@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100" fill="none">
+  <defs>
+    <linearGradient id="memyGrad" x1="20" y1="8" x2="100" y2="92" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFB347"/>
+      <stop offset="0.45" stop-color="#FF6B35"/>
+      <stop offset="1" stop-color="#E84D1C"/>
+    </linearGradient>
+    <mask id="heartMask">
+      <rect width="120" height="100" fill="white"/>
+      <path fill="black" d="M60 84 C48 74 38 66 38 58 C38 52 43 48 49 48 C54 48 57 51 60 56 C63 51 66 48 71 48 C77 48 82 52 82 58 C82 66 72 74 60 84Z"/>
+    </mask>
+  </defs>
+  <circle cx="32" cy="18" r="11" fill="url(#memyGrad)"/>
+  <circle cx="88" cy="22" r="9.5" fill="url(#memyGrad)"/>
+  <path mask="url(#heartMask)" fill="url(#memyGrad)" d="M14 36 C14 30 22 28 32 30 C40 32 46 40 50 52 C52 58 54 66 60 72 C66 66 68 58 70 52 C74 40 80 32 88 30 C98 28 106 30 106 36 L106 88 C106 94 100 98 94 98 L78 98 C70 98 66 90 60 80 C54 90 50 98 42 98 L26 98 C20 98 14 94 14 88 Z"/>
+</svg>

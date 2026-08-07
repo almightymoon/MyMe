@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>MeMy — Personal AI Life Companion</title>
+  <link rel="stylesheet" href="css/app.css?v=55" />
+  <link rel="stylesheet" href="css/system.css?v=53" />
+</head>
+<body>
+  <div class="app-stage">
+    <div class="phone auth-mode" id="phone">
+      <div class="phone-notch" aria-hidden="true"></div>
+      <div class="status-bar" aria-hidden="true">
+        <span>9:41</span>
+        <span class="icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 16h2v4H2zm4-3h2v7H6zm4-3h2v10h-2zm4-3h2v13h-2zm4-4h2v17h-2z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C7.5 3 3.5 5.5 1 9.5l1.5 1.2C4.6 7.5 8 5.5 12 5.5s7.4 2 9.5 5.2L23 9.5C20.5 5.5 16.5 3 12 3z"/><path d="M12 9c-2.8 0-5.2 1.3-6.8 3.4l1.5 1.2C8 11.7 9.9 11 12 11s4 0.7 5.3 2.6l1.5-1.2C17.2 10.3 14.8 9 12 9z"/><circle cx="12" cy="17" r="2"/></svg>
+          <svg viewBox="0 0 28 14" fill="currentColor"><rect x="0" y="1" width="24" height="12" rx="3" stroke="currentColor" fill="none" stroke-width="1.5"/><rect x="2" y="3" width="16" height="8" rx="1.5"/><rect x="25" y="4" width="2.5" height="6" rx="1"/></svg>
+        </span>
+      </div>
+
+      <div class="drawer-scrim" id="drawer-scrim" hidden></div>
+      <aside class="drawer" id="drawer" aria-hidden="true">
+        <div class="drawer-profile">
+          <img src="assets/avatar.png?v=14" alt="" />
+          <div>
+            <p class="drawer-name">Emma Chen</p>
+            <p class="drawer-mail">emma@memy.app</p>
+            <button class="drawer-view" data-go="profile">View Profile <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 18 6-6-6-6"/></svg></button>
+          </div>
+        </div>
+        <nav class="drawer-nav">
+          <button data-go="dashboard" class="drawer-link active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>Dashboard<svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+          <button data-go="goals" class="drawer-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>Goals<svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+          <button data-go="finance" class="drawer-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="7" width="18" height="12" rx="2"/><path d="M3 11h18"/></svg>Finance<svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+          <button data-go="health" class="drawer-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M19.5 12.5c0 4.5-5.5 7.5-7.5 8.5-2-1-7.5-4-7.5-8.5A4.5 4.5 0 0 1 12 9a4.5 4.5 0 0 1 7.5 3.5z"/></svg>Health<svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+          <button data-go="calendar" class="drawer-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>Calendar<svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+          <button data-go="nutrition" class="drawer-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3c-3 4-6 6-6 10a6 6 0 0 0 12 0c0-4-3-6-6-10z"/></svg>Nutrition<svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+          <button data-go="outfit" class="drawer-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 5 4 8l2 2v9h12V10l2-2-4-3-2 2h-4L8 5z"/></svg>Wardrobe<svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+          <button data-go="bodycomp" class="drawer-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="5" r="2.5"/><path d="M8 21v-7l-2-4h12l-2 4v7"/><path d="M10 14h4"/></svg>Body<svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+          <button data-go="insights" class="drawer-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 19v-6M12 19V5M18 19v-9"/></svg>Insights<svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+          <button data-go="coach" class="drawer-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 4 7v5c0 5 3.5 8.5 8 9 4.5-.5 8-4 8-9V7l-8-4z"/><path d="M9.5 12h.01M14.5 12h.01"/></svg>AI Coach<svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+        </nav>
+        <div class="drawer-foot">
+          <button data-go="settings" class="drawer-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h0a1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Settings<svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+          <button class="drawer-link" data-toast="You're all caught up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Notifications<svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+          <button class="drawer-link" data-toast="Help center coming soon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4.5M12 17h.01"/></svg>Help &amp; Support<svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+        </div>
+        <button class="drawer-logout" data-go="signin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></svg>Log Out</button>
+      </aside>
+
+      <div class="screen-stack" id="screens">
+
+        <!-- AUTH: Sign In -->
+        <section class="screen active" data-screen="signin" data-nav="none">
+          <div class="auth auth-signin">
+            <div class="auth-bg" aria-hidden="true">
+              <span class="auth-orb auth-orb-a"></span>
+              <span class="auth-orb auth-orb-b"></span>
+              <span class="auth-glow"></span>
+            </div>
+            <div class="auth-body">
+              <header class="auth-brand brand">
+                <div class="logo">MeMy</div>
+                <p class="tag">Your life, perfectly balanced.</p>
+              </header>
+
+              <div class="auth-hero">
+                <img class="auth-logo-mark" src="assets/logo.svg" alt="MeMy" />
+              </div>
+
+              <div class="auth-panel">
+                <div class="auth-input">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></svg>
+                  <input type="email" id="signin-email" placeholder="Email or Phone" value="emma@memy.app" autocomplete="username" />
+                </div>
+                <div class="auth-input">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  <input type="password" id="signin-pass" placeholder="Password" value="memy2026" autocomplete="current-password" />
+                  <button type="button" class="auth-eye" data-toggle-pass="signin-pass" aria-label="Show password">
+                    <svg class="eye-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" hidden><path d="M17.94 17.94A10.9 10.9 0 0 1 12 20c-7 0-11-8-11-8a21.8 21.8 0 0 1 5.06-5.94M9.9 4.24A10.9 10.9 0 0 1 12 4c7 0 11 8 11 8a21.9 21.9 0 0 1-2.16 3.19M1 1l22 22"/><path d="M14.12 14.12A3 3 0 0 1 9.88 9.88"/></svg>
+                  </button>
+                </div>
+                <button type="button" class="auth-link" data-go="forgot">Forgot password?</button>
+                <button type="button" class="btn-orange auth-signin-btn" data-go="home" id="signin-btn">Sign In</button>
+              </div>
+            </div>
+            <button class="wave-btn orange" data-go="signup" type="button">
+              <svg class="wave" viewBox="0 0 390 120" preserveAspectRatio="none"><path class="fill" d="M0 120 V55 C60 55 120 10 195 10 C270 10 330 55 390 55 V120 Z"/></svg>
+              <span class="label"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m18 15-6-6-6 6"/></svg>Sign Up</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- AUTH: Sign Up -->
+        <section class="screen" data-screen="signup" data-nav="none">
+          <div class="auth auth-signup">
+            <div class="auth-bg" aria-hidden="true">
+              <span class="auth-orb auth-orb-a"></span>
+              <span class="auth-orb auth-orb-b"></span>
+              <span class="auth-glow"></span>
+            </div>
+            <div class="auth-body">
+              <div class="auth-topbar">
+                <button type="button" class="icon-circle auth-back" data-go="signin" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+                <span class="auth-mark">MeMy</span>
+                <span class="auth-top-spacer" aria-hidden="true"></span>
+              </div>
+
+              <header class="auth-head">
+                <h1 class="auth-title">Create your account</h1>
+                <p class="auth-sub">One place for goals, health, money, and style — guided by MeMy.</p>
+              </header>
+
+              <div class="auth-panel">
+                <div class="auth-input">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 19.5c1.8-3.2 4-4.8 6.5-4.8s4.7 1.6 6.5 4.8"/></svg>
+                  <input type="text" id="signup-name" placeholder="Full Name" value="Emma Chen" autocomplete="name" />
+                </div>
+                <div class="auth-input">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></svg>
+                  <input type="email" id="signup-email" placeholder="Email" value="emma@memy.app" autocomplete="email" />
+                </div>
+                <div class="auth-input">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  <input type="password" id="signup-pass" placeholder="Password" value="memy2026" autocomplete="new-password" />
+                  <button type="button" class="auth-eye" data-toggle-pass="signup-pass" aria-label="Show password">
+                    <svg class="eye-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" hidden><path d="M17.94 17.94A10.9 10.9 0 0 1 12 20c-7 0-11-8-11-8a21.8 21.8 0 0 1 5.06-5.94M9.9 4.24A10.9 10.9 0 0 1 12 4c7 0 11 8 11 8a21.9 21.9 0 0 1-2.16 3.19M1 1l22 22"/><path d="M14.12 14.12A3 3 0 0 1 9.88 9.88"/></svg>
+                  </button>
+                </div>
+                <div class="auth-input">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V6l-8-3-8 3v6c0 6 8 10 8 10z"/></svg>
+                  <input type="password" id="signup-confirm" placeholder="Confirm Password" value="memy2026" autocomplete="new-password" />
+                </div>
+                <label class="auth-check">
+                  <input type="checkbox" checked />
+                  <span>I agree to the <a href="#">Terms &amp; Conditions</a> and <a href="#">Privacy Policy</a>.</span>
+                </label>
+                <button type="button" class="btn-orange auth-signin-btn" data-go="home" id="signup-btn">Sign Up</button>
+              </div>
+            </div>
+            <button class="wave-btn orange" data-go="signin" type="button">
+              <svg class="wave" viewBox="0 0 390 120" preserveAspectRatio="none"><path class="fill" d="M0 120 V55 C60 55 120 10 195 10 C270 10 330 55 390 55 V120 Z"/></svg>
+              <span class="label"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m18 15-6-6-6 6"/></svg>Sign In</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- AUTH: Forgot -->
+        <section class="screen" data-screen="forgot" data-nav="none">
+          <div class="auth auth-forgot">
+            <div class="auth-bg" aria-hidden="true">
+              <span class="auth-orb auth-orb-a"></span>
+              <span class="auth-orb auth-orb-b"></span>
+              <span class="auth-glow"></span>
+            </div>
+            <div class="auth-body">
+              <div class="auth-topbar">
+                <button type="button" class="icon-circle auth-back" data-go="signin" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+                <span class="auth-mark">MeMy</span>
+                <span class="auth-top-spacer" aria-hidden="true"></span>
+              </div>
+
+              <div class="auth-forgot-hero">
+                <div class="lock-badge" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </div>
+                <h1 class="auth-title auth-title-center">Forgot password?</h1>
+                <p class="auth-sub auth-sub-center">Enter your email or phone and MeMy will send a reset link.</p>
+              </div>
+
+              <div class="auth-panel">
+                <div class="auth-input">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></svg>
+                  <input type="email" id="forgot-email" placeholder="Email or Phone" autocomplete="username" />
+                </div>
+                <p class="auth-switch">Remembered it? <button type="button" data-go="signin">Back to sign in</button></p>
+              </div>
+            </div>
+            <button class="wave-btn orange" id="reset-btn" type="button">
+              <svg class="wave" viewBox="0 0 390 120" preserveAspectRatio="none"><path class="fill" d="M0 120 V55 C60 55 120 10 195 10 C270 10 330 55 390 55 V120 Z"/></svg>
+              <span class="label"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m18 15-6-6-6 6"/></svg>Send Reset Link</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- HOME -->
+        <section class="screen" data-screen="home" data-nav="home">
+          <div class="screen-scroll home-scroll">
+            <header class="home-top">
+              <div class="home-greet" data-drawer="open" role="button" tabindex="0">
+                <p class="hi">Hi, Emma!</p>
+                <h1 class="gm">Good Morning <span aria-hidden="true">☀️</span></h1>
+              </div>
+              <button class="home-avatar" data-go="profile" aria-label="Profile">
+                <img src="assets/avatar.png?v=14" alt="Emma" />
+              </button>
+            </header>
+
+            <article class="card life-card">
+              <div class="life-copy">
+                <p class="label">Life Score</p>
+                <p class="score">84<span class="pc">%</span></p>
+                <p class="sub">You're doing great!</p>
+              </div>
+              <div class="ring-wrap" aria-hidden="true">
+                <svg class="ring-svg" viewBox="0 0 100 100">
+                  <circle class="ring-track" cx="50" cy="50" r="40" />
+                  <circle class="ring-val" cx="50" cy="50" r="40" pathLength="100" stroke-dasharray="84 16" />
+                  <circle class="ring-dot" cx="16.1" cy="28.8" r="5.5" />
+                </svg>
+              </div>
+            </article>
+
+            <article class="card focus-card">
+              <p class="sec-label">Today's Focus</p>
+              <div class="row">
+                <p class="task">Finish AI Research Paper</p>
+                <p class="pct">55%</p>
+              </div>
+              <div class="progress"><i style="width:55%"></i></div>
+            </article>
+
+            <div class="shortcut-row">
+              <button class="shortcut-sq" data-go="goals">
+                <span class="shortcut-ico">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><path d="M12 3.5v2M19.2 7.2l-1.5 1.2"/></svg>
+                </span>
+                Goals
+              </button>
+              <button class="shortcut-sq" data-go="finance">
+                <span class="shortcut-ico">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 4.5 7.5v9L12 21l7.5-4.5v-9L12 3z"/><path d="M12 8.5c-1.5 0-2.5.8-2.5 1.8S10.5 12 12 12s2.5.6 2.5 1.7S13.5 15.5 12 15.5"/><path d="M12 8.5V7M12 17v-1.5"/></svg>
+                </span>
+                Finance
+              </button>
+              <button class="shortcut-sq" data-go="health">
+                <span class="shortcut-ico">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19.5 12.2c0 4.2-5.2 7.2-7.5 8.2-2.3-1-7.5-4-7.5-8.2A4.3 4.3 0 0 1 12 9a4.3 4.3 0 0 1 7.5 3.2z"/><path d="M8.5 13h2l1.2-2.5 1.6 5 1.2-2.5H16"/></svg>
+                </span>
+                Health
+              </button>
+              <button class="shortcut-sq" data-go="calendar">
+                <span class="shortcut-ico">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3.5v3M16 3.5v3M3.5 10h17"/></svg>
+                </span>
+                Calendar
+              </button>
+            </div>
+
+            <article class="card glance-card">
+              <p class="glance-title">Today at a Glance</p>
+              <div class="glance-body">
+                <div class="glance-weather">
+                  <p class="sec-label">Weather</p>
+                  <p class="t">22°C</p>
+                  <p class="w-sub">Cloudy</p>
+                </div>
+                <div class="glance-events">
+                  <div class="ev">
+                    <span class="ev-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m4 10 8-6 8 6v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19z"/><path d="M10 20.5v-6h4v6"/></svg></span>
+                    <div><p class="when">10:00 AM</p><p class="what">Team Meeting</p></div>
+                  </div>
+                  <div class="ev">
+                    <span class="ev-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 7h8l1.5 3H6.5L8 7z"/><path d="M6.5 10h11v8.5a1.5 1.5 0 0 1-1.5 1.5h-8a1.5 1.5 0 0 1-1.5-1.5V10z"/><path d="M10 14h4"/></svg></span>
+                    <div><p class="when">6:00 PM</p><p class="what">Gym Workout</p></div>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="card todo-card">
+              <div class="todo-head">
+                <p class="glance-title">Today's Tasks</p>
+                <span class="todo-count">2 of 5</span>
+              </div>
+              <ul class="todo-list" id="home-todos">
+                <li class="todo-item done">
+                  <button class="todo-check" type="button" aria-pressed="true" aria-label="Toggle task"></button>
+                  <div class="todo-copy">
+                    <p class="todo-title">Morning stretch routine</p>
+                    <p class="todo-meta">Health · 7:30 AM</p>
+                  </div>
+                </li>
+                <li class="todo-item done">
+                  <button class="todo-check" type="button" aria-pressed="true" aria-label="Toggle task"></button>
+                  <div class="todo-copy">
+                    <p class="todo-title">Review weekly budget</p>
+                    <p class="todo-meta">Finance · Done</p>
+                  </div>
+                </li>
+                <li class="todo-item">
+                  <button class="todo-check" type="button" aria-pressed="false" aria-label="Toggle task"></button>
+                  <div class="todo-copy">
+                    <p class="todo-title">Draft literature review section</p>
+                    <p class="todo-meta">Goals · Due today</p>
+                  </div>
+                </li>
+                <li class="todo-item">
+                  <button class="todo-check" type="button" aria-pressed="false" aria-label="Toggle task"></button>
+                  <div class="todo-copy">
+                    <p class="todo-title">Drink 2L water</p>
+                    <p class="todo-meta">Health · 1.6 / 2 L</p>
+                  </div>
+                </li>
+                <li class="todo-item">
+                  <button class="todo-check" type="button" aria-pressed="false" aria-label="Toggle task"></button>
+                  <div class="todo-copy">
+                    <p class="todo-title">Pack gym bag</p>
+                    <p class="todo-meta">Calendar · Before 6 PM</p>
+                  </div>
+                </li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <!-- DASHBOARD — modules grid -->
+        <section class="screen" data-screen="dashboard" data-nav="dashboard">
+          <div class="screen-scroll">
+            <header class="mod-top">
+              <button class="icon-plain" data-drawer="open" aria-label="Menu">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+              </button>
+              <div>
+                <p class="mod-kicker">Modules</p>
+                <h1 class="mod-title">Dashboard</h1>
+              </div>
+              <button class="home-avatar" data-go="profile" aria-label="Profile">
+                <img src="assets/avatar.png?v=14" alt="Emma" />
+              </button>
+            </header>
+
+            <div class="mod-grid">
+              <button class="mod-card" data-go="goals">
+                <div class="mod-card-top"><span>Goals</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></div>
+                <div class="mod-row">
+                <div class="mod-copy">
+                <p class="mod-stat">4 active</p>
+                <p class="mod-big">65%</p>
+                <p class="mod-sub">avg progress</p>
+                <div class="progress"><i style="width:65%"></i></div>
+                </div>
+                <img class="mod-ico" src="assets/mod-goals.png?v=24" alt="" />
+                </div>
+              </button>
+              <button class="mod-card" data-go="finance">
+                <div class="mod-card-top"><span>Finance</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></div>
+                <div class="mod-row">
+                <div class="mod-copy">
+                <p class="mod-stat">Balance</p>
+                <p class="mod-big" style="font-size:20px">PKR 245K</p>
+                <p class="mod-trend up">↑ 12% this month</p>
+                </div>
+                <img class="mod-ico" src="assets/mod-finance.png?v=24" alt="" />
+                </div>
+              </button>
+              <button class="mod-card" data-go="health">
+                <div class="mod-card-top"><span>Health</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></div>
+                <div class="mod-row">
+                <div class="mod-copy">
+                <p class="mod-stat">Heart rate</p>
+                <p class="mod-big">95 <span>bpm</span></p>
+                <p class="mod-trend up">◆ Stable</p>
+                </div>
+                <img class="mod-ico heart" src="assets/heart.png?v=41" alt="" />
+                </div>
+              </button>
+              <button class="mod-card" data-go="calendar">
+                <div class="mod-card-top"><span>Calendar</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></div>
+                <div class="mod-row">
+                <div class="mod-copy">
+                <p class="mod-stat">Next up</p>
+                <p class="mod-big sm">Team Meeting</p>
+                <p class="mod-sub">10:00 AM · Today</p>
+                </div>
+                <img class="mod-ico" src="assets/mod-calendar.png?v=24" alt="" />
+                </div>
+              </button>
+              <button class="mod-card" data-go="outfit">
+                <div class="mod-card-top"><span>Wardrobe</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></div>
+                <div class="mod-row">
+                <div class="mod-copy">
+                <p class="mod-stat">Today</p>
+                <p class="mod-big sm">Business Casual</p>
+                <p class="mod-sub orange-dot">Recommended</p>
+                </div>
+                <img class="mod-ico" src="assets/mod-wardrobe.png?v=24" alt="" />
+                </div>
+              </button>
+              <button class="mod-card" data-go="nutrition">
+                <div class="mod-card-top"><span>Nutrition</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></div>
+                <div class="mod-row">
+                <div class="mod-copy">
+                <p class="mod-stat">Today</p>
+                <p class="mod-big" style="font-size:20px">1,650</p>
+                <p class="mod-sub">kcal</p>
+                <p class="mod-trend accent">60% of goal</p>
+                </div>
+                <img class="mod-ico" src="assets/mod-nutrition.png?v=24" alt="" />
+                </div>
+              </button>
+              <button class="mod-card" data-go="bodycomp">
+                <div class="mod-card-top"><span>Body</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></div>
+                <div class="mod-row">
+                <div class="mod-copy">
+                <p class="mod-stat">BMI</p>
+                <p class="mod-big">22.4</p>
+                <p class="mod-trend up">Normal</p>
+                </div>
+                <img class="mod-ico body" src="assets/body.png?v=8" alt="" />
+                </div>
+              </button>
+              <button class="mod-card" data-go="insights">
+                <div class="mod-card-top"><span>Insights</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></div>
+                <div class="mod-row">
+                <div class="mod-copy">
+                <p class="mod-stat">This week</p>
+                <p class="mod-big sm">Weekly Summary</p>
+                <p class="mod-sub">View report</p>
+                </div>
+                <img class="mod-ico" src="assets/mod-insights.png?v=24" alt="" />
+                </div>
+              </button>
+            </div>
+
+            <button class="coach-strip" data-go="coach">
+              <div>
+                <p class="coach-strip-title">AI Coach</p>
+                <p class="coach-strip-copy">You're 8% ahead of your monthly savings goal. Great job!</p>
+              </div>
+              <div
+                class="ai-sphere-host is-sm coach-strip-orb"
+                data-ai-coach-sphere
+                data-state="idle"
+                data-size="56"
+                data-interactive="false"
+                aria-hidden="true"
+              ></div>
+            </button>
+          </div>
+        </section>
+
+        <!-- GOALS -->
+        <section class="screen" data-screen="goals" data-nav="dashboard" data-ctx="target">
+          <div class="screen-scroll">
+            <div class="top-row">
+              <button class="icon-plain" data-go="home" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m15 18-6-6 6-6"/></svg></button>
+              <h1 class="page-title">My Goals</h1>
+              <button class="icon-plain" data-go="add-goal" aria-label="Add goal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 5v14M5 12h14"/></svg></button>
+            </div>
+            <div class="hero-float md"><img src="assets/mod-goals.png?v=24" alt="" /></div>
+            <div class="mod-hero" style="padding-top:0;margin-top:-8px">
+              <p class="mod-value" id="goals-avg">72<span>%</span></p>
+              <p class="mod-kicker">Average progress across active goals</p>
+            </div>
+            <div class="tabs-pill" id="goal-tabs">
+              <button class="tab active" data-filter="all">All</button>
+              <button class="tab" data-filter="active">Active</button>
+              <button class="tab" data-filter="completed">Completed</button>
+            </div>
+            <div id="goals-list"></div>
+          </div>
+        </section>
+
+        <!-- FINANCE -->
+        <section class="screen" data-screen="finance" data-nav="dashboard">
+          <div class="screen-scroll">
+            <div class="top-row">
+              <button class="icon-plain" data-go="home" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m15 18-6-6 6-6"/></svg></button>
+              <h1 class="page-title">Finance Overview</h1>
+              <button class="icon-plain" data-go="add-tx" aria-label="Add transaction"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></button>
+            </div>
+            <div class="hero-float md"><img src="assets/mod-finance.png?v=24" alt="" /></div>
+            <div class="bal-head">
+              <p class="muted">Total Balance</p>
+              <button class="month-pill">This Month <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg></button>
+            </div>
+            <p class="bal-amt num" id="fin-balance">PKR 245,000</p>
+            <div class="flow">
+              <div class="flow-box up"><p class="l">Income</p><p class="v num" id="fin-income">PKR 180,000</p></div>
+              <div class="flow-box down"><p class="l">Expenses</p><p class="v num" id="fin-expense">PKR 89,000</p></div>
+            </div>
+            <div class="spend-head">
+              <p class="h3">Spending Breakdown</p>
+              <button class="muted" data-go="add-tx" style="font-size:12px">See All</button>
+            </div>
+            <div class="donut-row">
+              <div class="donut" id="fin-donut"></div>
+              <div class="legend" id="fin-legend"></div>
+            </div>
+
+            <div class="spend-head money-head">
+              <p class="h3">Loans &amp; Money Out</p>
+              <button class="muted" data-toast="Add entry coming soon" style="font-size:12px">Add</button>
+            </div>
+            <div class="money-tabs" id="money-tabs" role="tablist">
+              <button class="money-tab active" data-money="lent" type="button">Expecting back</button>
+              <button class="money-tab" data-money="loans" type="button">You owe</button>
+            </div>
+            <div class="money-summary" id="money-summary"></div>
+            <div class="money-list" id="money-list"></div>
+          </div>
+        </section>
+
+        <!-- ADD TX -->
+        <section class="screen" data-screen="add-tx" data-nav="none">
+          <div class="screen-scroll">
+            <div class="top-row">
+              <button class="icon-plain" data-go="finance" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+              <h1 class="page-title">Add Transaction</h1>
+              <div style="width:36px"></div>
+            </div>
+            <div class="seg" id="tx-toggle">
+              <button class="exp active" data-type="expense">Expense</button>
+              <button class="inc" data-type="income">Income</button>
+            </div>
+            <div class="amount-block">
+              <span class="cur">PKR</span>
+              <input type="number" id="tx-amount" value="1250" />
+            </div>
+            <p class="f-label">Category</p>
+            <div class="field">
+              <span class="f-ico">🍔</span>
+              <select id="tx-category"><option>Food &amp; Dining</option><option>Transport</option><option>Shopping</option><option>Bills</option><option>Other</option></select>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+            </div>
+            <p class="f-label">Date</p>
+            <div class="field">
+              <input value="Aug 07, 2026" readonly />
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            </div>
+            <p class="f-label">Payment Method</p>
+            <div class="field">
+              <select><option>Cash</option><option>Card</option><option>Bank Transfer</option></select>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+            <p class="f-label">Notes</p>
+            <div class="field">
+              <input value="Lunch at cafe" />
+            </div>
+            <p class="field-error" id="tx-error" hidden></p>
+            <button class="btn-orange" id="tx-save">Save Transaction</button>
+          </div>
+        </section>
+
+        <!-- ADD GOAL -->
+        <section class="screen" data-screen="add-goal" data-nav="none">
+          <div class="screen-scroll">
+            <div class="top-row">
+              <button class="icon-plain" data-go="goals" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+              <h1 class="page-title">Add Goal</h1>
+              <div style="width:36px"></div>
+            </div>
+            <p class="f-label">Goal name</p>
+            <div class="field">
+              <input type="text" id="goal-name" placeholder="e.g. Build emergency fund" autocomplete="off" />
+            </div>
+            <p class="f-label">Target</p>
+            <div class="field">
+              <input type="text" id="goal-target" placeholder="e.g. PKR 1,000,000 or 67 kg" />
+            </div>
+            <p class="f-label">Current progress (%)</p>
+            <div class="field">
+              <input type="number" id="goal-progress" min="0" max="100" value="0" />
+            </div>
+            <p class="f-label">Deadline</p>
+            <div class="field">
+              <input type="text" id="goal-deadline" placeholder="e.g. Dec 31, 2026" />
+            </div>
+            <p class="f-label">Category</p>
+            <div class="field">
+              <select id="goal-category">
+                <option value="home">Home &amp; Life</option>
+                <option value="shield">Finance</option>
+                <option value="fitness">Health &amp; Fitness</option>
+                <option value="book">Learning &amp; Career</option>
+              </select>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+            </div>
+            <p class="f-label">Notes (optional)</p>
+            <div class="field">
+              <input type="text" id="goal-notes" placeholder="Anything to remember" />
+            </div>
+            <p class="field-error" id="goal-error" hidden></p>
+            <button class="btn-orange" id="goal-save">Save Goal</button>
+          </div>
+        </section>
+
+        <!-- ADD EVENT -->
+        <section class="screen" data-screen="add-event" data-nav="none">
+          <div class="screen-scroll">
+            <div class="top-row">
+              <button class="icon-plain" data-go="calendar" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+              <h1 class="page-title">Add Event</h1>
+              <div style="width:36px"></div>
+            </div>
+            <p class="f-label">Event title</p>
+            <div class="field">
+              <input type="text" id="event-title" placeholder="e.g. Team standup" autocomplete="off" />
+            </div>
+            <p class="f-label">Date</p>
+            <div class="field">
+              <input type="text" id="event-date" value="Aug 07, 2026" />
+            </div>
+            <div class="stat2" style="gap:10px;margin:0 0 4px">
+              <div style="flex:1">
+                <p class="f-label">Start time</p>
+                <div class="field"><input type="text" id="event-start" placeholder="10:00 AM" /></div>
+              </div>
+              <div style="flex:1">
+                <p class="f-label">End time</p>
+                <div class="field"><input type="text" id="event-end" placeholder="11:00 AM" /></div>
+              </div>
+            </div>
+            <p class="f-label">Location</p>
+            <div class="field">
+              <input type="text" id="event-place" placeholder="Office, Google Meet…" />
+            </div>
+            <p class="f-label">Notes</p>
+            <div class="field">
+              <input type="text" id="event-notes" placeholder="Optional details" />
+            </div>
+            <p class="f-label">Reminder</p>
+            <div class="field">
+              <select id="event-reminder">
+                <option value="">None</option>
+                <option value="15">15 minutes before</option>
+                <option value="30">30 minutes before</option>
+                <option value="60">1 hour before</option>
+              </select>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+            </div>
+            <p class="field-error" id="event-error" hidden></p>
+            <button class="btn-orange" id="event-save">Save Event</button>
+          </div>
+        </section>
+
+        <!-- ADD MEAL -->
+        <section class="screen" data-screen="add-meal" data-nav="none">
+          <div class="screen-scroll">
+            <div class="top-row">
+              <button class="icon-plain" data-go="nutrition" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+              <h1 class="page-title">Log Meal</h1>
+              <div style="width:36px"></div>
+            </div>
+            <p class="f-label">Meal name</p>
+            <div class="field">
+              <input type="text" id="meal-name" placeholder="e.g. Grilled chicken bowl" autocomplete="off" />
+            </div>
+            <p class="f-label">Calories (kcal)</p>
+            <div class="field">
+              <input type="number" id="meal-kcal" inputmode="numeric" placeholder="450" />
+            </div>
+            <p class="f-label">Time</p>
+            <div class="field">
+              <input type="text" id="meal-time" value="1:30 PM" />
+            </div>
+            <p class="field-error" id="meal-error" hidden></p>
+            <button class="btn-orange" id="meal-save">Save Meal</button>
+          </div>
+        </section>
+
+        <!-- HEALTH OVERVIEW -->
+        <section class="screen health-ov" data-screen="health" data-nav="dashboard" data-ctx="heart">
+          <div class="screen-scroll health-ov-scroll">
+            <header class="ho-header">
+              <div class="ho-greet">
+                <p class="hm-hi">Hi, Emma!</p>
+                <h2 class="hm-title">Let's measure your<br />heart rate</h2>
+              </div>
+              <div class="ho-actions">
+                <button class="icon-plain" data-go="profile" aria-label="Profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 19.2a6.5 6.5 0 0 1 13 0"/></svg></button>
+                <button class="icon-plain ho-bell" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><i class="dot" aria-hidden="true"></i></button>
+              </div>
+            </header>
+
+            <div class="ho-stage">
+              <div class="ho-heart-wrap">
+                <img class="ho-heart" src="assets/heart.png?v=45" alt="Heart" />
+              </div>
+
+              <div class="ho-float-cards">
+                <button class="card ho-ecg" data-go="ecg">
+                  <p class="l">ECG</p>
+                  <p class="v num">95 <span>bpm</span></p>
+                  <svg class="ho-wave" viewBox="0 0 130 28" fill="none"><path d="M0 16h14l5-9 6 18 5-12 5 9h16l5-9 6 18 5-12 5 9h16l4-7 5 12 4-9h19" stroke="#FF6A1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="card ho-hrv" data-go="hr">
+                  <div class="ho-hrv-top">
+                    <p class="l">Heart Rate Variability</p>
+                    <span class="ho-pulse" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h3l2.5-5 3 10 2.5-5H21"/></svg></span>
+                  </div>
+                  <p class="status">Status: <b>Stable</b></p>
+                  <p class="v num">86 <span>ms</span></p>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- HR WEEKLY -->
+        <section class="screen" data-screen="hr" data-nav="none">
+          <div class="screen-scroll">
+            <div class="top-row">
+              <button class="icon-plain" data-go="health" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+              <h1 class="page-title">Heart Rate</h1>
+              <button class="icon-plain" aria-label="More"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
+            </div>
+            <p class="hr-greet"><b>Hi, Emma!</b><br/>Here's your weekly summary</p>
+            <div class="hr-hero">
+              <div class="hr-main"><span class="big num">95</span><span class="unit">bpm</span></div>
+              <div class="range"><b>240</b> Max&nbsp;&nbsp;<b>60</b> Min</div>
+            </div>
+            <div class="card hrv-card">
+              <div class="head">
+                <span class="h3">Heart Rate Variability</span>
+                <span class="hrv-val num">82 <span>ms</span></span>
+              </div>
+              <div class="hrv-plot" id="hrv-plot"></div>
+            </div>
+            <div class="stat2">
+              <div class="card"><p class="muted">Stress Level</p><p class="stat-v" style="margin-top:6px">Low</p></div>
+              <div class="card"><p class="muted">Ave. Variability</p><p class="stat-v num" style="margin-top:6px">92 <span>ms</span></p></div>
+            </div>
+            <div class="insight">
+              <span class="ico">i</span>
+              <p>Your HRV is <b>5%</b> higher than average for your age group</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ECG -->
+        <section class="screen" data-screen="ecg" data-nav="none">
+          <div class="screen-scroll ecg-scroll">
+            <div class="top-row">
+              <button class="icon-plain" data-go="health" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+              <h1 class="page-title">ECG Recording</h1>
+              <button class="icon-plain" aria-label="More"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
+            </div>
+            <div class="ecg-wrap">
+              <div class="bpm num" id="ecg-bpm">95</div>
+              <div class="unit">bpm</div>
+              <div class="ecg-chart">
+                <div class="ecg-peaks" aria-hidden="true"><span>848</span><span>858</span><span>862</span></div>
+                <svg viewBox="0 0 360 170" preserveAspectRatio="none" fill="none">
+                  <polyline stroke="#D9D9DE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    points="0,100 14,98 22,104 30,60 38,150 48,96 60,88 68,102 78,100 92,98 100,104 108,52 116,158 126,98 138,86 148,104 158,100"/>
+                  <polyline stroke="#FF6A1A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                    points="158,100 172,98 180,106 188,48 196,160 206,96 218,84 228,106 238,102 246,100"/>
+                  <circle cx="246" cy="102" r="6" fill="#FF6A1A"/>
+                  <polyline stroke="#D9D9DE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    points="246,102 258,100 268,104 276,44 284,162 294,98 306,86 318,104 330,100 344,98 360,100"/>
+                </svg>
+              </div>
+              <div class="ecg-timer-wrap">
+                <button class="ecg-ring" id="ecg-pause" style="--p:88" aria-label="Pause">
+                  <div class="inner">
+                    <div class="time" id="ecg-timer">00:11</div>
+                    <div class="pause-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg></div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- WEIGHT & BMI -->
+        <section class="screen" data-screen="weight" data-nav="dashboard" data-ctx="heart" data-ctx-go="health">
+          <div class="screen-scroll">
+            <div class="top-row">
+              <button class="icon-plain" data-go="health" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+              <h1 class="page-title">Weight &amp; BMI</h1>
+              <button class="icon-plain" data-go="bodycomp" aria-label="Body composition"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
+            </div>
+            <div class="gauge-wrap">
+              <svg class="gauge" viewBox="0 0 300 168">
+                <path d="M32 152 A118 118 0 0 1 268 152" stroke="#E8E8ED" stroke-width="20" stroke-linecap="round" fill="none"/>
+                <path d="M32 152 A118 118 0 0 1 268 152" stroke="#FF6A1A" stroke-width="20" stroke-linecap="round" fill="none" pathLength="100" stroke-dasharray="62 100"/>
+              </svg>
+              <div class="gauge-center">
+                <p class="gv num">72.5 <span>kg</span></p>
+                <p class="gs">Normal</p>
+              </div>
+              <span class="g-min">50</span>
+              <span class="g-max">100</span>
+            </div>
+            <div class="bmi-top">
+              <button class="card bmi-mini" data-go="bodycomp"><p class="muted">BMI</p><p class="v num">22.4</p><span class="ok">Normal</span></button>
+              <button class="card bmi-mini" data-go="bodycomp"><p class="muted">Height</p><p class="v num">175<span class="sm"> cm</span></p><span class="ok">Average</span></button>
+            </div>
+            <div class="card chart-card">
+              <svg viewBox="0 0 330 160" fill="none">
+                <defs>
+                  <linearGradient id="wfill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#FF6A1A" stop-opacity=".22"/>
+                    <stop offset="1" stop-color="#FF6A1A" stop-opacity="0"/>
+                  </linearGradient>
+                </defs>
+                <text x="6" y="30" class="ax">80</text>
+                <text x="6" y="82" class="ax">70</text>
+                <text x="6" y="134" class="ax">60</text>
+                <g stroke="#EEEEF1" stroke-width="1">
+                  <path d="M46 18v118"/><path d="M99 18v118"/><path d="M152 18v118"/><path d="M205 18v118"/><path d="M258 18v118"/><path d="M311 18v118"/>
+                </g>
+                <path d="M46 52 C64 76 81 96 99 94 C117 92 134 87 152 84 C170 81 187 74 205 73 C223 72 240 80 258 78 C276 76 298 46 311 26 L311 136 L46 136 Z" fill="url(#wfill)"/>
+                <path d="M46 52 C64 76 81 96 99 94 C117 92 134 87 152 84 C170 81 187 74 205 73 C223 72 240 80 258 78 C276 76 298 46 311 26" stroke="#FF6A1A" stroke-width="2.4" stroke-linecap="round"/>
+                <g fill="#FF6A1A">
+                  <circle cx="46" cy="52" r="4.5"/><circle cx="99" cy="94" r="4.5"/><circle cx="152" cy="84" r="4.5"/><circle cx="205" cy="73" r="4.5"/><circle cx="258" cy="78" r="4.5"/><circle cx="311" cy="26" r="4.5"/>
+                </g>
+                <text x="38" y="154" class="ax">Mar</text>
+                <text x="91" y="154" class="ax">Apr</text>
+                <text x="142" y="154" class="ax">May</text>
+                <text x="197" y="154" class="ax">Jun</text>
+                <text x="252" y="154" class="ax">Jul</text>
+                <text x="303" y="154" class="ax">Aug</text>
+              </svg>
+            </div>
+            <div class="card goal-card">
+              <p class="muted">Goal</p>
+              <div class="goal-vals">
+                <p class="gl num">65 <span>kg</span></p>
+                <p class="gr num">65<span>%</span></p>
+              </div>
+              <div class="goal-track">
+                <span>You're on track!</span>
+                <div class="progress" style="flex:1"><i style="width:65%"></i></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- BMI BODY COMPOSITION -->
+        <section class="screen" data-screen="bodycomp" data-nav="dashboard" data-ctx="heart" data-ctx-go="health">
+          <div class="screen-scroll bodycomp-scroll">
+            <div class="top-row">
+              <button class="icon-plain" data-go="weight" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+              <h1 class="page-title">BMI &amp; Body Composition</h1>
+              <button class="icon-plain" aria-label="More"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
+            </div>
+
+            <div class="bc-hero card">
+              <div class="bc-hero-greet">
+                <img src="assets/avatar.png?v=14" alt="" class="bc-hero-avatar" />
+                <div>
+                  <p class="bc-hero-hi">Great job, Emma!</p>
+                  <p class="bc-hero-sub">You're in <span>great shape</span>. Keep going!</p>
+                </div>
+              </div>
+              <div class="bc-score">
+                <p class="bc-score-l">Body Score</p>
+                <p class="bc-score-v num"><span id="bc-score">84</span><small>/100</small></p>
+                <svg class="bc-spark" id="bc-spark" viewBox="0 0 72 28" preserveAspectRatio="none" aria-hidden="true"></svg>
+              </div>
+            </div>
+
+            <div class="bc-metrics" id="bc-metrics">
+              <div class="card bc-metric">
+                <p class="l">BMI</p>
+                <p class="v num" id="bc-bmi">22.4</p>
+                <p class="s ok">Normal</p>
+              </div>
+              <div class="card bc-metric">
+                <p class="l">Height</p>
+                <p class="v num" id="bc-height">175<span class="sm"> cm</span></p>
+                <p class="s muted">Average</p>
+              </div>
+              <div class="card bc-metric">
+                <p class="l">Weight</p>
+                <p class="v num" id="bc-weight">72.5<span class="sm"> kg</span></p>
+                <p class="s down" id="bc-weight-delta">↓ 0.5 kg</p>
+              </div>
+              <div class="card bc-metric">
+                <p class="l">Body Fat</p>
+                <p class="v num" id="bc-fat">18.6<span class="sm">%</span></p>
+                <p class="s down" id="bc-fat-delta">↓ 1.2%</p>
+              </div>
+            </div>
+
+            <div class="bc-section-head">
+              <p class="h3">Muscle Balance</p>
+            </div>
+            <div class="card bc-muscle">
+              <div class="bc-muscle-fig">
+                <img src="assets/body.png?v=10" alt="Muscle balance" />
+              </div>
+              <div class="bc-muscle-list" id="bc-muscle-list"></div>
+            </div>
+
+            <div class="bc-section-head">
+              <p class="h3">AI Recommended Plan</p>
+              <span class="bc-plan-badge">7 Days</span>
+            </div>
+            <article class="card bc-plan" id="bc-plan">
+              <div class="bc-plan-media">
+                <img id="bc-plan-img" src="assets/mod-health.png" alt="" />
+              </div>
+              <div class="bc-plan-body">
+                <h2 class="bc-plan-title" id="bc-plan-title">Focus on core &amp; lower body</h2>
+                <p class="bc-plan-sub" id="bc-plan-sub">Strengthen your core and build lower body power.</p>
+                <div class="bc-plan-tags" id="bc-plan-tags"></div>
+                <button type="button" class="btn-orange bc-plan-cta" data-toast="Starting AI plan">Start Plan</button>
+              </div>
+            </article>
+
+            <div class="bc-section-head">
+              <p class="h3">Today's Workout</p>
+              <button type="button" class="ward-link" data-toast="Full workout coming soon">View All</button>
+            </div>
+            <div class="bc-today" id="bc-today"></div>
+
+            <div class="bc-section-head">
+              <p class="h3">Exercises Library</p>
+              <button type="button" class="ward-link" data-go="exercises">See all</button>
+            </div>
+            <div class="bc-ex-filters" id="bc-ex-filters" aria-label="Exercise filters">
+              <button type="button" class="ward-chip active" data-ex-tag="all">All</button>
+              <button type="button" class="ward-chip" data-ex-tag="Abs">Abs</button>
+              <button type="button" class="ward-chip" data-ex-tag="Chest">Chest</button>
+              <button type="button" class="ward-chip" data-ex-tag="Legs">Legs</button>
+              <button type="button" class="ward-chip" data-ex-tag="Arms">Arms</button>
+            </div>
+            <div class="bc-ex-list" id="bc-ex-list"></div>
+          </div>
+        </section>
+
+        <!-- EXERCISE LIBRARY -->
+        <section class="screen" data-screen="exercises" data-nav="dashboard" data-ctx="heart" data-ctx-go="health">
+          <div class="screen-scroll exlib-scroll">
+            <div class="top-row">
+              <button class="icon-plain" data-go="bodycomp" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+              <h1 class="page-title">Exercise Library</h1>
+              <button class="icon-plain" id="exlib-search-btn" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+            </div>
+
+            <div class="exlib-search" id="exlib-search" hidden>
+              <input type="search" id="exlib-q" placeholder="Search exercises" autocomplete="off" />
+            </div>
+
+            <div class="exlib-cats" id="exlib-cats" aria-label="Muscle groups">
+              <button type="button" class="exlib-cat active" data-exlib-tag="all">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg>
+                All
+              </button>
+              <button type="button" class="exlib-cat" data-exlib-tag="Abs">Abs</button>
+              <button type="button" class="exlib-cat" data-exlib-tag="Chest">Chest</button>
+              <button type="button" class="exlib-cat" data-exlib-tag="Legs">Legs</button>
+              <button type="button" class="exlib-cat" data-exlib-tag="Arms">Arms</button>
+              <button type="button" class="exlib-cat" data-exlib-tag="Back">Back</button>
+              <button type="button" class="exlib-cat" data-exlib-tag="Shoulders">Shoulders</button>
+            </div>
+
+            <p class="exlib-quick-label">Quick Filters</p>
+            <div class="exlib-quick" id="exlib-quick" aria-label="Equipment filters">
+              <button type="button" class="exlib-chip" data-exlib-eq="Bodyweight">Bodyweight</button>
+              <button type="button" class="exlib-chip" data-exlib-eq="Dumbbell">Dumbbell</button>
+              <button type="button" class="exlib-chip" data-exlib-eq="Barbell">Barbell</button>
+              <button type="button" class="exlib-chip" data-exlib-eq="Kettlebell">Kettlebell</button>
+              <button type="button" class="exlib-chip muted" data-toast="More filters soon">More…</button>
+            </div>
+
+            <article class="card exlib-featured" id="exlib-featured">
+              <div class="exlib-featured-copy">
+                <p class="exlib-featured-kicker">Featured</p>
+                <h2 class="exlib-featured-title" id="exlib-feat-title">Build Strength Anywhere</h2>
+                <p class="exlib-featured-sub" id="exlib-feat-sub">Effective exercises you can do at home or the gym.</p>
+                <button type="button" class="btn-orange exlib-feat-cta" data-toast="Opening program">View Program</button>
+              </div>
+              <div class="exlib-featured-media">
+                <img id="exlib-feat-img" src="assets/mod-health.png" alt="" />
+                <span class="exlib-feat-count" id="exlib-feat-count">12 Exercises</span>
+              </div>
+            </article>
+
+            <div class="bc-section-head exlib-list-head">
+              <p class="h3">All Exercises</p>
+              <button type="button" class="ward-link" id="exlib-sort" data-exlib-sort="popular">Sort: Most Popular</button>
+            </div>
+            <div class="exlib-list" id="exlib-list"></div>
+          </div>
+        </section>
+
+        <!-- NUTRITION -->
+        <section class="screen" data-screen="nutrition" data-nav="dashboard" data-ctx="heart" data-ctx-go="health">
+          <div class="screen-scroll nu-scroll">
+            <div class="top-row">
+              <button class="icon-plain" data-go="health" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m15 18-6-6 6-6"/></svg></button>
+              <h1 class="page-title">Nutrition &amp; Water</h1>
+              <button class="icon-plain" aria-label="More"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></button>
+            </div>
+
+            <!-- Today's Nutrition hero -->
+            <div class="card nu-hero">
+              <div class="nu-hero-main">
+                <div class="nu-hero-copy">
+                  <p class="nu-kicker">✨ Today's Nutrition</p>
+                  <p class="nu-kcal num" id="nutrition-kcal">1,650 <span>kcal</span></p>
+                  <p class="nu-pct" id="nutrition-pct">83% of your daily goal <span class="up">↑</span></p>
+                  <button type="button" class="nu-details" data-toast="Nutrition details">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-6M22 19V8"/></svg>
+                    View details
+                  </button>
+                </div>
+                <img class="nu-hero-img" src="assets/nutrition-salad.png?v=1" alt="" />
+              </div>
+              <div class="nu-hero-stats">
+                <div class="nu-stat">
+                  <span class="nu-stat-ico target" aria-hidden="true">◎</span>
+                  <div><p class="l">Goal</p><p class="v num" id="nu-goal">2,000 kcal</p></div>
+                </div>
+                <div class="nu-stat">
+                  <span class="nu-stat-ico flame" aria-hidden="true">🔥</span>
+                  <div><p class="l">Remaining</p><p class="v num" id="nu-remain">350 kcal</p></div>
+                </div>
+                <div class="nu-stat">
+                  <span class="nu-stat-ico streak" aria-hidden="true">🔥</span>
+                  <div><p class="l">Streak</p><p class="v num">12 days</p></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Water -->
+            <div class="card nu-water">
+              <div class="nu-water-top">
+                <div>
+                  <p class="nu-sec-title"><span class="drop">💧</span> Water Intake</p>
+                  <p class="nu-water-val num" id="water-label">1.6 <span>/ 2.0 L</span></p>
+                  <p class="nu-water-hint" id="water-hint">You're 400 ml away from your goal</p>
+                </div>
+                <div class="nu-water-ring" id="water-ring" style="--p:80"><span id="water-ring-pct">80%</span></div>
+              </div>
+              <div class="nu-water-row">
+                <div class="glasses" id="water-glasses"></div>
+                <button type="button" class="nu-water-add" id="water-add">+ 250 ml</button>
+              </div>
+            </div>
+
+            <!-- Macros -->
+            <div class="card nu-macros-card">
+              <p class="nu-sec-title">Today's Nutrition</p>
+              <div class="macros" id="macros"></div>
+              <div class="nu-cal-bar">
+                <div class="progress"><i id="nutrition-kcal-bar" style="width:82.5%"></i></div>
+                <p class="nu-cal-bar-label num" id="nutrition-kcal-bar-label">1,650 / 2,000 kcal</p>
+              </div>
+            </div>
+
+            <!-- Meals -->
+            <div class="card nu-meals-card">
+              <div class="nu-meals-head">
+                <p class="nu-sec-title" style="margin:0">Today's Meals</p>
+                <button type="button" class="nu-link" data-go="add-meal">+ Add meal</button>
+              </div>
+              <div id="meals-list"></div>
+            </div>
+
+            <!-- AI Insight -->
+            <div class="card nu-insight">
+              <div class="nu-insight-copy">
+                <p class="nu-sec-title">✨ AI Coach Insight</p>
+                <p class="nu-insight-text" id="nu-insight-text">You're 350 kcal below your target and your protein intake is already strong today.</p>
+                <p class="nu-insight-tip" id="nu-insight-tip"><b>Suggestion:</b> Add a balanced dinner with vegetables + complex carbs.</p>
+              </div>
+              <div class="nu-insight-orb" aria-hidden="true">🧠</div>
+            </div>
+
+            <!-- Nutrients breakdown -->
+            <div class="card nu-break-card">
+              <div class="nu-meals-head">
+                <p class="nu-sec-title" style="margin:0">Nutrients Breakdown</p>
+                <button type="button" class="nu-link muted" data-toast="All nutrients">View all</button>
+              </div>
+              <div class="nu-break">
+                <div class="nu-donut" id="nu-donut" style="--p:45;--c:30;--f:25">
+                  <div class="nu-donut-core">
+                    <p class="num" id="nu-donut-kcal">1,650</p>
+                    <span>kcal</span>
+                  </div>
+                </div>
+                <div class="nu-legend" id="nu-legend"></div>
+              </div>
+              <div class="nu-micros" id="nu-micros"></div>
+            </div>
+
+            <!-- Weekly trend -->
+            <div class="card nu-trend-card">
+              <div class="nu-meals-head">
+                <p class="nu-sec-title" style="margin:0">Weekly Nutrition Trend</p>
+                <span class="nu-chip">kcal/day</span>
+              </div>
+              <div class="nu-trend-chart" id="nu-trend-chart" aria-hidden="true"></div>
+              <div class="nu-trend-stats">
+                <div><p class="l">Average</p><p class="v num">1,820 kcal</p></div>
+                <div class="nu-best"><p class="l">🏆 Best Day</p><p class="v num">2,150 kcal</p></div>
+              </div>
+            </div>
+
+            <!-- Healthy habits -->
+            <div class="nu-habits-wrap">
+              <div class="nu-meals-head" style="padding:0 2px 10px">
+                <p class="nu-sec-title" style="margin:0">Healthy Habits</p>
+                <button type="button" class="nu-link muted" data-toast="All habits">View all</button>
+              </div>
+              <div class="nu-habits" id="nu-habits"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- CALENDAR -->
+        <section class="screen" data-screen="calendar" data-nav="dashboard" data-ctx="calendar">
+          <div class="screen-scroll">
+            <div class="top-row">
+              <button class="icon-plain" data-go="home" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m15 18-6-6 6-6"/></svg></button>
+              <h1 class="page-title">Calendar</h1>
+              <button class="icon-plain" data-go="add-event" aria-label="Add event"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 5v14M5 12h14"/></svg></button>
+            </div>
+            <div class="hero-float sm"><img src="assets/mod-calendar.png?v=24" alt="" /></div>
+            <div class="cal-month-row">
+              <p class="h3">August 2026</p>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+            </div>
+            <div class="cal-grid" id="cal-grid"></div>
+            <p class="cal-today">Today &nbsp;-&nbsp; Fri, Aug 07</p>
+            <div id="cal-agenda"></div>
+          </div>
+        </section>
+
+        <!-- WARDROBE 2.0 — AI Personal Stylist -->
+        <section class="screen" data-screen="outfit" data-nav="dashboard" data-ctx="shirt">
+          <div class="screen-scroll ward-scroll">
+            <div class="top-row">
+              <button class="icon-plain" data-go="home" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m15 18-6-6 6-6"/></svg></button>
+              <h1 class="page-title">Wardrobe</h1>
+              <button class="icon-plain" data-go="add-piece" aria-label="Add clothing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 5v14M5 12h14"/></svg></button>
+            </div>
+
+            <div class="ward-hero-head">
+              <p class="ward-kicker">Wear Decision</p>
+              <p class="ward-ctx-hint">MeMy checked your day before choosing</p>
+            </div>
+
+            <div class="ward-ctx-cards">
+              <div class="card ward-ctx-card">
+                <p class="ward-ctx-value" id="ward-temp">22°C</p>
+                <p class="ward-ctx-sub" id="ward-weather-label">Cloudy</p>
+              </div>
+              <div class="card ward-ctx-card">
+                <p class="ward-ctx-value" id="ward-event-title">Team Meeting</p>
+                <p class="ward-ctx-sub" id="ward-event-time">10:00 AM</p>
+              </div>
+            </div>
+
+            <div class="ward-styles" id="ward-styles" aria-label="Style">
+              <button type="button" class="ward-style active" data-ward-style="smart">Smart</button>
+              <button type="button" class="ward-style" data-ward-style="casual">Casual</button>
+              <button type="button" class="ward-style" data-ward-style="formal">Formal</button>
+              <button type="button" class="ward-style" data-ward-style="minimal">Minimal</button>
+              <button type="button" class="ward-style" data-ward-style="date">Date</button>
+              <button type="button" class="ward-style" data-ward-style="workout">Workout</button>
+            </div>
+
+            <article class="card ward-hero" id="ward-decision">
+              <div class="ward-hero-visual" id="ward-hero-visual">
+                <img id="ward-hero-img" src="assets/outfit-flat.png?v=13" alt="Recommended outfit" />
+                <div class="ward-hero-swatches" id="ward-hero-swatches" aria-hidden="true"></div>
+              </div>
+              <div class="ward-hero-meta">
+                <div>
+                  <p class="ward-pill" id="ward-pill">Today’s pick</p>
+                  <h2 class="ward-decision-title" id="ward-pick-title">Smart Meeting Look</h2>
+                </div>
+                <div class="ward-fit" id="ward-score" aria-label="Fit score">
+                  <span class="ward-fit-n" id="ward-score-n">97</span>
+                  <span class="ward-fit-l">FIT SCORE</span>
+                </div>
+              </div>
+              <ul class="ward-item-list" id="ward-combo"></ul>
+              <div class="ward-actions">
+                <button type="button" class="btn-orange ward-btn" id="ward-wear">Wear this</button>
+                <button type="button" class="ward-btn-ghost" id="ward-remix">Remix</button>
+              </div>
+              <button type="button" class="ward-save-link" id="ward-save-look">Save look</button>
+            </article>
+
+            <div class="card ward-why-card">
+              <div class="ward-why-top">
+                <span class="ward-ai-mark" aria-hidden="true"></span>
+                <p class="ward-why-label">Why MeMy picked this</p>
+              </div>
+              <p class="ward-why" id="ward-why">Your meeting is at 10 AM and it's 22°C. This combination keeps you comfortable while looking professional.</p>
+            </div>
+
+            <div class="ward-section-head">
+              <p class="h3">Your closet</p>
+              <button type="button" class="ward-link" data-go="add-piece">Add piece</button>
+            </div>
+            <div class="ward-filters" id="ward-filters">
+              <button type="button" class="ward-chip active" data-ward-cat="all">All</button>
+              <button type="button" class="ward-chip" data-ward-cat="top">Tops</button>
+              <button type="button" class="ward-chip" data-ward-cat="bottom">Bottoms</button>
+              <button type="button" class="ward-chip" data-ward-cat="shoes">Shoes</button>
+              <button type="button" class="ward-chip" data-ward-cat="layer">Layers</button>
+              <button type="button" class="ward-chip" data-ward-cat="accessory">Accessories</button>
+            </div>
+            <div class="ward-grid" id="ward-grid"></div>
+
+            <div class="ward-section-head"><p class="h3">Wardrobe insights</p></div>
+            <div class="ward-insights" id="ward-insights"></div>
+
+            <div class="card ward-missing" id="ward-missing"></div>
+
+            <div class="ward-section-head">
+              <p class="h3">Recent looks</p>
+            </div>
+            <div class="ward-hist-tabs" id="ward-hist-tabs">
+              <button type="button" class="ward-chip active" data-hist-tab="recent">Recent</button>
+              <button type="button" class="ward-chip" data-hist-tab="saved">Saved</button>
+            </div>
+            <div id="ward-history"></div>
+          </div>
+        </section>
+
+        <!-- PIECE DETAIL -->
+        <section class="screen" data-screen="piece-detail" data-nav="none">
+          <div class="screen-scroll">
+            <div class="top-row">
+              <button class="icon-plain" data-go="outfit" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m15 18-6-6 6-6"/></svg></button>
+              <h1 class="page-title">Item</h1>
+              <div style="width:40px"></div>
+            </div>
+            <div id="piece-detail-root"></div>
+          </div>
+        </section>
+
+        <!-- ADD CLOTHING -->
+        <section class="screen" data-screen="add-piece" data-nav="none">
+          <div class="screen-scroll">
+            <div class="top-row">
+              <button class="icon-plain" data-go="outfit" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m15 18-6-6 6-6"/></svg></button>
+              <h1 class="page-title">Add Clothing</h1>
+              <div style="width:40px"></div>
+            </div>
+
+            <button type="button" class="ward-photo-slot" id="piece-photo" aria-label="Add photo">
+              <span class="ward-photo-preview" id="piece-photo-preview"></span>
+              <span class="ward-photo-copy">
+                <strong>Photo</strong>
+                <span>Optional — tap to choose a color preview</span>
+              </span>
+            </button>
+
+            <p class="f-label">Item name</p>
+            <div class="field">
+              <label>Name</label>
+              <input type="text" id="piece-name" placeholder="e.g. Cream Cable Knit" autocomplete="off" />
+            </div>
+
+            <p class="f-label">Category</p>
+            <div class="ward-cat-row" id="piece-cat">
+              <button type="button" class="ward-cat active" data-cat="top">Tops</button>
+              <button type="button" class="ward-cat" data-cat="bottom">Bottoms</button>
+              <button type="button" class="ward-cat" data-cat="shoes">Shoes</button>
+              <button type="button" class="ward-cat" data-cat="layer">Layers</button>
+              <button type="button" class="ward-cat" data-cat="accessory">Accessories</button>
+            </div>
+
+            <p class="f-label">Color</p>
+            <div class="ward-colors" id="piece-color">
+              <button type="button" class="ward-swatch active" data-color="#1C1C1E" data-cname="Black" style="--c:#1C1C1E" aria-label="Black"></button>
+              <button type="button" class="ward-swatch" data-color="#F5F5F7" data-cname="White" style="--c:#F5F5F7" aria-label="White"></button>
+              <button type="button" class="ward-swatch" data-color="#2F5AA8" data-cname="Blue" style="--c:#2F5AA8" aria-label="Blue"></button>
+              <button type="button" class="ward-swatch" data-color="#1F3A5F" data-cname="Navy" style="--c:#1F3A5F" aria-label="Navy"></button>
+              <button type="button" class="ward-swatch" data-color="#8B5A2B" data-cname="Brown" style="--c:#8B5A2B" aria-label="Brown"></button>
+              <button type="button" class="ward-swatch" data-color="#6B7C4C" data-cname="Olive" style="--c:#6B7C4C" aria-label="Olive"></button>
+              <button type="button" class="ward-swatch" data-color="#C4A574" data-cname="Sand" style="--c:#C4A574" aria-label="Sand"></button>
+              <button type="button" class="ward-swatch" data-color="#E8501F" data-cname="Orange" style="--c:#E8501F" aria-label="Orange"></button>
+            </div>
+
+            <p class="f-label">Style</p>
+            <div class="ward-cat-row" id="piece-vibe">
+              <button type="button" class="ward-cat" data-vibe="casual">Casual</button>
+              <button type="button" class="ward-cat active" data-vibe="smart">Smart</button>
+              <button type="button" class="ward-cat" data-vibe="formal">Formal</button>
+              <button type="button" class="ward-cat" data-vibe="minimal">Minimal</button>
+            </div>
+
+            <p class="f-label">Season</p>
+            <div class="ward-weather-tags" id="piece-season">
+              <button type="button" class="ward-chip active" data-season="all">All year</button>
+              <button type="button" class="ward-chip" data-season="summer">Summer</button>
+              <button type="button" class="ward-chip" data-season="fall">Fall</button>
+              <button type="button" class="ward-chip" data-season="winter">Winter</button>
+            </div>
+
+            <p class="f-label">Brand <span class="muted">(optional)</span></p>
+            <div class="field">
+              <label>Brand</label>
+              <input type="text" id="piece-brand" placeholder="e.g. COS" autocomplete="off" />
+            </div>
+
+            <button class="btn-orange" id="piece-save" style="margin-top:18px">Add to closet</button>
+          </div>
+        </section>
+
+        <!-- COACH -->
+        <section class="screen" data-screen="coach" data-nav="chat">
+          <div class="screen-scroll coach-scroll">
+            <div class="top-row">
+              <button class="icon-plain" data-go="home" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m15 18-6-6 6-6"/></svg></button>
+              <h1 class="page-title">AI Coach</h1>
+              <button class="icon-plain" aria-label="More"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+            </div>
+
+            <div class="coach-stage">
+              <div
+                id="coach-sphere"
+                class="ai-sphere-host is-lg"
+                data-ai-coach-sphere
+                data-state="idle"
+                data-size="168"
+                data-interactive="true"
+                data-label="AI Coach sphere"
+              ></div>
+
+              <div class="coach-hi" id="coach-hi">
+                <p class="h">Hi, Emma</p>
+                <p class="s">How can I help you today?</p>
+              </div>
+
+              <div class="coach-prompts" id="coach-prompts" aria-label="Suggested prompts">
+                <button type="button" class="coach-prompt" data-prompt="What should I focus on today?">What should I focus on today?</button>
+                <button type="button" class="coach-prompt" data-prompt="How am I doing with my goals?">How am I doing with my goals?</button>
+                <button type="button" class="coach-prompt" data-prompt="Help me manage my spending">Help me manage my spending</button>
+                <button type="button" class="coach-prompt" data-prompt="Plan my day">Plan my day</button>
+                <button type="button" class="coach-prompt" data-prompt="Plan my workout">Plan my workout</button>
+                <button type="button" class="coach-prompt" data-prompt="Analyze my spending">Analyze my spending</button>
+                <button type="button" class="coach-prompt" data-prompt="What's on my calendar?">What's on my calendar?</button>
+              </div>
+            </div>
+
+            <div id="chat-thread" class="chat-thread" aria-live="polite"></div>
+          </div>
+          <div class="chat-bar">
+            <div class="field-pill">
+              <input type="text" id="chat-input" placeholder="Ask me anything…" autocomplete="off" />
+              <button type="button" class="mic-btn" id="chat-mic" aria-label="Voice input" aria-pressed="false">
+                <svg class="mic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg>
+              </button>
+            </div>
+            <button class="chat-send" id="chat-send" aria-label="Send">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 4.5 12.4 8.6 16.5 10 12.4 11.4 11 15.5 9.6 11.4 5.5 10 9.6 8.6z"/><path d="M17.5 13.5 18.3 15.7 20.5 16.5 18.3 17.3 17.5 19.5 16.7 17.3 14.5 16.5 16.7 15.7z"/></svg>
+            </button>
+          </div>
+        </section>
+
+        <!-- INSIGHTS -->
+        <section class="screen" data-screen="insights" data-nav="insights">
+          <div class="screen-scroll">
+            <div class="top-row"><div><p class="muted">This week</p><h1 class="h1">Insights</h1></div></div>
+            <div class="card life-card">
+              <div>
+                <p class="label">Life Score trend</p>
+                <p class="score num" style="font-size:32px">+6%</p>
+                <p class="sub">vs last week</p>
+              </div>
+              <div class="ring-lg" style="--pct:84"></div>
+            </div>
+            <div class="stat2" style="margin-top:12px">
+              <button class="card" data-go="finance" style="text-align:left"><p class="muted">Saved</p><p class="h2" style="margin-top:6px;color:var(--green)">PKR 12K</p></button>
+              <button class="card" data-go="goals" style="text-align:left"><p class="muted">Goals on track</p><p class="h2" style="margin-top:6px">3 / 4</p></button>
+            </div>
+            <div class="insight" style="margin-top:12px"><span class="ico">i</span><p>Weekend spending is up 32%. Try a no-spend Saturday to stay on your emergency fund goal.</p></div>
+          </div>
+        </section>
+
+        <!-- SETTINGS -->
+        <section class="screen" data-screen="settings" data-nav="none">
+          <div class="screen-scroll">
+            <div class="top-row">
+              <button class="icon-plain" data-go="profile" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m15 18-6-6 6-6"/></svg></button>
+              <h1 class="page-title">Settings</h1>
+              <div style="width:36px"></div>
+            </div>
+
+            <p class="set-section">Account</p>
+            <div class="set-group">
+              <button class="set-row" data-toast="Profile information"><span class="set-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M19 21v-1a5 5 0 0 0-5-5h-4a5 5 0 0 0-5 5v1"/><circle cx="12" cy="7.5" r="3.5"/></svg></span>Profile Information<svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+              <button class="set-row" data-toast="Change password"><span class="set-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>Change Password<svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+              <button class="set-row" data-toast="Security"><span class="set-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 4 7v5c0 5 3.5 8.5 8 9 4.5-.5 8-4 8-9V7l-8-4z"/></svg></span>Security<svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+              <button class="set-row" data-toast="Connected accounts"><span class="set-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.2 1.2"/><path d="M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.2-1.2"/></svg></span>Connected Accounts<svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+            </div>
+
+            <p class="set-section">Preferences</p>
+            <div class="set-group">
+              <button class="set-row" data-toast="Appearance"><span class="set-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></span>Appearance<span class="set-val">Light</span><svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+              <button class="set-row" data-toast="Units"><span class="set-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M4 17h16M8 7v10M16 7v10"/></svg></span>Units<span class="set-val">Metric</span><svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+              <button class="set-row" data-toast="Language"><span class="set-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span>Language<span class="set-val">English</span><svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+              <button class="set-row" data-toast="Notifications"><span class="set-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>Notifications<svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+              <button class="set-row" data-toast="Privacy"><span class="set-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 4 7v5c0 5 3.5 8.5 8 9 4.5-.5 8-4 8-9V7l-8-4z"/></svg></span>Privacy<svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+            </div>
+
+            <p class="set-section">More</p>
+            <div class="set-group">
+              <button class="set-row" data-toast="Help & Support"><span class="set-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4.5M12 17h.01"/></svg></span>Help &amp; Support<svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+              <button class="set-row" data-toast="Terms"><span class="set-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></svg></span>Terms &amp; Conditions<svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+              <button class="set-row" data-toast="Privacy Policy"><span class="set-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 4 7v5c0 5 3.5 8.5 8 9 4.5-.5 8-4 8-9V7l-8-4z"/></svg></span>Privacy Policy<svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+              <button class="set-row" data-toast="MeMy v1.2.0"><span class="set-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></span>About MeMy<span class="set-val">v1.2.0</span><svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+            </div>
+
+            <button class="drawer-logout" data-go="signin" style="margin:8px 0 24px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></svg>Log Out</button>
+          </div>
+        </section>
+
+        <!-- PROFILE -->
+        <section class="screen" data-screen="profile" data-nav="none">
+          <div class="screen-scroll">
+            <div class="top-row"><div><p class="muted">Account</p><h1 class="h1">Profile</h1></div>
+              <button class="icon-plain" data-go="settings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h0a1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+            </div>
+            <div class="card" style="text-align:center;padding:28px">
+              <img src="assets/avatar.png?v=14" alt="Emma" style="width:72px;height:72px;border-radius:50%;object-fit:cover;margin:0 auto 12px" />
+              <p class="h2">Emma Chen</p>
+              <p class="muted">emma@memy.app · Life Score 84</p>
+            </div>
+            <div class="card" style="margin-top:12px;padding:0;overflow:hidden">
+              <button class="field" style="margin:0;box-shadow:none;border-radius:0;border-bottom:1px solid var(--line)" data-go="settings"><div><label>Settings</label><span style="font-weight:600;color:var(--ink-3)">Manage</span></div></button>
+              <button class="field" style="margin:0;box-shadow:none;border-radius:0;border-bottom:1px solid var(--line)" data-go="goals"><div><label>Goals</label><span style="font-weight:600">4 active</span></div></button>
+              <button class="field" style="margin:0;box-shadow:none;border-radius:0;border-bottom:1px solid var(--line)" data-go="finance"><div><label>Finance</label><span style="font-weight:600">PKR 245,000</span></div></button>
+              <button class="field" style="margin:0;box-shadow:none;border-radius:0" data-go="signin"><div><label>Sign out</label><span style="font-weight:600;color:var(--red)">Log out</span></div></button>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <nav class="bottom-nav labeled" id="bottom-nav" aria-label="Main">
+        <div class="nav-side">
+          <button class="nav-item active" data-go="home" data-nav-id="home">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9.5 21v-6h5v6"/></svg>
+            <span>Home</span>
+          </button>
+          <button class="nav-item" data-go="dashboard" data-nav-id="dashboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg>
+            <span>Dashboard</span>
+          </button>
+        </div>
+        <div class="nav-fab-slot">
+          <button class="nav-fab" id="nav-fab" type="button" aria-label="Quick add">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+        <div class="nav-side nav-side-right">
+          <button class="nav-item" data-go="coach" data-nav-id="chat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A3.5 3.5 0 0 1 7.5 3h9A3.5 3.5 0 0 1 20 6.5v7a3.5 3.5 0 0 1-3.5 3.5H11l-4.2 3.2c-.7.5-1.8 0-1.8-.8V17A3.5 3.5 0 0 1 4 13.5v-7z"/><path d="M9 9.5h.01M12 9.5h.01M15 9.5h.01"/></svg>
+            <span>AI Coach</span>
+          </button>
+          <button class="nav-item" data-go="insights" data-nav-id="insights">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 19V11M12 19V5M18 19v-7"/></svg>
+            <span>Insights</span>
+          </button>
+        </div>
+      </nav>
+
+      <div class="ctx-sheet" id="ctx-sheet" hidden>
+        <div class="ctx-scrim" data-ctx-close tabindex="-1" aria-hidden="true"></div>
+        <div class="ctx-panel" role="dialog" aria-modal="true" aria-labelledby="ctx-title">
+          <div class="ctx-handle" aria-hidden="true"></div>
+          <h3 class="ctx-title" id="ctx-title">Quick Add</h3>
+          <div class="ctx-body" id="ctx-body"></div>
+        </div>
+      </div>
+
+      <div class="toast" id="toast" role="status"></div>
+    </div>
+  </div>
+
+  <script src="js/data.js?v=27"></script>
+  <script src="js/ai-coach-sphere.js?v=3"></script>
+  <script src="js/wardrobe.js?v=7"></script>
+  <script src="js/contextual-actions.js?v=3"></script>
+  <script src="js/app.js?v=33"></script>
+</body>
+</html>

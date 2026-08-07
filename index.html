@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LifeOS — Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --canvas:#EDEAE2;
+    --canvas-deep:#E4E0D6;
+    --card:#FFFFFF;
+    --card-glass:rgba(255,255,255,0.6);
+    --ink:#1A1712;
+    --ink-soft:#726B60;
+    --ink-faint:#A69F92;
+    --ember:#FF4E2E;
+    --ember-deep:#C93113;
+    --depth:#211D3B;
+    --health:#FF6F59;
+    --money:#1F9D6D;
+    --career:#3E7BFA;
+    --learning:#8B5CF6;
+    --habits:#F2A93B;
+    --line:rgba(26,23,18,0.08);
+    --shadow-soft: 0 1px 2px rgba(26,23,18,0.04), 0 12px 28px rgba(26,23,18,0.07);
+    --shadow-lift: 0 2px 4px rgba(26,23,18,0.06), 0 24px 48px rgba(26,23,18,0.12);
+    --radius-card:24px;
+    --radius-sm:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(255,78,46,0.06), transparent 40%),
+      radial-gradient(circle at 90% 20%, rgba(139,92,246,0.05), transparent 35%),
+      var(--canvas);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    padding:64px 5vw 120px;
+  }
+  .wrap{max-width:1120px;margin:0 auto;}
+  .kicker{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--ember-deep);
+    margin:0 0 10px;
+  }
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    font-size:clamp(40px,5.5vw,68px);
+    line-height:1.02;
+    letter-spacing:-0.01em;
+    margin:0 0 14px;
+  }
+  .lede{
+    font-size:17px;
+    color:var(--ink-soft);
+    max-width:560px;
+    line-height:1.6;
+    margin:0 0 90px;
+  }
+  section{margin-bottom:96px;}
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    gap:16px;
+    margin-bottom:32px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:18px;
+  }
+  .section-num{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--ink-faint);
+  }
+  .section-title{
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    font-size:26px;
+    margin:0;
+  }
+  .section-note{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-left:auto;
+    max-width:320px;
+    text-align:right;
+    line-height:1.5;
+  }
+
+  /* ---- palette ---- */
+  .palette-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;}
+  .swatch{border-radius:var(--radius-sm);overflow:hidden;box-shadow:var(--shadow-soft);}
+  .swatch-fill{height:96px;}
+  .swatch-meta{background:var(--card);padding:12px 14px;}
+  .swatch-name{font-size:13px;font-weight:600;margin:0 0 2px;}
+  .swatch-hex{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);margin:0;}
+  .cat-strip{display:flex;gap:10px;margin-top:16px;}
+  .cat-chip{
+    display:flex;align-items:center;gap:8px;
+    background:var(--card);border-radius:100px;padding:8px 14px 8px 8px;
+    box-shadow:var(--shadow-soft);font-size:12px;font-weight:500;
+  }
+  .dot{width:20px;height:20px;border-radius:50%;}
+
+  /* ---- type ---- */
+  .type-row{display:flex;align-items:baseline;gap:24px;padding:22px 0;border-bottom:1px solid var(--line);}
+  .type-row:last-child{border-bottom:none;}
+  .type-label{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-faint);width:150px;flex-shrink:0;}
+  .t-display{font-family:'Fraunces',serif;font-weight:500;}
+  .t-number{font-family:'Fraunces',serif;font-weight:400;font-variant-numeric:tabular-nums;}
+
+  /* ---- orb ---- */
+  .orb-stage{
+    display:grid;grid-template-columns:1fr 1.1fr;gap:48px;align-items:center;
+    background:linear-gradient(160deg,#161328,var(--depth) 60%);
+    border-radius:32px;padding:56px;color:#fff;
+  }
+  .orb-copy .section-num{color:rgba(255,255,255,0.4);}
+  .orb-copy h3{font-family:'Fraunces',serif;font-weight:500;font-size:28px;margin:6px 0 14px;}
+  .orb-copy p{font-size:14px;line-height:1.65;color:rgba(255,255,255,0.6);margin:0;}
+  .orb-holder{display:flex;justify-content:center;align-items:center;position:relative;height:280px;}
+  .orb{
+    width:220px;height:220px;border-radius:50%;position:relative;
+    background:
+      radial-gradient(circle at 32% 28%, #FFB199 0%, #FF4E2E 38%, #C93113 68%, #7A1B0A 100%);
+    box-shadow:
+      inset -18px -22px 50px rgba(0,0,0,0.35),
+      inset 14px 16px 40px rgba(255,200,170,0.5),
+      0 40px 80px rgba(255,78,46,0.35);
+  }
+  .orb::after{
+    content:'';position:absolute;top:18%;left:22%;width:34%;height:22%;
+    background:rgba(255,255,255,0.55);border-radius:50%;filter:blur(14px);
+  }
+  .orb-ring{
+    position:absolute;inset:-26px;border-radius:50%;
+    border:1px solid rgba(255,255,255,0.12);
+  }
+  .orb-score{
+    position:absolute;bottom:-6px;right:6%;
+    background:rgba(255,255,255,0.08);backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,0.14);
+    border-radius:16px;padding:10px 16px;text-align:left;
+  }
+  .orb-score p{margin:0;}
+  .orb-score .n{font-family:'Fraunces',serif;font-size:22px;}
+  .orb-score .l{font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.08em;}
+
+  /* ---- components ---- */
+  .comp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+  .card{background:var(--card);border-radius:var(--radius-card);padding:24px;box-shadow:var(--shadow-soft);}
+  .card-label{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin:0 0 14px;}
+
+  .glass-demo{
+    background:linear-gradient(135deg,#FFD9C7,#FFEFE6);
+    border-radius:var(--radius-card);padding:22px;position:relative;overflow:hidden;
+  }
+  .glass-card{
+    background:var(--card-glass);backdrop-filter:blur(16px);
+    border:1px solid rgba(255,255,255,0.5);
+    border-radius:18px;padding:16px 18px;
+    box-shadow:0 8px 24px rgba(201,49,19,0.12);
+  }
+  .glass-card .n{font-family:'Fraunces',serif;font-size:30px;margin:2px 0;}
+  .glass-card .l{font-size:12px;color:var(--ink-soft);}
+
+  .ring-wrap{display:flex;align-items:center;gap:16px;}
+  .ring{width:64px;height:64px;border-radius:50%;
+    background:conic-gradient(var(--money) 0% 71%, var(--line) 71% 100%);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .ring-inner{width:48px;height:48px;border-radius:50%;background:var(--card);
+    display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:14px;}
+
+  .btn-row{display:flex;flex-direction:column;gap:10px;}
+  .btn{border:none;border-radius:100px;padding:13px 20px;font-family:'Inter';font-size:14px;font-weight:600;cursor:default;text-align:center;}
+  .btn-primary{background:var(--ember);color:#fff;box-shadow:0 10px 24px rgba(255,78,46,0.3);}
+  .btn-secondary{background:var(--card);color:var(--ink);border:1px solid var(--line);}
+  .btn-ghost{background:transparent;color:var(--ink-soft);border:1px solid transparent;}
+
+  .habit-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px;}
+  .habit-row:last-child{border:none;}
+  .streak-dots{display:flex;gap:4px;}
+  .streak-dot{width:8px;height:8px;border-radius:50%;background:var(--line);}
+  .streak-dot.on{background:var(--habits);}
+
+  /* ---- assembled screen ---- */
+  .phone-frame{
+    max-width:380px;margin:0 auto;background:var(--canvas-deep);
+    border-radius:44px;padding:14px;box-shadow:var(--shadow-lift);
+  }
+  .screen{background:var(--canvas);border-radius:32px;padding:26px 22px 30px;}
+  .screen-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;}
+  .greet-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.08em;}
+  .greet{font-family:'Fraunces',serif;font-size:22px;margin:2px 0 0;}
+  .avatar{width:38px;height:38px;border-radius:50%;background:var(--depth);}
+  .hero-card{
+    background:linear-gradient(150deg,#221D3E,#3A2140);
+    border-radius:26px;padding:22px;color:#fff;margin-bottom:16px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .hero-score .l{font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;}
+  .hero-score .n{font-family:'Fraunces',serif;font-size:40px;margin:2px 0;}
+  .hero-orb{width:64px;height:64px;border-radius:50%;
+    background:radial-gradient(circle at 32% 28%,#FFB199,#FF4E2E 45%,#C93113 80%);
+    box-shadow:0 12px 24px rgba(255,78,46,0.4);}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+  .mini-card{background:var(--card);border-radius:18px;padding:16px;box-shadow:var(--shadow-soft);}
+  .mini-card .l{font-size:11px;color:var(--ink-soft);margin:0 0 6px;}
+  .mini-card .n{font-family:'Fraunces',serif;font-size:20px;margin:0;}
+  .wide-card{background:var(--card);border-radius:18px;padding:16px;box-shadow:var(--shadow-soft);}
+
+  @media (max-width:900px){
+    .palette-grid{grid-template-columns:repeat(3,1fr);}
+    .comp-grid{grid-template-columns:1fr;}
+    .orb-stage{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="kicker">LifeOS · Design system v1</p>
+  <h1>An operating<br>system for you.</h1>
+  <p class="lede">A warm, organic visual language built around one signature idea — a living orb that reflects your day — surrounded by quiet, glass-soft cards that never compete with it.</p>
+
+  <section>
+    <div class="section-head">
+      <span class="section-num">01</span>
+      <h2 class="section-title">Color</h2>
+      <p class="section-note">A warm porcelain canvas with one saturated accent, "Ember." Category colors stay muted until data needs them.</p>
+    </div>
+    <div class="palette-grid">
+      <div class="swatch"><div class="swatch-fill" style="background:var(--canvas)"></div><div class="swatch-meta"><p class="swatch-name">Canvas</p><p class="swatch-hex">#EDEAE2</p></div></div>
+      <div class="swatch"><div class="swatch-fill" style="background:var(--card);border-bottom:1px solid var(--line)"></div><div class="swatch-meta"><p class="swatch-name">Card</p><p class="swatch-hex">#FFFFFF</p></div></div>
+      <div class="swatch"><div class="swatch-fill" style="background:var(--ink)"></div><div class="swatch-meta"><p class="swatch-name">Ink</p><p class="swatch-hex">#1A1712</p></div></div>
+      <div class="swatch"><div class="swatch-fill" style="background:var(--ember)"></div><div class="swatch-meta"><p class="swatch-name">Ember</p><p class="swatch-hex">#FF4E2E</p></div></div>
+      <div class="swatch"><div class="swatch-fill" style="background:var(--depth)"></div><div class="swatch-meta"><p class="swatch-name">Depth</p><p class="swatch-hex">#211D3B</p></div></div>
+      <div class="swatch"><div class="swatch-fill" style="background:var(--ink-faint)"></div><div class="swatch-meta"><p class="swatch-name">Ink faint</p><p class="swatch-hex">#A69F92</p></div></div>
+    </div>
+    <div class="cat-strip">
+      <div class="cat-chip"><span class="dot" style="background:var(--health)"></span>Health</div>
+      <div class="cat-chip"><span class="dot" style="background:var(--money)"></span>Money</div>
+      <div class="cat-chip"><span class="dot" style="background:var(--career)"></span>Career</div>
+      <div class="cat-chip"><span class="dot" style="background:var(--learning)"></span>Learning</div>
+      <div class="cat-chip"><span class="dot" style="background:var(--habits)"></span>Habits</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="section-num">02</span>
+      <h2 class="section-title">Type</h2>
+      <p class="section-note">Fraunces carries every number and headline with warmth. Inter runs the interface. Plex Mono labels data.</p>
+    </div>
+    <div class="type-row"><span class="type-label">Display / 68</span><span class="t-display" style="font-size:56px">Good evening</span></div>
+    <div class="type-row"><span class="type-label">Hero number / 96</span><span class="t-number" style="font-size:72px">84<span style="font-size:24px;color:var(--ink-soft)">%</span></span></div>
+    <div class="type-row"><span class="type-label">Heading / 26</span><span class="t-display" style="font-size:26px">Today's focus</span></div>
+    <div class="type-row"><span class="type-label">Body / 15 · Inter</span><span style="font-size:15px;color:var(--ink-soft)">Small progress every day beats perfection once a year.</span></div>
+    <div class="type-row"><span class="type-label">Label / 11 · Mono</span><span style="font-family:'IBM Plex Mono';font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-faint)">Heart rate variability</span></div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="section-num">03</span>
+      <h2 class="section-title">The Orb — signature element</h2>
+      <p class="section-note">One glowing gradient sphere, always the emotional anchor. Its color and glow shift with your daily life score.</p>
+    </div>
+    <div class="orb-stage">
+      <div class="orb-copy">
+        <p class="section-num">Signature</p>
+        <h3>It breathes with your day.</h3>
+        <p>Every dashboard, health screen, and coach session opens on the Orb. It is the one place LifeOS allows itself to be expressive — everything else in the system stays quiet so this can hold the room.</p>
+      </div>
+      <div class="orb-holder">
+        <div class="orb-ring"></div>
+        <div class="orb"></div>
+        <div class="orb-score"><p class="l">Life score</p><p class="n">84</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="section-num">04</span>
+      <h2 class="section-title">Components</h2>
+      <p class="section-note">Glass on gradient for hero moments, flat white cards for everything supporting.</p>
+    </div>
+    <div class="comp-grid">
+      <div class="glass-demo">
+        <p class="card-label" style="color:rgba(26,23,18,0.5)">Glass card</p>
+        <div class="glass-card"><p class="l">Steps today</p><p class="n">8,241</p></div>
+      </div>
+      <div class="card">
+        <p class="card-label">Progress ring</p>
+        <div class="ring-wrap">
+          <div class="ring"><div class="ring-inner">71%</div></div>
+          <div><p style="margin:0;font-weight:600;font-size:14px">Monthly budget</p><p style="margin:2px 0 0;font-size:12px;color:var(--ink-soft)">PKR 42,000 left</p></div>
+        </div>
+      </div>
+      <div class="card">
+        <p class="card-label">Buttons</p>
+        <div class="btn-row">
+          <button class="btn btn-primary">Set today's focus</button>
+          <button class="btn btn-secondary">View history</button>
+          <button class="btn btn-ghost">Skip for now</button>
+        </div>
+      </div>
+      <div class="card" style="grid-column:span 2">
+        <p class="card-label">Habit streaks</p>
+        <div class="habit-row"><span>Reading</span><div class="streak-dots"><div class="streak-dot on"></div><div class="streak-dot on"></div><div class="streak-dot on"></div><div class="streak-dot on"></div><div class="streak-dot"></div><div class="streak-dot"></div><div class="streak-dot"></div></div></div>
+        <div class="habit-row"><span>Gym</span><div class="streak-dots"><div class="streak-dot on"></div><div class="streak-dot"></div><div class="streak-dot on"></div><div class="streak-dot on"></div><div class="streak-dot on"></div><div class="streak-dot"></div><div class="streak-dot"></div></div></div>
+        <div class="habit-row"><span>Meditation</span><div class="streak-dots"><div class="streak-dot on"></div><div class="streak-dot on"></div><div class="streak-dot on"></div><div class="streak-dot on"></div><div class="streak-dot on"></div><div class="streak-dot on"></div><div class="streak-dot"></div></div></div>
+      </div>
+      <div class="card">
+        <p class="card-label">Category chip</p>
+        <div class="cat-chip" style="width:fit-content"><span class="dot" style="background:var(--career)"></span>Career · 80%</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="section-num">05</span>
+      <h2 class="section-title">Assembled — home screen</h2>
+      <p class="section-note">Every token above, in place.</p>
+    </div>
+    <div class="phone-frame">
+      <div class="screen">
+        <div class="screen-top">
+          <div><p class="greet-eyebrow">Good morning</p><h2 class="greet">Moon</h2></div>
+          <div class="avatar"></div>
+        </div>
+        <div class="hero-card">
+          <div class="hero-score"><p class="l">Today's score</p><p class="n">84</p></div>
+          <div class="hero-orb"></div>
+        </div>
+        <div class="grid2">
+          <div class="mini-card"><p class="l">Weather</p><p class="n">22°C</p></div>
+          <div class="mini-card"><p class="l">Budget left</p><p class="n">42K</p></div>
+        </div>
+        <div class="wide-card">
+          <p class="l" style="font-size:11px;color:var(--ink-soft);margin:0 0 8px">Today's focus</p>
+          <p style="font-family:'Fraunces',serif;font-size:17px;margin:0">Finish AI research paper</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

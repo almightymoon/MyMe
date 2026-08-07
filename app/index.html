@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>MeMy — Personal AI Life Companion</title>
-  <link rel="stylesheet" href="css/app.css?v=55" />
-  <link rel="stylesheet" href="css/system.css?v=53" />
+  <link rel="stylesheet" href="css/app.css?v=64" />
+  <link rel="stylesheet" href="css/system.css?v=64" />
 </head>
 <body>
   <div class="app-stage">
@@ -667,37 +667,41 @@
         <!-- HEALTH OVERVIEW -->
         <section class="screen health-ov" data-screen="health" data-nav="dashboard" data-ctx="heart">
           <div class="screen-scroll health-ov-scroll">
-            <header class="ho-header">
+            <div class="top-row">
+              <button class="icon-plain" data-go="home" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m15 18-6-6 6-6"/></svg></button>
+              <h1 class="page-title">Health Overview</h1>
+              <button class="icon-plain ho-bell" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><i class="dot" aria-hidden="true"></i></button>
+            </div>
+
+            <div class="ho-hero">
               <div class="ho-greet">
                 <p class="hm-hi">Hi, Emma!</p>
-                <h2 class="hm-title">Let's measure your<br />heart rate</h2>
+                <h2 class="hm-title">Let's measure your<br />health today</h2>
               </div>
-              <div class="ho-actions">
-                <button class="icon-plain" data-go="profile" aria-label="Profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 19.2a6.5 6.5 0 0 1 13 0"/></svg></button>
-                <button class="icon-plain ho-bell" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><i class="dot" aria-hidden="true"></i></button>
-              </div>
-            </header>
+              <img class="ho-heart" src="assets/heart.png?v=45" alt="Heart" />
+            </div>
 
-            <div class="ho-stage">
-              <div class="ho-heart-wrap">
-                <img class="ho-heart" src="assets/heart.png?v=45" alt="Heart" />
-              </div>
-
-              <div class="ho-float-cards">
-                <button class="card ho-ecg" data-go="ecg">
-                  <p class="l">ECG</p>
-                  <p class="v num">95 <span>bpm</span></p>
-                  <svg class="ho-wave" viewBox="0 0 130 28" fill="none"><path d="M0 16h14l5-9 6 18 5-12 5 9h16l5-9 6 18 5-12 5 9h16l4-7 5 12 4-9h19" stroke="#FF6A1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </button>
-                <button class="card ho-hrv" data-go="hr">
-                  <div class="ho-hrv-top">
-                    <p class="l">Heart Rate Variability</p>
-                    <span class="ho-pulse" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h3l2.5-5 3 10 2.5-5H21"/></svg></span>
-                  </div>
-                  <p class="status">Status: <b>Stable</b></p>
-                  <p class="v num">86 <span>ms</span></p>
-                </button>
-              </div>
+            <div class="ho-metrics">
+              <button type="button" class="card ho-metric" data-go="hr">
+                <p class="l">Heart Rate</p>
+                <p class="v num">95 <span>bpm</span></p>
+                <svg class="ho-wave" viewBox="0 0 120 28" fill="none" aria-hidden="true"><path d="M0 16h12l4-8 5 16 4-11 4 8h14l4-8 5 16 4-11 4 8h14l3-6 4 11 3-8h17" stroke="#FF6A1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <button type="button" class="card ho-metric" data-go="bodycomp">
+                <p class="l">Steps</p>
+                <p class="v num">7,532</p>
+                <div class="ho-bars orange" id="spark-steps" aria-hidden="true"></div>
+              </button>
+              <button type="button" class="card ho-metric" data-go="nutrition">
+                <p class="l">Calories</p>
+                <p class="v num">1,650 <span>kcal</span></p>
+                <div class="ho-bars orange" id="spark-cal" aria-hidden="true"></div>
+              </button>
+              <button type="button" class="card ho-metric" data-go="weight">
+                <p class="l">Sleep</p>
+                <p class="v num">7h 45m</p>
+                <div class="ho-bars purple" id="spark-sleep" aria-hidden="true"></div>
+              </button>
             </div>
           </div>
         </section>
@@ -1477,10 +1481,10 @@
     </div>
   </div>
 
-  <script src="js/data.js?v=27"></script>
+  <script src="js/data.js?v=28"></script>
   <script src="js/ai-coach-sphere.js?v=3"></script>
   <script src="js/wardrobe.js?v=7"></script>
   <script src="js/contextual-actions.js?v=3"></script>
-  <script src="js/app.js?v=33"></script>
+  <script src="js/app.js?v=40"></script>
 </body>
 </html>

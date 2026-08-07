@@ -415,11 +415,11 @@ html, body {
 }
 
 /* Health overview glass polish */
-.health-ov { background: var(--bg) !important; }
-.ho-bars.orange i { background: var(--orange); }
-.ho-bars.purple i { background: #7B6CF0; }
+.ho-bars.orange i,
+.ho-bars.orange .ho-bar { background: linear-gradient(180deg, #FFC08A 0%, #FF6A1A 100%); }
+.ho-bars.purple i,
+.ho-bars.purple .ho-bar { background: linear-gradient(180deg, #C4B5FD 0%, #6366F1 100%); }
 .ho-heart {
-  filter: none !important;
   animation: floatY 5.8s ease-in-out infinite;
 }
 

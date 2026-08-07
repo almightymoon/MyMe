@@ -268,13 +268,19 @@
 
   function spark(el, heights) {
     if (!el) return;
+    const maxH = 34;
     el.innerHTML = heights
-      .map((h, i) => `<span class="${i > heights.length - 4 ? "on" : ""}" style="height:${h}%"></span>`)
+      .map((h) => {
+        const px = Math.max(8, Math.round((h / 100) * maxH));
+        return `<span class="ho-bar" style="height:${px}px"></span>`;
+      })
       .join("");
   }
 
   function renderHealthSparks() {
-    // metric sparks removed from health measure screen (matches ref)
+    spark(document.getElementById("spark-steps"), [32, 48, 40, 68, 46, 82, 58, 94, 52, 88, 70, 100]);
+    spark(document.getElementById("spark-cal"), [38, 54, 44, 70, 50, 78, 60, 90, 64, 84, 72, 96]);
+    spark(document.getElementById("spark-sleep"), [46, 36, 62, 42, 74, 50, 80, 56, 88, 64, 92, 70]);
   }
 
   function renderHrvPlot() {
@@ -572,6 +578,11 @@
   }
 
   let bodyExFilter = "all";
+  let exLibTag = "all";
+  let exLibEq = "";
+  let exLibSort = "popular";
+  let exLibQuery = "";
+  const exLibSaved = new Set();
 
   function sparkPath(values, w, h) {
     if (!values || !values.length) return "";
@@ -689,20 +700,21 @@
   function renderBodyExercises() {
     const H = D.health;
     const list = document.getElementById("bc-ex-list");
-    const count = document.getElementById("bc-ex-count");
     if (!list || !H) return;
     const all = H.exercises || [];
     const filtered =
       bodyExFilter === "all" ? all : all.filter((ex) => ex.tag === bodyExFilter);
-    if (count) count.textContent = filtered.length + (filtered.length === 1 ? " move" : " moves");
+    const preview = filtered.slice(0, 4);
+    const icon =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 12h12M9 8l-3 4 3 4M15 8l3 4-3 4"/></svg>';
     const plus =
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>';
-    list.innerHTML = filtered
+    list.innerHTML = preview
       .map(
         (ex) =>
           '<div class="bc-ex-card">' +
           '<span class="bc-ex-visual">' +
-          moveIcon() +
+          icon +
           "</span>" +
           "<div><p class=\"bc-ex-name\">" +
           escapeHtml(ex.name) +
@@ -721,6 +733,127 @@
           plus +
           "</button></div>"
       )
+      .join("");
+  }
+
+  function eqClass(eq) {
+    return "eq-" + String(eq || "bodyweight").toLowerCase().replace(/\s+/g, "");
+  }
+
+  function renderExerciseLibrary() {
+    const H = D.health;
+    if (!H || !document.getElementById("exlib-list")) return;
+
+    const feat = H.featuredProgram || {};
+    const set = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val;
+    };
+    set("exlib-feat-title", feat.title || "Build Strength Anywhere");
+    set("exlib-feat-sub", feat.subtitle || "");
+    set("exlib-feat-count", (feat.count || (H.exercises || []).length) + " Exercises");
+    const featImg = document.getElementById("exlib-feat-img");
+    if (featImg && feat.image) featImg.src = feat.image;
+
+    const sortBtn = document.getElementById("exlib-sort");
+    if (sortBtn) {
+      sortBtn.textContent =
+        exLibSort === "name" ? "Sort: A–Z" : "Sort: Most Popular";
+      sortBtn.dataset.exlibSort = exLibSort;
+    }
+
+    const list = document.getElementById("exlib-list");
+    let items = (H.exercises || []).slice();
+    if (exLibTag !== "all") items = items.filter((ex) => ex.tag === exLibTag);
+    if (exLibEq) items = items.filter((ex) => (ex.equipment || ex.level) === exLibEq);
+    if (exLibQuery) {
+      const q = exLibQuery.toLowerCase();
+      items = items.filter(
+        (ex) =>
+          (ex.name || "").toLowerCase().includes(q) ||
+          (ex.muscles || "").toLowerCase().includes(q) ||
+          (ex.tag || "").toLowerCase().includes(q)
+      );
+    }
+    if (exLibSort === "name") {
+      items.sort((a, b) => String(a.name).localeCompare(String(b.name)));
+    } else {
+      items.sort((a, b) => (b.popular || 0) - (a.popular || 0));
+    }
+
+    const move =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 12h12M9 8l-3 4 3 4M15 8l3 4-3 4"/></svg>';
+    const play =
+      '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 7.5v9l8-4.5-8-4.5z"/></svg>';
+    const plus =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>';
+    const bookmark =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 4h10v17l-5-3.2L7 21V4z"/></svg>';
+    const icoSets =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 6h14M5 12h14M5 18h10"/></svg>';
+    const icoReps =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="5" width="14" height="14" rx="3"/><path d="M9 9h.01M15 9h.01M9 15h.01M15 15h.01"/></svg>';
+    const icoRest =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 8v5l3 2"/></svg>';
+
+    if (!items.length) {
+      list.innerHTML = '<p class="exlib-empty">No exercises match these filters.</p>';
+      return;
+    }
+
+    list.innerHTML = items
+      .map((ex) => {
+        const eq = ex.equipment || ex.level || "Bodyweight";
+        const saved = exLibSaved.has(ex.id);
+        return (
+          '<article class="exlib-card">' +
+          '<div class="exlib-thumb">' +
+          move +
+          '<span class="exlib-play" aria-hidden="true">' +
+          play +
+          "</span></div>" +
+          "<div><p class=\"exlib-name\">" +
+          escapeHtml(ex.name) +
+          '</p><p class="exlib-muscles">' +
+          escapeHtml(ex.muscles || "") +
+          '</p><span class="exlib-eq ' +
+          eqClass(eq) +
+          '">' +
+          escapeHtml(eq) +
+          '</span><div class="exlib-stats">' +
+          '<span class="exlib-stat">' +
+          icoSets +
+          (ex.sets || 3) +
+          " sets</span>" +
+          '<span class="exlib-stat">' +
+          icoReps +
+          escapeHtml(String(ex.reps || "")) +
+          (/s$/i.test(String(ex.reps || "")) ? "" : " reps") +
+          "</span>" +
+          '<span class="exlib-stat">' +
+          icoRest +
+          escapeHtml(String(ex.rest || "45s")) +
+          " rest</span>" +
+          "</div></div>" +
+          '<div class="exlib-actions">' +
+          '<button type="button" class="exlib-save' +
+          (saved ? " is-on" : "") +
+          '" data-exlib-save="' +
+          escapeHtml(ex.id) +
+          '" aria-label="Save ' +
+          escapeHtml(ex.name) +
+          '">' +
+          bookmark +
+          "</button>" +
+          '<button type="button" class="exlib-add" data-toast="Added ' +
+          escapeHtml(ex.name) +
+          '" aria-label="Add ' +
+          escapeHtml(ex.name) +
+          '">' +
+          plus +
+          "</button></div></article>"
+        );
+      })
       .join("");
   }
 
@@ -925,6 +1058,68 @@
         b.classList.toggle("active", b === exFilter);
       });
       renderBodyExercises();
+      return;
+    }
+
+    const exlibCat = e.target.closest("#exlib-cats [data-exlib-tag]");
+    if (exlibCat) {
+      exLibTag = exlibCat.dataset.exlibTag;
+      document.querySelectorAll("#exlib-cats .exlib-cat").forEach((b) => {
+        b.classList.toggle("active", b === exlibCat);
+      });
+      renderExerciseLibrary();
+      return;
+    }
+
+    const exlibEqBtn = e.target.closest("#exlib-quick [data-exlib-eq]");
+    if (exlibEqBtn) {
+      const eq = exlibEqBtn.dataset.exlibEq;
+      exLibEq = exLibEq === eq ? "" : eq;
+      document.querySelectorAll("#exlib-quick .exlib-chip[data-exlib-eq]").forEach((b) => {
+        b.classList.toggle("active", b.dataset.exlibEq === exLibEq);
+      });
+      renderExerciseLibrary();
+      return;
+    }
+
+    const exlibSortBtn = e.target.closest("#exlib-sort");
+    if (exlibSortBtn) {
+      exLibSort = exLibSort === "popular" ? "name" : "popular";
+      renderExerciseLibrary();
+      return;
+    }
+
+    const exlibSave = e.target.closest("[data-exlib-save]");
+    if (exlibSave) {
+      const id = exlibSave.dataset.exlibSave;
+      if (exLibSaved.has(id)) {
+        exLibSaved.delete(id);
+        showToast("Removed from saved");
+      } else {
+        exLibSaved.add(id);
+        showToast("Saved exercise");
+      }
+      renderExerciseLibrary();
+      return;
+    }
+
+    if (e.target.closest("#exlib-search-btn")) {
+      const box = document.getElementById("exlib-search");
+      if (box) {
+        const open = box.hasAttribute("hidden");
+        if (open) box.removeAttribute("hidden");
+        else {
+          box.setAttribute("hidden", "");
+          exLibQuery = "";
+          const input = document.getElementById("exlib-q");
+          if (input) input.value = "";
+          renderExerciseLibrary();
+        }
+        if (open) {
+          const input = document.getElementById("exlib-q");
+          if (input) input.focus();
+        }
+      }
       return;
     }
 
@@ -1151,7 +1346,16 @@
   renderNutritionExtras();
   renderCalendar();
   renderBodyComp();
+  renderExerciseLibrary();
   updateTodoCount();
+
+  const exlibQ = document.getElementById("exlib-q");
+  if (exlibQ) {
+    exlibQ.addEventListener("input", () => {
+      exLibQuery = exlibQ.value.trim();
+      renderExerciseLibrary();
+    });
+  }
 
   const hash = (location.hash || "").replace("#", "");
   if (hash === "apps") go("dashboard");

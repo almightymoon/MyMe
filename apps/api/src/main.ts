@@ -18,9 +18,17 @@ async function bootstrap(): Promise<void> {
   app.setGlobalPrefix(globalPrefix);
 
   const corsOrigins = config.get('corsOrigins', { infer: true });
+  const nodeEnv = config.get('nodeEnv', { infer: true });
+  const allowAnyOrigin = corsOrigins.includes('*');
+  if (nodeEnv === 'production' && allowAnyOrigin) {
+    throw new Error(
+      'CORS_ORIGINS=* is not allowed in production. Set an explicit allowlist.',
+    );
+  }
   app.enableCors({
-    origin: corsOrigins.includes('*') ? true : corsOrigins,
-    credentials: true,
+    origin: allowAnyOrigin ? true : corsOrigins,
+    // Reflect-any Origin is incompatible with credentialed browsers safely.
+    credentials: !allowAnyOrigin,
   });
 
   app.useGlobalPipes(

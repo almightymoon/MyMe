@@ -5,6 +5,7 @@ import 'package:memy/features/goals/domain/entities/goal_forecast.dart';
 import 'package:memy/features/goals/domain/entities/goal_milestone.dart';
 import 'package:memy/features/goals/domain/services/goal_forecast_service.dart';
 import 'package:memy/features/goals/domain/services/goal_progress_calculator.dart';
+import 'package:memy/features/goals/domain/value_objects/money_minor.dart';
 
 Goal _financialGoal({
   required int target,
@@ -18,8 +19,8 @@ Goal _financialGoal({
     category: GoalCategory.financial,
     priority: GoalPriority.high,
     status: status,
-    targetAmountMinor: target,
-    currentAmountMinor: current,
+    targetAmountMinor: MoneyMinor.fromInt(target),
+    currentAmountMinor: MoneyMinor.fromInt(current),
     currencyCode: 'PKR',
     deadline: deadline,
     createdAt: DateTime(2026, 1, 1),
@@ -66,6 +67,59 @@ void main() {
     expect(restored.milestones.first.isCompleted, isTrue);
   });
 
+  test('serialization round-trip preserves large money amounts as strings', () {
+    final goal = _financialGoal(
+      target: 15000000000, // PKR 150,000,000.00
+      current: 1050000000,
+      deadline: DateTime(2030, 12, 31),
+    );
+
+    final json = goal.toJson();
+    expect(json['targetAmountMinor'], '15000000000');
+    expect(json['currentAmountMinor'], '1050000000');
+
+    final restored = Goal.fromJson(json);
+    expect(restored.targetAmountMinor, MoneyMinor.fromInt(15000000000));
+    expect(restored.currentAmountMinor, MoneyMinor.fromInt(1050000000));
+  });
+
+  test('Goal.fromJson reads legacy int money JSON without crashing', () {
+    final goal = Goal.fromJson({
+      'id': 'legacy',
+      'name': 'Legacy goal',
+      'category': 'financial',
+      'priority': 'high',
+      'status': 'active',
+      'targetAmountMinor': 15000000000,
+      'currentAmountMinor': 1050000000,
+      'currencyCode': 'PKR',
+      'deadline': '2026-12-01T00:00:00.000',
+      'createdAt': '2026-01-01T00:00:00.000',
+      'updatedAt': '2026-01-01T00:00:00.000',
+      'progressPercent': 7,
+    });
+    expect(goal.targetAmountMinor, MoneyMinor.fromInt(15000000000));
+    expect(goal.currentAmountMinor, MoneyMinor.fromInt(1050000000));
+  });
+
+  test('Goal.fromJson drops corrupt money values instead of crashing', () {
+    final goal = Goal.fromJson({
+      'id': 'corrupt',
+      'name': 'Corrupt goal',
+      'category': 'financial',
+      'priority': 'high',
+      'status': 'active',
+      'targetAmountMinor': '100.5',
+      'currentAmountMinor': -5,
+      'deadline': '2026-12-01T00:00:00.000',
+      'createdAt': '2026-01-01T00:00:00.000',
+      'updatedAt': '2026-01-01T00:00:00.000',
+      'progressPercent': 0,
+    });
+    expect(goal.targetAmountMinor, isNull);
+    expect(goal.currentAmountMinor, isNull);
+  });
+
   test('deserializes unknown enum values with safe fallbacks', () {
     final goal = Goal.fromJson({
       'id': 'x',
@@ -94,7 +148,10 @@ void main() {
     final forecast = service.forecast(goal, asOf: asOf);
     // ceil(60 / 30.4375) = 2
     expect(forecast.estimatedMonthsRemaining, 2);
-    expect(forecast.requiredMonthlyContributionMinor, 500000);
+    expect(
+      forecast.requiredMonthlyContributionMinor,
+      MoneyMinor.fromInt(500000),
+    );
     expect(forecast.status, GoalForecastStatus.onTrack);
   });
 
@@ -106,7 +163,7 @@ void main() {
     );
     final forecast = service.forecast(goal, asOf: asOf);
     expect(forecast.status, GoalForecastStatus.overdue);
-    expect(forecast.remainingAmountMinor, 90000);
+    expect(forecast.remainingAmountMinor, MoneyMinor.fromInt(90000));
   });
 
   test('forecast completed when target reached', () {
@@ -117,7 +174,7 @@ void main() {
     );
     final forecast = service.forecast(goal, asOf: asOf);
     expect(forecast.status, GoalForecastStatus.completed);
-    expect(forecast.remainingAmountMinor, 0);
+    expect(forecast.remainingAmountMinor, MoneyMinor.zero);
   });
 
   test('forecast insufficient data without target', () {
@@ -141,18 +198,38 @@ void main() {
     final forecast = service.forecast(goal, asOf: asOf);
     expect(forecast.daysRemaining, 0);
     expect(forecast.estimatedMonthsRemaining, 1);
-    expect(forecast.requiredMonthlyContributionMinor, 10000);
+    expect(
+      forecast.requiredMonthlyContributionMinor,
+      MoneyMinor.fromInt(10000),
+    );
     expect(forecast.status, GoalForecastStatus.atRisk);
   });
 
-  test('negative current amount is treated as zero remaining basis', () {
-    final goal = _financialGoal(
-      target: 10000,
-      current: -500,
-      deadline: asOf.add(const Duration(days: 30)),
+  test('forecast handles amounts far beyond double-safe precision', () {
+    // 9,007,199,254,740,993 exceeds 2^53 — the point at which double loses
+    // integer precision — to prove the forecast math stays BigInt-based.
+    final huge = BigInt.parse('9007199254740993');
+    final goal = Goal(
+      id: 'huge',
+      name: 'Huge fund',
+      category: GoalCategory.financial,
+      priority: GoalPriority.high,
+      status: GoalStatus.active,
+      targetAmountMinor: MoneyMinor.fromBigInt(huge),
+      currentAmountMinor: MoneyMinor.zero,
+      currencyCode: 'PKR',
+      deadline: asOf.add(const Duration(days: 60)),
+      createdAt: asOf,
+      updatedAt: asOf,
+      progressPercent: 0,
     );
     final forecast = service.forecast(goal, asOf: asOf);
-    expect(forecast.remainingAmountMinor, 10000);
+    expect(forecast.remainingAmountMinor!.value, huge);
+    // ceil(60 / 30.4375) = 2 months.
+    expect(
+      forecast.requiredMonthlyContributionMinor!.value,
+      (huge + BigInt.one) ~/ BigInt.two,
+    );
   });
 
   test('progress calculator uses amounts then milestones', () {
@@ -190,4 +267,27 @@ void main() {
     );
     expect(withMilestones.progressPercent, 50);
   });
+
+  test(
+    'progress calculator stays precise for amounts beyond double precision',
+    () {
+      final huge = BigInt.parse('9007199254740993'); // 2^53 + 1
+      final goal = GoalProgressCalculator.withRecalculatedProgress(
+        Goal(
+          id: 'huge',
+          name: 'Huge fund',
+          category: GoalCategory.financial,
+          priority: GoalPriority.high,
+          status: GoalStatus.active,
+          targetAmountMinor: MoneyMinor.fromBigInt(huge * BigInt.two),
+          currentAmountMinor: MoneyMinor.fromBigInt(huge),
+          deadline: asOf.add(const Duration(days: 10)),
+          createdAt: asOf,
+          updatedAt: asOf,
+          progressPercent: 0,
+        ),
+      );
+      expect(goal.progressPercent, closeTo(50, 0.01));
+    },
+  );
 }

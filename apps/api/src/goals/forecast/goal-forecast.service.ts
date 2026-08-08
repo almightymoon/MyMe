@@ -1,3 +1,10 @@
+import { Prisma } from '@prisma/client';
+import {
+  ceilDivBigInt,
+  moneyMinorToApiString,
+  moneyMinorToBigInt,
+} from '../money/money-minor';
+
 export enum ForecastStatus {
   completed = 'completed',
   overdue = 'overdue',
@@ -9,33 +16,37 @@ export enum ForecastStatus {
 export type GoalForecastInput = {
   status: string;
   deadline: Date;
-  targetAmountMinor?: number | null;
-  currentAmountMinor?: number | null;
+  targetAmountMinor?: Prisma.Decimal | string | null;
+  currentAmountMinor?: Prisma.Decimal | string | null;
 };
 
 export type GoalForecast = {
   status: ForecastStatus;
   asOf: string;
-  remainingAmountMinor?: number;
+  /** Whole-number decimal strings — never IEEE Number. */
+  remainingAmountMinor?: string;
   daysRemaining?: number;
   estimatedMonthsRemaining?: number;
-  requiredMonthlyContributionMinor?: number;
-  requiredWeeklyContributionMinor?: number;
+  requiredMonthlyContributionMinor?: string;
+  requiredWeeklyContributionMinor?: string;
   projectedCompletionDate?: string;
   message: string;
 };
 
 /**
- * Deterministic goal forecasting — must stay aligned with Flutter
- * `GoalForecastService` (apps/mobile) and docs/product/goals-api-contract.md.
+ * Deterministic goal forecasting — aligned with Flutter `GoalForecastService`.
+ *
+ * Rounding: required monthly/weekly contributions use **ceiling** division
+ * so the user is never told to save less than the mathematically required
+ * whole minor units.
  *
  * Formula:
- *   remaining = max(0, targetAmountMinor - max(0, currentAmountMinor))
- *   daysRemaining = deadlineDate - asOfDate (date-only)
+ *   remaining = max(0, target - max(0, current))
+ *   daysRemaining = deadlineDate - asOfDate (UTC date-only)
  *   effectiveDays = daysRemaining == 0 ? 1 : daysRemaining
  *   monthsRemaining = max(1, ceil(effectiveDays / 30.4375))
- *   requiredMonthlyContribution = ceil(remaining / monthsRemaining)
- *   requiredWeeklyContribution = ceil(remaining / max(1, ceil(effectiveDays / 7)))
+ *   requiredMonthly = ceil(remaining / monthsRemaining)
+ *   requiredWeekly = ceil(remaining / max(1, ceil(effectiveDays / 7)))
  */
 export class GoalForecastService {
   static readonly AVERAGE_DAYS_PER_MONTH = 30.4375;
@@ -44,7 +55,7 @@ export class GoalForecastService {
     goal: GoalForecastInput,
     options?: {
       asOf?: Date;
-      knownMonthlyContributionMinor?: number;
+      knownMonthlyContributionMinor?: string | bigint;
     },
   ): GoalForecast {
     const now = dateOnly(options?.asOf ?? new Date());
@@ -55,16 +66,20 @@ export class GoalForecastService {
       return {
         status: ForecastStatus.completed,
         asOf: asOfIso,
-        remainingAmountMinor: 0,
+        remainingAmountMinor: '0',
         daysRemaining: diffDays(deadline, now),
         message: 'Goal is marked completed.',
       };
     }
 
-    const target = goal.targetAmountMinor;
-    const currentRaw = goal.currentAmountMinor ?? 0;
+    const targetBi = moneyMinorToBigInt(
+      goal.targetAmountMinor as Prisma.Decimal | string | null | undefined,
+    );
+    const currentRaw = moneyMinorToBigInt(
+      goal.currentAmountMinor as Prisma.Decimal | string | null | undefined,
+    );
 
-    if (target == null || target <= 0) {
+    if (targetBi == null || targetBi <= 0n) {
       const days = diffDays(deadline, now);
       return {
         status:
@@ -72,24 +87,26 @@ export class GoalForecastService {
         asOf: asOfIso,
         daysRemaining: days,
         message:
-          target == null
+          targetBi == null
             ? 'No target amount — forecast unavailable.'
             : 'Target amount must be positive.',
       };
     }
 
-    const current = currentRaw < 0 ? 0 : currentRaw;
-    const remaining = Math.max(0, Math.min(target, target - current));
+    const current = currentRaw == null || currentRaw < 0n ? 0n : currentRaw;
+    let remaining = targetBi - current;
+    if (remaining < 0n) remaining = 0n;
+    if (remaining > targetBi) remaining = targetBi;
 
-    if (remaining === 0) {
+    if (remaining === 0n) {
       return {
         status: ForecastStatus.completed,
         asOf: asOfIso,
-        remainingAmountMinor: 0,
+        remainingAmountMinor: '0',
         daysRemaining: diffDays(deadline, now),
         estimatedMonthsRemaining: 0,
-        requiredMonthlyContributionMinor: 0,
-        requiredWeeklyContributionMinor: 0,
+        requiredMonthlyContributionMinor: '0',
+        requiredWeeklyContributionMinor: '0',
         message: 'Target amount already reached.',
       };
     }
@@ -100,28 +117,34 @@ export class GoalForecastService {
       return {
         status: ForecastStatus.overdue,
         asOf: asOfIso,
-        remainingAmountMinor: remaining,
+        remainingAmountMinor: remaining.toString(),
         daysRemaining,
         estimatedMonthsRemaining: 0,
-        requiredMonthlyContributionMinor: remaining,
-        requiredWeeklyContributionMinor: remaining,
+        requiredMonthlyContributionMinor: remaining.toString(),
+        requiredWeeklyContributionMinor: remaining.toString(),
         message: 'Deadline has passed with amount still remaining.',
       };
     }
 
     const effectiveDays = daysRemaining === 0 ? 1 : daysRemaining;
-    const monthsRemaining = ceilDivDouble(
-      effectiveDays,
-      GoalForecastService.AVERAGE_DAYS_PER_MONTH,
+    const monthsRemaining = ceilDaysPerMonth(effectiveDays);
+    const weeksRemaining = Number(ceilDivBigInt(BigInt(effectiveDays), 7n));
+    const requiredMonthly = ceilDivBigInt(remaining, BigInt(monthsRemaining));
+    const requiredWeekly = ceilDivBigInt(
+      remaining,
+      BigInt(weeksRemaining < 1 ? 1 : weeksRemaining),
     );
-    const weeksRemaining = ceilDiv(effectiveDays, 7);
-    const requiredMonthly = ceilDiv(remaining, monthsRemaining);
-    const requiredWeekly = ceilDiv(remaining, weeksRemaining);
 
     let projected: Date | undefined;
-    const known = options?.knownMonthlyContributionMinor;
-    if (known != null && known > 0) {
-      const monthsNeeded = ceilDiv(remaining, known);
+    const knownRaw = options?.knownMonthlyContributionMinor;
+    let known: bigint | null = null;
+    if (typeof knownRaw === 'bigint') {
+      known = knownRaw;
+    } else if (typeof knownRaw === 'string') {
+      known = moneyMinorToBigInt(knownRaw);
+    }
+    if (known != null && known > 0n) {
+      const monthsNeeded = Number(ceilDivBigInt(remaining, known));
       const projectedDays = Math.ceil(
         monthsNeeded * GoalForecastService.AVERAGE_DAYS_PER_MONTH,
       );
@@ -134,7 +157,7 @@ export class GoalForecastService {
     if (projected != null && dateOnly(projected) > deadline) {
       status = ForecastStatus.atRisk;
       message = 'Current contribution rate finishes after the deadline.';
-    } else if (daysRemaining <= 14 && remaining > target / 2) {
+    } else if (daysRemaining <= 14 && remaining > targetBi / 2n) {
       status = ForecastStatus.atRisk;
       message = 'Less than two weeks left with more than half remaining.';
     }
@@ -147,17 +170,25 @@ export class GoalForecastService {
     return {
       status,
       asOf: asOfIso,
-      remainingAmountMinor: remaining,
+      remainingAmountMinor: remaining.toString(),
       daysRemaining,
       estimatedMonthsRemaining: monthsRemaining,
-      requiredMonthlyContributionMinor: requiredMonthly,
-      requiredWeeklyContributionMinor: requiredWeekly,
+      requiredMonthlyContributionMinor: requiredMonthly.toString(),
+      requiredWeeklyContributionMinor: requiredWeekly.toString(),
       projectedCompletionDate: projected
         ? toIsoDate(dateOnly(projected))
         : undefined,
       message,
     };
   }
+}
+
+function ceilDaysPerMonth(effectiveDays: number): number {
+  // Month count uses AVERAGE_DAYS_PER_MONTH; result is a small integer so Number is safe.
+  const ceiled = Math.ceil(
+    effectiveDays / GoalForecastService.AVERAGE_DAYS_PER_MONTH,
+  );
+  return ceiled < 1 ? 1 : ceiled;
 }
 
 function dateOnly(value: Date): Date {
@@ -181,14 +212,5 @@ function addDays(value: Date, days: number): Date {
   return next;
 }
 
-function ceilDiv(numerator: number, denominator: number): number {
-  if (denominator <= 0) return numerator;
-  const result = Math.floor((numerator + denominator - 1) / denominator);
-  return Math.min(Math.max(result, 1), numerator);
-}
-
-function ceilDivDouble(numerator: number, denominator: number): number {
-  if (denominator <= 0) return numerator;
-  const ceiled = Math.ceil(numerator / denominator);
-  return ceiled < 1 ? 1 : ceiled;
-}
+/** Re-export for tests that assert string serialization helpers. */
+export { moneyMinorToApiString };

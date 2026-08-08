@@ -8,7 +8,7 @@ This package implements the first production vertical slice: **Goals**, **Milest
 
 - NestJS (TypeScript strict)
 - PostgreSQL
-- Prisma ORM
+- Prisma ORM (`Decimal(30,0)` for monetary minor units)
 - Swagger / OpenAPI (`/docs`)
 - class-validator DTOs
 - Docker Compose PostgreSQL (repo root)
@@ -28,7 +28,7 @@ From **`apps/api`**:
 ```bash
 cp .env.example .env
 npm install
-npx prisma migrate dev
+npx prisma migrate deploy
 npx prisma db seed
 npm run start:dev
 ```
@@ -36,6 +36,12 @@ npm run start:dev
 - API: `http://localhost:3000/api/v1`
 - Health: `http://localhost:3000/api/v1/health`
 - Swagger: `http://localhost:3000/docs`
+
+## Money
+
+- DB: `DECIMAL(30,0)` — supports PKR 150,000,000 as `15000000000` paisa
+- API JSON: **strings only** (never JavaScript `Number` for stored money)
+- Services use `Prisma.Decimal` / `bigint`
 
 ## Development authentication
 
@@ -53,6 +59,28 @@ Authorization: Bearer dev 00000000-0000-4000-8000-000000000001
 
 The value must match `DEV_USER_ID`. Production refuses development authentication.
 
+## E2E tests (isolated database)
+
+E2E cleanup is destructive and **requires** a dedicated test database.
+
+1. Create the database (once):
+
+```bash
+docker exec memy-postgres psql -U memy -d postgres -c 'CREATE DATABASE memy_test;'
+```
+
+2. Copy env and migrate:
+
+```bash
+cp .env.test.example .env.test
+npm run test:e2e:prepare
+npm run test:e2e
+```
+
+The suite loads `.env.test`, asserts `NODE_ENV=test`, and refuses any database whose name does **not** end with `_test`.
+
+Never run E2E against the development `memy` database.
+
 ## Scripts
 
 | Command | Purpose |
@@ -62,14 +90,15 @@ The value must match `DEV_USER_ID`. Production refuses development authenticatio
 | `npm run lint` | ESLint |
 | `npm run format` | Prettier |
 | `npm test` | Unit tests |
-| `npm run test:e2e` | E2E tests (needs Postgres + migrations) |
+| `npm run test:e2e` | E2E against `memy_test` |
+| `npm run test:e2e:prepare` | Migrate the test database |
 | `npm run prisma:validate` | Validate Prisma schema |
 | `npm run prisma:migrate:status` | Migration status |
 | `npm run prisma:seed` | Seed development users/goals |
 
 ## Environment
 
-See `.env.example`. Never commit real credentials. Root `.gitignore` ignores `.env`.
+See `.env.example` and `.env.test.example`. Never commit real credentials. `.env` and `.env.test` are gitignored.
 
 ## Docs
 

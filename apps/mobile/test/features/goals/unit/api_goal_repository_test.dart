@@ -9,13 +9,17 @@ import 'package:memy/features/goals/data/repositories/api_goal_repository.dart';
 import 'package:memy/features/goals/data/repositories/local_goal_repository.dart';
 import 'package:memy/features/goals/domain/entities/goal.dart';
 import 'package:memy/features/goals/domain/entities/goal_enums.dart';
+import 'package:memy/features/goals/domain/entities/goal_milestone.dart';
+import 'package:memy/features/goals/domain/value_objects/money_minor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Map<String, dynamic> _goalJson({
   String id = '11111111-1111-4111-8111-111111111111',
   String name = 'Emergency fund',
   double progress = 20,
-  int current = 100000,
+  Object current = '100000',
+  Object? target = '1000000',
+  List<Map<String, dynamic>> milestones = const [],
 }) {
   return {
     'id': id,
@@ -26,7 +30,7 @@ Map<String, dynamic> _goalJson({
     'customCategoryName': null,
     'priority': 'high',
     'status': 'active',
-    'targetAmountMinor': 1000000,
+    'targetAmountMinor': target,
     'currentAmountMinor': current,
     'currencyCode': 'PKR',
     'deadline': '2026-12-31T00:00:00.000Z',
@@ -35,12 +39,30 @@ Map<String, dynamic> _goalJson({
     'archivedAt': null,
     'createdAt': '2026-01-01T00:00:00.000Z',
     'updatedAt': '2026-01-01T00:00:00.000Z',
-    'milestones': <Map<String, dynamic>>[],
+    'milestones': milestones,
     'forecast': {
       'status': 'onTrack',
       'asOf': '2026-08-08',
       'message': 'On track',
     },
+  };
+}
+
+Map<String, dynamic> _milestoneJson({
+  required String id,
+  required String goalId,
+  String title = 'First step',
+  int order = 0,
+}) {
+  return {
+    'id': id,
+    'goalId': goalId,
+    'title': title,
+    'description': null,
+    'targetDate': null,
+    'isCompleted': false,
+    'completedAt': null,
+    'order': order,
   };
 }
 
@@ -134,14 +156,38 @@ void main() {
       final goals = await repo.getGoals();
       expect(goals, hasLength(1));
       expect(goals.first.name, 'Emergency fund');
-      expect(goals.first.targetAmountMinor, 1000000);
+      expect(goals.first.targetAmountMinor, MoneyMinor.parse('1000000'));
+      expect(goals.first.currentAmountMinor, MoneyMinor.parse('100000'));
     });
 
-    test('create goal posts body and returns server goal', () async {
+    test('create goal posts body once including milestones', () async {
+      var postCount = 0;
       final repo = await _repoWithAdapter((options) async {
         expect(options.method, 'POST');
         expect(options.path, '/goals');
-        return _json(_goalJson(name: 'Run marathon', progress: 0, current: 0));
+        postCount++;
+        final body = Map<String, dynamic>.from(options.data as Map);
+        expect(body['milestones'], isA<List>());
+        expect(body['milestones'], hasLength(1));
+        expect(
+          (body['milestones'] as List).first,
+          containsPair('title', 'Outline'),
+        );
+        return _json(
+          _goalJson(
+            name: 'Run marathon',
+            progress: 0,
+            current: '0',
+            target: null,
+            milestones: [
+              _milestoneJson(
+                id: '22222222-2222-4222-8222-222222222222',
+                goalId: '11111111-1111-4111-8111-111111111111',
+                title: 'Outline',
+              ),
+            ],
+          ),
+        );
       });
 
       final created = await repo.createGoal(
@@ -155,15 +201,73 @@ void main() {
           createdAt: DateTime.utc(2026, 8, 8),
           updatedAt: DateTime.utc(2026, 8, 8),
           progressPercent: 0,
+          milestones: const [
+            GoalMilestone(
+              id: 'client-ms',
+              goalId: 'client-temp',
+              title: 'Outline',
+              order: 0,
+            ),
+          ],
         ),
       );
+      expect(postCount, 1);
       expect(created.id, '11111111-1111-4111-8111-111111111111');
       expect(created.name, 'Run marathon');
+      expect(created.milestones, hasLength(1));
+      expect(
+        created.milestones.first.id,
+        '22222222-2222-4222-8222-222222222222',
+      );
+    });
+
+    test('addMilestone returns createdMilestone by exact id', () async {
+      const goalId = '11111111-1111-4111-8111-111111111111';
+      const createdId = '33333333-3333-4333-8333-333333333333';
+      final repo = await _repoWithAdapter((options) async {
+        expect(options.method, 'POST');
+        expect(options.path, '/goals/$goalId/milestones');
+        final body = Map<String, dynamic>.from(options.data as Map);
+        expect(body['title'], 'Save first paycheck');
+        final goal = _goalJson(
+          milestones: [
+            _milestoneJson(
+              id: createdId,
+              goalId: goalId,
+              title: 'Save first paycheck',
+            ),
+          ],
+        );
+        return _json({
+          'goal': goal,
+          'createdMilestone': _milestoneJson(
+            id: createdId,
+            goalId: goalId,
+            title: 'Save first paycheck',
+          ),
+        });
+      });
+
+      final created = await repo.addMilestone(
+        goalId,
+        const GoalMilestone(
+          id: 'client-temp-ms',
+          goalId: goalId,
+          title: 'Save first paycheck',
+          order: 0,
+        ),
+      );
+      expect(created.id, createdId);
+      expect(created.goalId, goalId);
+      expect(created.title, 'Save first paycheck');
     });
 
     test('update goal patches', () async {
       final repo = await _repoWithAdapter((options) async {
         expect(options.method, 'PATCH');
+        final body = Map<String, dynamic>.from(options.data as Map);
+        expect(body['targetAmountMinor'], '1000000');
+        expect(body['currentAmountMinor'], '100000');
         return _json(_goalJson(name: 'Updated'));
       });
 
@@ -178,8 +282,8 @@ void main() {
           createdAt: DateTime.utc(2026, 1, 1),
           updatedAt: DateTime.utc(2026, 8, 8),
           progressPercent: 20,
-          targetAmountMinor: 1000000,
-          currentAmountMinor: 100000,
+          targetAmountMinor: MoneyMinor.parse('1000000'),
+          currentAmountMinor: MoneyMinor.parse('100000'),
           currencyCode: 'PKR',
         ),
       );

@@ -1,35 +1,72 @@
-/// Money helpers — amounts are stored as integer minor units (e.g. paisa).
+import '../value_objects/money_minor.dart';
+
+/// Money helpers — amounts are stored as [MoneyMinor] (arbitrary-precision
+/// minor units, e.g. paisa). All formatting/parsing here is done with
+/// [BigInt]/string math; the full minor-unit value is never routed through
+/// `double`, so large amounts (e.g. PKR 150,000,000.00) never lose precision.
 abstract final class MoneyFormat {
   static const String defaultCurrencyCode = 'PKR';
 
-  static String formatMinor(int minorUnits, String currencyCode) {
-    final major = minorUnits / 100.0;
-    final fixed = minorUnits % 100 == 0
-        ? major.toStringAsFixed(0)
-        : major.toStringAsFixed(2);
-    final withSeparators = fixed.replaceAllMapped(
-      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+  static final RegExp _majorInputPattern = RegExp(r'^[0-9]+(\.[0-9]{1,2})?$');
+  static final RegExp _thousandsSeparator = RegExp(r'(\d)(?=(\d{3})+(?!\d))');
+
+  /// Formats [minor] as `"CODE 1,234.56"`, splitting major/fraction via
+  /// integer [BigInt] division/modulo instead of converting to `double`.
+  static String formatMinor(MoneyMinor minor, String currencyCode) {
+    final major = minor.value ~/ BigInt.from(100);
+    final fraction = minor.value % BigInt.from(100);
+    final majorDigits = major.toString().replaceAllMapped(
+      _thousandsSeparator,
       (match) => '${match[1]},',
     );
-    return '$currencyCode $withSeparators';
+    final formatted = fraction == BigInt.zero
+        ? majorDigits
+        : '$majorDigits.${fraction.toString().padLeft(2, '0')}';
+    return '$currencyCode $formatted';
   }
 
-  /// Parses a user-entered major-unit string into minor units.
-  /// Returns null if empty; throws [FormatException] if invalid.
-  static int? parseMajorToMinor(String? raw) {
+  /// Parses a user-entered major-unit decimal string (optional single
+  /// decimal point, up to 2 fraction digits) into [MoneyMinor] using
+  /// [BigInt]/string math — never `double`.
+  ///
+  /// Returns `null` for empty/blank input; throws [FormatException] for
+  /// malformed input (multiple decimal points, non-digit characters, more
+  /// than 2 fraction digits, etc).
+  static MoneyMinor? parseMajorToMinor(String? raw) {
     if (raw == null) return null;
     final trimmed = raw.trim().replaceAll(',', '');
     if (trimmed.isEmpty) return null;
-    final value = double.tryParse(trimmed);
+    if (!_majorInputPattern.hasMatch(trimmed)) {
+      throw const FormatException('Enter a valid amount');
+    }
+
+    final dotIndex = trimmed.indexOf('.');
+    final String integerPart;
+    String fractionPart;
+    if (dotIndex < 0) {
+      integerPart = trimmed;
+      fractionPart = '';
+    } else {
+      integerPart = trimmed.substring(0, dotIndex);
+      fractionPart = trimmed.substring(dotIndex + 1);
+    }
+    fractionPart = fractionPart.padRight(2, '0');
+
+    final minorDigits = '$integerPart$fractionPart';
+    final value = BigInt.tryParse(minorDigits);
     if (value == null) {
       throw const FormatException('Enter a valid amount');
     }
-    return (value * 100).round();
+    return MoneyMinor.fromBigInt(value);
   }
 
-  static String majorStringFromMinor(int? minor) {
+  /// Inverse of [parseMajorToMinor]: renders a major-unit decimal string
+  /// suitable for editing in a text field (e.g. `"150000000.50"`).
+  static String majorStringFromMinor(MoneyMinor? minor) {
     if (minor == null) return '';
-    if (minor % 100 == 0) return (minor ~/ 100).toString();
-    return (minor / 100).toStringAsFixed(2);
+    final major = minor.value ~/ BigInt.from(100);
+    final fraction = minor.value % BigInt.from(100);
+    if (fraction == BigInt.zero) return major.toString();
+    return '$major.${fraction.toString().padLeft(2, '0')}';
   }
 }

@@ -5,6 +5,7 @@ import 'package:memy/features/goals/data/repositories/local_goal_repository.dart
 import 'package:memy/features/goals/domain/entities/goal.dart';
 import 'package:memy/features/goals/domain/entities/goal_enums.dart';
 import 'package:memy/features/goals/domain/entities/goal_milestone.dart';
+import 'package:memy/features/goals/domain/value_objects/money_minor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -23,8 +24,8 @@ void main() {
           category: GoalCategory.financial,
           priority: GoalPriority.medium,
           status: GoalStatus.active,
-          targetAmountMinor: 100000,
-          currentAmountMinor: 10000,
+          targetAmountMinor: MoneyMinor.fromInt(100000),
+          currentAmountMinor: MoneyMinor.fromInt(10000),
           currencyCode: 'PKR',
           deadline: DateTime.now().add(const Duration(days: 90)),
           createdAt: DateTime.now(),
@@ -45,6 +46,73 @@ void main() {
 
     final again = LocalGoalRepository(prefs: prefs, seedBuilder: () => first);
     expect(await again.getGoals(), isEmpty);
+  });
+
+  test('new writes persist money amounts as digit strings', () async {
+    await repo.ensureInitialized();
+    await repo.deleteGoal('seed-1');
+
+    await repo.createGoal(
+      Goal(
+        id: 'money-1',
+        name: 'Big Goal',
+        category: GoalCategory.financial,
+        priority: GoalPriority.high,
+        status: GoalStatus.active,
+        targetAmountMinor: MoneyMinor.parse('15000000000'),
+        currentAmountMinor: MoneyMinor.fromInt(1000000),
+        currencyCode: 'PKR',
+        deadline: DateTime.now().add(const Duration(days: 40)),
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        progressPercent: 0,
+      ),
+    );
+
+    final raw = prefs.getString(LocalGoalRepository.storageKey)!;
+    final decoded = jsonDecode(raw) as Map<String, dynamic>;
+    final goals = decoded['goals'] as List<dynamic>;
+    final saved = goals.first as Map<String, dynamic>;
+    expect(saved['targetAmountMinor'], isA<String>());
+    expect(saved['targetAmountMinor'], '15000000000');
+    expect(saved['currentAmountMinor'], '1000000');
+
+    final loaded = await repo.getGoal('money-1');
+    expect(loaded!.targetAmountMinor, MoneyMinor.parse('15000000000'));
+    expect(loaded.currentAmountMinor, MoneyMinor.fromInt(1000000));
+  });
+
+  test('legacy int money JSON still loads', () async {
+    await prefs.setBool(LocalGoalRepository.initializedKey, true);
+    await prefs.setString(
+      LocalGoalRepository.storageKey,
+      jsonEncode({
+        'schemaVersion': 1,
+        'goals': [
+          {
+            'id': 'legacy-1',
+            'name': 'Legacy Goal',
+            'category': 'financial',
+            'priority': 'medium',
+            'status': 'active',
+            'targetAmountMinor': 1000000,
+            'currentAmountMinor': 250000,
+            'currencyCode': 'PKR',
+            'deadline': '2027-01-01T00:00:00.000',
+            'createdAt': '2026-01-01T00:00:00.000',
+            'updatedAt': '2026-01-01T00:00:00.000',
+            'progressPercent': 25,
+            'milestones': [],
+          },
+        ],
+      }),
+    );
+
+    final local = LocalGoalRepository(prefs: prefs);
+    final goals = await local.getGoals();
+    expect(goals, hasLength(1));
+    expect(goals.first.targetAmountMinor, MoneyMinor.fromInt(1000000));
+    expect(goals.first.currentAmountMinor, MoneyMinor.fromInt(250000));
   });
 
   test('create update delete and milestone completion', () async {

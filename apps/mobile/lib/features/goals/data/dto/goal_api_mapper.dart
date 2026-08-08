@@ -1,6 +1,8 @@
+import '../../../../core/errors/app_exception.dart';
 import '../../domain/entities/goal.dart';
 import '../../domain/entities/goal_enums.dart';
 import '../../domain/entities/goal_milestone.dart';
+import '../../domain/value_objects/money_minor.dart';
 
 /// Maps NestJS Goals API JSON ↔ domain entities.
 /// Widgets must never parse JSON directly.
@@ -41,8 +43,14 @@ class GoalApiMapper {
         json['status'] as String?,
         GoalStatus.active,
       ),
-      targetAmountMinor: (json['targetAmountMinor'] as num?)?.toInt(),
-      currentAmountMinor: (json['currentAmountMinor'] as num?)?.toInt(),
+      targetAmountMinor: _requireMoney(
+        json['targetAmountMinor'],
+        'targetAmountMinor',
+      ),
+      currentAmountMinor: _requireMoney(
+        json['currentAmountMinor'],
+        'currentAmountMinor',
+      ),
       currencyCode: json['currencyCode'] as String?,
       deadline: _requireDate(json['deadline']),
       createdAt: _requireDate(json['createdAt']),
@@ -80,7 +88,7 @@ class GoalApiMapper {
     return goals;
   }
 
-  /// Body for POST /goals (server assigns id).
+  /// Body for POST /goals — includes nested milestones for atomic create.
   static Map<String, dynamic> createGoalBody(Goal goal) {
     return {
       'name': goal.name,
@@ -91,13 +99,18 @@ class GoalApiMapper {
       'priority': goal.priority.name,
       'status': goal.status.name,
       if (goal.targetAmountMinor != null)
-        'targetAmountMinor': goal.targetAmountMinor,
+        'targetAmountMinor': goal.targetAmountMinor!.toJson(),
       if (goal.currentAmountMinor != null)
-        'currentAmountMinor': goal.currentAmountMinor,
+        'currentAmountMinor': goal.currentAmountMinor!.toJson(),
       if (goal.currencyCode != null) 'currencyCode': goal.currencyCode,
       'deadline': goal.deadline.toUtc().toIso8601String(),
       'progressPercent': goal.progressPercent,
       'notes': goal.notes,
+      if (goal.milestones.isNotEmpty)
+        'milestones': [
+          for (final m in goal.milestones)
+            if (m.title.trim().isNotEmpty) createMilestoneBody(m),
+        ],
     };
   }
 
@@ -110,8 +123,8 @@ class GoalApiMapper {
       'customCategoryName': goal.customCategoryName,
       'priority': goal.priority.name,
       'status': goal.status.name,
-      'targetAmountMinor': goal.targetAmountMinor,
-      'currentAmountMinor': goal.currentAmountMinor,
+      'targetAmountMinor': goal.targetAmountMinor?.toJson(),
+      'currentAmountMinor': goal.currentAmountMinor?.toJson(),
       'currencyCode': goal.currencyCode,
       'deadline': goal.deadline.toUtc().toIso8601String(),
       'progressPercent': goal.progressPercent,
@@ -139,15 +152,40 @@ class GoalApiMapper {
   }
 
   static Map<String, dynamic> progressBody({
-    int? currentAmountMinor,
+    MoneyMinor? currentAmountMinor,
     double? progressPercent,
     String? note,
   }) {
     return {
-      'currentAmountMinor': ?currentAmountMinor,
+      'currentAmountMinor': ?currentAmountMinor?.toJson(),
       'progressPercent': ?progressPercent,
       'note': ?note,
     };
+  }
+
+  /// Parses `{ goal, createdMilestone }` from POST /milestones.
+  static ({Goal goal, GoalMilestone createdMilestone})
+  milestoneCreationFromJson(Map<String, dynamic> json) {
+    final goalJson = json['goal'];
+    final createdJson = json['createdMilestone'];
+    if (goalJson is! Map || createdJson is! Map) {
+      throw AppException.validation(
+        'Milestone create response must include goal and createdMilestone.',
+      );
+    }
+    final goal = goalFromJson(Map<String, dynamic>.from(goalJson));
+    final created = milestoneFromJson(Map<String, dynamic>.from(createdJson));
+    return (goal: goal, createdMilestone: created);
+  }
+
+  /// Null amounts are allowed; non-null corrupt values throw.
+  static MoneyMinor? _requireMoney(Object? raw, String field) {
+    if (raw == null) return null;
+    final parsed = MoneyMinor.fromJson(raw);
+    if (parsed == null) {
+      throw AppException.validation('Invalid monetary value for $field');
+    }
+    return parsed;
   }
 
   static DateTime _requireDate(Object? value) {

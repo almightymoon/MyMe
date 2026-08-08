@@ -5,6 +5,7 @@ import '../../../../core/network/api_client.dart';
 import '../../domain/entities/goal.dart';
 import '../../domain/entities/goal_milestone.dart';
 import '../../domain/repositories/goal_repository.dart';
+import '../../domain/value_objects/money_minor.dart';
 import '../dto/goal_api_mapper.dart';
 import 'local_goal_repository.dart';
 
@@ -104,27 +105,15 @@ class ApiGoalRepository implements GoalRepository {
   @override
   Future<Goal> createGoal(Goal goal) {
     return _write(() async {
+      // Draft milestones are nested in the create body — a single request,
+      // server assigns milestone ids alongside the goal id.
       final response = await client.post<dynamic>(
         '/goals',
         data: GoalApiMapper.createGoalBody(goal),
       );
-      var created = GoalApiMapper.goalFromJson(
+      final created = GoalApiMapper.goalFromJson(
         Map<String, dynamic>.from(response.data as Map),
       );
-
-      // Server assigns milestone ids — create any draft milestones after.
-      for (final milestone in goal.milestones) {
-        if (milestone.title.trim().isEmpty) continue;
-        final milestoneResponse = await client.post<dynamic>(
-          '/goals/${created.id}/milestones',
-          data: GoalApiMapper.createMilestoneBody(
-            milestone.copyWith(goalId: created.id),
-          ),
-        );
-        created = GoalApiMapper.goalFromJson(
-          Map<String, dynamic>.from(milestoneResponse.data as Map),
-        );
-      }
 
       await cache.upsert(created);
       _emit(await cache.getGoals());
@@ -177,23 +166,18 @@ class ApiGoalRepository implements GoalRepository {
         '/goals/$goalId/milestones',
         data: GoalApiMapper.createMilestoneBody(milestone),
       );
-      final goal = GoalApiMapper.goalFromJson(
-        Map<String, dynamic>.from(response.data as Map),
+      final data = response.data;
+      if (data is! Map) {
+        throw AppException.serverFailure(
+          'Unexpected response shape from milestone creation.',
+        );
+      }
+      final result = GoalApiMapper.milestoneCreationFromJson(
+        Map<String, dynamic>.from(data),
       );
-      await cache.upsert(goal);
+      await cache.upsert(result.goal);
       _emit(await cache.getGoals());
-      GoalMilestone? match;
-      for (final m in goal.milestones.reversed) {
-        if (m.title == milestone.title) {
-          match = m;
-          break;
-        }
-      }
-      match ??= goal.milestones.isEmpty ? null : goal.milestones.last;
-      if (match == null) {
-        throw AppException.notFound('Milestone was not returned by the API.');
-      }
-      return match;
+      return result.createdMilestone;
     });
   }
 
@@ -256,7 +240,7 @@ class ApiGoalRepository implements GoalRepository {
   @override
   Future<Goal> updateGoalProgress({
     required String goalId,
-    int? currentAmountMinor,
+    MoneyMinor? currentAmountMinor,
     double? progressPercent,
   }) {
     return _write(() async {

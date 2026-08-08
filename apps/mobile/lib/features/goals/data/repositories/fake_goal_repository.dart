@@ -5,6 +5,7 @@ import '../../domain/entities/goal_enums.dart';
 import '../../domain/entities/goal_milestone.dart';
 import '../../domain/repositories/goal_repository.dart';
 import '../../domain/services/goal_progress_calculator.dart';
+import '../../domain/value_objects/money_minor.dart';
 
 /// In-memory goals repository for UI demos and widget tests.
 class FakeGoalRepository implements GoalRepository {
@@ -169,7 +170,7 @@ class FakeGoalRepository implements GoalRepository {
   @override
   Future<Goal> updateGoalProgress({
     required String goalId,
-    int? currentAmountMinor,
+    MoneyMinor? currentAmountMinor,
     double? progressPercent,
   }) async {
     final index = _goals.indexWhere((g) => g.id == goalId);

@@ -8,6 +8,7 @@ import { Reflector } from '@nestjs/core';
 import { AuthGuard } from './auth.guard';
 import { AppConfig } from '../../config/configuration';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+import { PrismaService } from '../../prisma/prisma.service';
 
 /**
  * Development-only authentication.
@@ -18,17 +19,19 @@ import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
  *
  * Refuses to run when NODE_ENV=production.
  * Skips routes marked with @Public().
+ * Upserts the configured development user so FK writes never 500.
  */
 @Injectable()
 export class DevAuthGuard extends AuthGuard {
   constructor(
     private readonly config: ConfigService<AppConfig, true>,
     private readonly reflector: Reflector,
+    private readonly prisma: PrismaService,
   ) {
     super();
   }
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -62,6 +65,23 @@ export class DevAuthGuard extends AuthGuard {
           'Provide X-Dev-User-Id (or Authorization: Bearer dev <DEV_USER_ID>) matching the configured development user.',
       });
     }
+
+    await this.prisma.user.upsert({
+      where: { id: devUser.id },
+      update: {
+        email: devUser.email,
+        displayName: devUser.displayName,
+        timezone: devUser.timezone,
+        currencyCode: devUser.currencyCode,
+      },
+      create: {
+        id: devUser.id,
+        email: devUser.email,
+        displayName: devUser.displayName,
+        timezone: devUser.timezone,
+        currencyCode: devUser.currencyCode,
+      },
+    });
 
     this.attachUser(context, {
       id: devUser.id,

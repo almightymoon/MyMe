@@ -1,10 +1,12 @@
 # Goals API contract
 
-Contract for the Goals vertical slice shared by `apps/api` and (later) `apps/mobile` remote repository.
+Contract for the Goals vertical slice shared by `apps/api` and `apps/mobile` (`ApiGoalRepository`).
 
 Base path: `/api/v1`
 
 Authentication (development): header `X-Dev-User-Id: <DEV_USER_ID>` or `Authorization: Bearer dev <DEV_USER_ID>`.
+
+Flutter sends `X-Dev-User-Id` **only in debug builds**. Release builds must not include development authentication.
 
 ## Resources
 
@@ -13,7 +15,7 @@ Authentication (development): header `X-Dev-User-Id: <DEV_USER_ID>` or `Authoriz
 | Method | Path | Description |
 | --- | --- | --- |
 | GET | `/goals` | List current user's goals (`status`, `includeArchived` query) |
-| POST | `/goals` | Create goal |
+| POST | `/goals` | Create goal **atomically** (optional nested `milestones[]`) |
 | GET | `/goals/:id` | Goal detail + milestones + progress history + forecast |
 | PATCH | `/goals/:id` | Partial update |
 | DELETE | `/goals/:id` | Hard delete |
@@ -24,7 +26,7 @@ Authentication (development): header `X-Dev-User-Id: <DEV_USER_ID>` or `Authoriz
 
 | Method | Path | Description |
 | --- | --- | --- |
-| POST | `/goals/:goalId/milestones` | Create |
+| POST | `/goals/:goalId/milestones` | Create — response `{ goal, createdMilestone }` |
 | PATCH | `/goals/:goalId/milestones/:milestoneId` | Update |
 | DELETE | `/goals/:goalId/milestones/:milestoneId` | Delete |
 | POST | `/goals/:goalId/milestones/:milestoneId/complete` | Complete |
@@ -40,7 +42,7 @@ Authentication (development): header `X-Dev-User-Id: <DEV_USER_ID>` or `Authoriz
 
 | Method | Path | Auth |
 | --- | --- | --- |
-| GET | `/health` | Public |
+| GET | `/health` | Public (503 when database unreachable) |
 
 ## Enums
 
@@ -51,9 +53,53 @@ Authentication (development): header `X-Dev-User-Id: <DEV_USER_ID>` or `Authoriz
 
 ## Money
 
-Amounts are **integer minor units** (`targetAmountMinor`, `currentAmountMinor`). Currency is ISO-4217 (`currencyCode`).
+### Storage
 
-When recording progress with only `currentAmountMinor` and a positive target, `progressPercent` is derived as `min(100, max(0, current/target*100))`.
+PostgreSQL / Prisma: `Decimal(30, 0)` minor units (whole numbers only). Never IEEE float.
+
+Example: **PKR 150,000,000** → minor units **`15000000000`** (paisa).
+
+### API JSON (strings only)
+
+All monetary fields are **decimal digit strings** (or `null`):
+
+- `targetAmountMinor`, `currentAmountMinor`
+- `previousAmountMinor`, `newAmountMinor`
+- forecast: `remainingAmountMinor`, `requiredMonthlyContributionMinor`, `requiredWeeklyContributionMinor`
+
+Correct:
+
+```json
+{
+  "targetAmountMinor": "15000000000",
+  "currentAmountMinor": "0"
+}
+```
+
+Incorrect: JSON numbers (`15000000000`), floats (`"100.5"`), signed values, commas, scientific notation, whitespace padding.
+
+### Rules
+
+- `targetAmountMinor` > 0 when supplied
+- `currentAmountMinor` ≥ 0
+- `currentAmountMinor` ≤ `targetAmountMinor` when both set
+- `currencyCode` required when any amount is supplied — exactly three uppercase ASCII letters (`PKR`)
+- Financial progress percent is **server-calculated** from amounts when possible (integer ratio, not floating money)
+
+## Atomic create
+
+`POST /goals` accepts optional `milestones[]`. Goal + milestones are written in one Prisma transaction (all-or-nothing). Flutter `ApiGoalRepository.createGoal` sends a **single** request.
+
+## Milestone create response
+
+```json
+{
+  "goal": { "...": "..." },
+  "createdMilestone": { "id": "...", "title": "...", "...": "..." }
+}
+```
+
+Clients must use `createdMilestone.id` — never match by title (duplicate titles are allowed).
 
 ## Ownership
 
@@ -61,12 +107,27 @@ Every goal query filters by authenticated `userId`. Cross-user access returns **
 
 Never trust a client-provided `userId`.
 
+## Domain error codes
+
+| Code | Meaning |
+| --- | --- |
+| `GOAL_VALIDATION_ERROR` | Generic / class-validator failure |
+| `GOAL_NAME_REQUIRED` | Missing or whitespace-only name |
+| `GOAL_DEADLINE_IN_PAST` | Active create with past deadline |
+| `GOAL_TARGET_AMOUNT_INVALID` | Bad or non-positive target |
+| `GOAL_CURRENT_AMOUNT_EXCEEDS_TARGET` | Current > target |
+| `GOAL_CURRENCY_REQUIRED` | Missing/invalid currency with amounts |
+| `GOAL_CUSTOM_CATEGORY_REQUIRED` | `custom` without name |
+| `GOAL_MILESTONE_INVALID` | Bad milestone payload |
+| `OWNERSHIP_FORBIDDEN` | Cross-user access |
+| `RESOURCE_NOT_FOUND` | Missing resource |
+
 ## Error shape
 
 ```json
 {
   "statusCode": 400,
-  "code": "GOAL_VALIDATION_ERROR",
+  "code": "GOAL_CURRENT_AMOUNT_EXCEEDS_TARGET",
   "message": "Human-readable message",
   "details": {},
   "timestamp": "2026-08-08T00:00:00.000Z",
@@ -78,26 +139,31 @@ Never trust a client-provided `userId`.
 
 Implemented in:
 
-- Flutter: `apps/mobile/.../goal_forecast_service.dart`
-- API: `apps/api/src/goals/forecast/goal-forecast.service.ts`
+- Flutter: `apps/mobile/.../goal_forecast_service.dart` (`MoneyMinor` / `BigInt`)
+- API: `apps/api/src/goals/forecast/goal-forecast.service.ts` (`bigint` / `Prisma.Decimal`)
 
 ### Formula
 
 ```
 remaining = max(0, targetAmountMinor - max(0, currentAmountMinor))
-daysRemaining = deadlineDate - asOfDate   // date-only
+daysRemaining = deadlineDate - asOfDate   // UTC date-only
 effectiveDays = daysRemaining == 0 ? 1 : daysRemaining
 monthsRemaining = max(1, ceil(effectiveDays / 30.4375))
-requiredMonthlyContribution = ceil(remaining / monthsRemaining)
+requiredMonthlyContribution = ceil(remaining / monthsRemaining)   // upward
 requiredWeeklyContribution = ceil(remaining / max(1, ceil(effectiveDays / 7)))
 ```
 
-Optional known monthly contribution:
+**Rounding:** required contributions always **ceil** to the next whole minor unit so the user is never told to save less than required.
 
-```
-monthsNeeded = ceil(remaining / knownMonthlyContributionMinor)
-projectedCompletionDate = asOf + ceil(monthsNeeded * 30.4375) days
-```
+### Test vector
+
+| Field | Value |
+| --- | --- |
+| Target | `"15000000000"` (PKR 150,000,000) |
+| Current | `"0"` |
+| Currency | `PKR` |
+
+Vary deadline (today / +60 days / past) and assert string remaining + ceiling monthly/weekly.
 
 ### Status rules
 
@@ -109,20 +175,36 @@ projectedCompletionDate = asOf + ceil(monthsNeeded * 30.4375) days
 | `onTrack` | Otherwise when amounts are present |
 | `insufficientData` | Missing/invalid target |
 
-No OpenAI / ML is used for these calculations.
-
 ## Example create body
 
 ```json
 {
-  "name": "Emergency fund",
-  "description": "Six months of expenses",
+  "name": "Buy a House",
+  "description": "Purchase a family home",
   "category": "financial",
   "priority": "high",
-  "targetAmountMinor": 50000000,
-  "currentAmountMinor": 10000000,
+  "deadline": "2027-12-31T00:00:00.000Z",
+  "targetAmountMinor": "15000000000",
+  "currentAmountMinor": "0",
   "currencyCode": "PKR",
-  "deadline": "2026-12-31T00:00:00.000Z",
-  "progressPercent": 20
+  "milestones": [
+    {
+      "title": "Build deposit fund",
+      "description": "Save the initial deposit",
+      "order": 0
+    },
+    {
+      "title": "Complete financing review",
+      "order": 1
+    }
+  ]
 }
 ```
+
+## Flutter client
+
+- `MoneyMinor` (`BigInt`) value object — JSON digit strings; legacy local `int` still readable
+- `ApiGoalRepository` implements `GoalRepository`
+- DTO mapping: `GoalApiMapper` (widgets never parse JSON)
+- Modes: `--dart-define=GOALS_DATA_SOURCE=fake|local|api`
+- Base URL: `--dart-define=API_BASE_URL=...` (include `/api/v1`)

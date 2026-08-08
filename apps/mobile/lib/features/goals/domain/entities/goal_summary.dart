@@ -1,3 +1,5 @@
+import '../services/money_format.dart';
+import '../value_objects/money_minor.dart';
 import 'goal.dart';
 import 'goal_enums.dart';
 
@@ -28,29 +30,14 @@ class GoalSummary {
 
   static String _subtitleFor(Goal goal) {
     if (goal.targetAmountMinor != null && goal.currencyCode != null) {
-      final current = goal.currentAmountMinor ?? 0;
-      return '${_formatMinor(current, goal.currencyCode!)} of '
-          '${_formatMinor(goal.targetAmountMinor!, goal.currencyCode!)}';
+      final current = goal.currentAmountMinor ?? MoneyMinor.zero;
+      return '${MoneyFormat.formatMinor(current, goal.currencyCode!)} of '
+          '${MoneyFormat.formatMinor(goal.targetAmountMinor!, goal.currencyCode!)}';
     }
     if (goal.milestones.isNotEmpty) {
       final done = goal.milestones.where((m) => m.isCompleted).length;
       return '$done / ${goal.milestones.length} milestones · ${goal.displayCategory}';
     }
     return '${goal.displayCategory} · ${goal.priority.label}';
-  }
-
-  static String _formatMinor(int minor, String currencyCode) {
-    final major = minor / 100.0;
-    final formatted = major >= 1000
-        ? major
-              .toStringAsFixed(0)
-              .replaceAllMapped(
-                RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-                (m) => '${m[1]},',
-              )
-        : (minor % 100 == 0
-              ? major.toStringAsFixed(0)
-              : major.toStringAsFixed(2));
-    return '$currencyCode $formatted';
   }
 }

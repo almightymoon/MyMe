@@ -1,86 +1,86 @@
 # Goals feature
 
-Locally persisted goal management for MeMy mobile (Flutter).
+Goal management for MeMy mobile (Flutter), with pluggable persistence:
+
+| Mode (`GOALS_DATA_SOURCE`) | Implementation |
+| --- | --- |
+| `local` (default) | `LocalGoalRepository` — SharedPreferences offline/demo |
+| `api` | `ApiGoalRepository` — NestJS `/api/v1/goals` + local read-cache |
+| `fake` | `FakeGoalRepository` — in-memory for demos/tests |
+
+UI never talks to Dio or parses JSON. Screens use `goalRepositoryProvider` only.
 
 ## User flow
 
 1. Demo sign-in → Today
-2. Quick Add → **Add Goal** (real form, not a placeholder)
+2. Quick Add → **Add Goal** (real form)
 3. Save goal → success snackbar → Goal detail
 4. Goal appears in **Goals** list (filters: All / Active / Completed / Archived)
 5. Active goals appear on **Today** and **Plan** automatically
 6. Open goal → update progress / complete milestones → forecast recalculates
-7. Restart app → SharedPreferences restores goals (no reseed after user clears all)
+7. Restart app → local mode restores SharedPreferences; API mode refreshes from server (cache used offline)
 
 ## Domain model
 
-`Goal` stores:
+`Goal` stores identity, classification, **`MoneyMinor`** amounts + currency, schedule, progress, milestones.
 
-- identity & copy: `id`, `name`, `description`, `notes`
-- classification: `category`, `customCategoryName`, `priority`, `status`
-- money as **integer minor units** + `currencyCode` (never floating point in storage)
-- schedule: `deadline`, `createdAt`, `updatedAt`, `archivedAt`
-- `progressPercent` (derived), `milestones[]`
+`MoneyMinor` is a non-negative `BigInt` minor-unit value object:
 
-`GoalMilestone`: `id`, `goalId`, `title`, `description?`, `targetDate?`, `isCompleted`, `completedAt?`, `order`
+- Wire / persistence: decimal digit **string** (e.g. `"15000000000"`)
+- Legacy local JSON **ints** still deserialize
+- New local writes always use strings
+- Corrupt monetary values yield `null` on local read (do not crash the app)
 
-Enums: `GoalCategory`, `GoalPriority`, `GoalStatus` (see `goal_enums.dart`).
+Enums: `GoalCategory`, `GoalPriority`, `GoalStatus`.
+
+PRD example: **PKR 150,000,000** → `"15000000000"` minor units.
 
 ## Forecast formula
 
-`GoalForecastService` is pure and deterministic (no AI).
+`GoalForecastService` is pure and deterministic (no AI), using `BigInt` arithmetic. Same formula as the NestJS server — see `docs/product/goals-api-contract.md`. Required contributions **ceil** upward.
 
-For financial goals with a positive target:
+## Repository selection
 
+Build-time / environment (see `EnvironmentConfig`):
+
+```bash
+--dart-define=GOALS_DATA_SOURCE=api
+--dart-define=API_BASE_URL=http://127.0.0.1:3000/api/v1
+--dart-define=DEV_USER_ID=00000000-0000-4000-8000-000000000001
 ```
-remaining = max(0, targetAmountMinor - max(0, currentAmountMinor))
-daysRemaining = deadlineDate - asOfDate   // date-only
-effectiveDays = daysRemaining == 0 ? 1 : daysRemaining
-monthsRemaining = max(1, ceil(effectiveDays / 30.4375))
-requiredMonthlyContribution = ceil(remaining / monthsRemaining)
-requiredWeeklyContribution = ceil(remaining / max(1, ceil(effectiveDays / 7)))
-```
 
-Optional known monthly contribution projects a completion date.
+`goalRepositoryProvider` switches implementations. Override `goalsDataSourceProvider` in tests.
 
-Status: `completed` | `overdue` | `atRisk` | `onTrack` | `insufficientData`.
+## API mode
 
-## Persistence format
+- `createGoal` sends **one** `POST /goals` including nested milestones (atomic)
+- `addMilestone` expects `{ goal, createdMilestone }` and uses the exact created id
+- Successful list/detail responses call `LocalGoalRepository.replaceAll` / `upsert`
+- Network/timeout on **reads** → return previously cached goals
+- Network on **writes** → `AppException.connectionRequired` — no fake offline sync
+
+## Error handling
+
+Failures map to `AppException` kinds: validation, unauthorized, forbidden, not found, conflict, network unavailable, timeout, server failure, connection required, unknown.
+
+UI uses `userFacingErrorMessage` — never raw Dio or stack traces.
+
+Dev auth header `X-Dev-User-Id` is sent **only in debug builds** (`kDebugMode`).
+
+## Local persistence format
 
 SharedPreferences keys:
 
-- `memy_goals_initialized_v1` — set once after first load
-- `memy_goals_v1` — JSON document:
+- `memy_goals_initialized_v1`
+- `memy_goals_v1` — `{ "schemaVersion": 1, "goals": [ ... ] }`
 
-```json
-{
-  "schemaVersion": 1,
-  "goals": [ /* Goal.toJson() */ ]
-}
-```
+Money fields in `goals` are digit strings after this migration. Legacy integer amounts remain readable via `MoneyMinor.fromJson`.
 
-Rules:
-
-- Seed demo goals only when initialized flag is absent
-- Deleting all goals does **not** reseed
-- Malformed JSON / bad entries → empty or partial list, never crash
-
-Implementation: `LocalGoalRepository` behind `GoalRepository` (swap-ready for `ApiGoalRepository`).
+Seed demo goals only when initialized flag is absent (local mode). API mode seeds an empty cache.
 
 ## Edge cases
 
-- Missing target → forecast `insufficientData`
-- Past deadline with remaining amount → `overdue`
-- Target reached / status completed → `completed`
-- Deadline today → one-day runway, typically `atRisk`
-- Negative current amount treated as 0 for remaining
-- Current > target blocked on create validation
 - Duplicate save prevented via `isSubmitting` on add form
-
-## Future API migration
-
-1. Keep `GoalRepository` method surface
-2. Add `ApiGoalRepository` mapping DTO ↔ `Goal`
-3. Override `goalRepositoryProvider` by environment
-4. Migrate local JSON once, or dual-run sync
-5. Leave `GoalForecastService` client-side until server provides forecasts
+- Missing target → forecast `insufficientData`
+- Offline write does not pretend success
+- Current amount cannot exceed target (client + server validation)

@@ -27,7 +27,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const isProd = process.env.NODE_ENV === 'production';
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let code: string = ErrorCodes.INTERNAL;
     let message = 'An unexpected error occurred';
@@ -35,39 +34,42 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
+      code = this.codeForStatus(status);
       const payload = exception.getResponse();
       if (typeof payload === 'string') {
         message = payload;
       } else if (typeof payload === 'object' && payload !== null) {
         const obj = payload as Record<string, unknown>;
-        message = String(obj.message ?? exception.message);
-        code = String(obj.code ?? this.codeForStatus(status));
         if (Array.isArray(obj.message)) {
           message = 'Validation failed';
           details = { messages: obj.message };
           code = ErrorCodes.VALIDATION_ERROR;
-        } else if (obj.details && typeof obj.details === 'object') {
-          details = obj.details as Record<string, unknown>;
-        }
-        if (obj.error && !obj.code) {
-          // Nest default validation shape
-          code = ErrorCodes.VALIDATION_ERROR;
+        } else {
+          message = String(obj.message ?? exception.message);
+          if (typeof obj.code === 'string' && obj.code.length > 0) {
+            code = obj.code;
+          } else if (status === 400 && obj.error) {
+            // Nest default Bad Request shape without custom code
+            code = ErrorCodes.VALIDATION_ERROR;
+          }
+          if (obj.details && typeof obj.details === 'object') {
+            details = obj.details as Record<string, unknown>;
+          }
         }
       }
     } else if (exception instanceof Error) {
-      message = isProd ? 'An unexpected error occurred' : exception.message;
+      // Never leak internals in HTTP responses
+      message = 'An unexpected error occurred';
       this.logger.error(exception.message, exception.stack);
     } else {
       this.logger.error(`Unknown exception: ${String(exception)}`);
     }
 
-    if (!(exception instanceof Error) || exception instanceof HttpException) {
-      if (status >= 500) {
-        this.logger.error(
-          `${request.method} ${request.url} -> ${status}`,
-          exception instanceof Error ? exception.stack : undefined,
-        );
-      }
+    if (status >= 500 && exception instanceof HttpException) {
+      this.logger.error(
+        `${request.method} ${request.url} -> ${status}`,
+        exception.stack,
+      );
     }
 
     const body: ErrorBody = {

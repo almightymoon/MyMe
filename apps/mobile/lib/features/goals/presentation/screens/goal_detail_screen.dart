@@ -20,6 +20,7 @@ import '../../domain/entities/goal_enums.dart';
 import '../../domain/entities/goal_forecast.dart';
 import '../../domain/entities/goal_milestone.dart';
 import '../../domain/services/money_format.dart';
+import '../../domain/value_objects/money_minor.dart';
 
 class GoalDetailScreen extends ConsumerWidget {
   const GoalDetailScreen({super.key, required this.goalId});
@@ -345,7 +346,7 @@ class _MetaCard extends StatelessWidget {
           if (goal.targetAmountMinor != null && currency != null) ...[
             const SizedBox(height: 6),
             Text(
-              '${MoneyFormat.formatMinor(goal.currentAmountMinor ?? 0, currency)}'
+              '${MoneyFormat.formatMinor(goal.currentAmountMinor ?? MoneyMinor.zero, currency)}'
               ' of ${MoneyFormat.formatMinor(goal.targetAmountMinor!, currency)}',
               style: AppTextStyles.mono(fontSize: 16),
             ),

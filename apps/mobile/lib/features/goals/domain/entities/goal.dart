@@ -1,3 +1,4 @@
+import '../value_objects/money_minor.dart';
 import 'goal_enums.dart';
 import 'goal_milestone.dart';
 
@@ -29,8 +30,8 @@ class Goal {
   final String? customCategoryName;
   final GoalPriority priority;
   final GoalStatus status;
-  final int? targetAmountMinor;
-  final int? currentAmountMinor;
+  final MoneyMinor? targetAmountMinor;
+  final MoneyMinor? currentAmountMinor;
   final String? currencyCode;
   final DateTime deadline;
   final DateTime createdAt;
@@ -62,8 +63,8 @@ class Goal {
     String? customCategoryName,
     GoalPriority? priority,
     GoalStatus? status,
-    int? targetAmountMinor,
-    int? currentAmountMinor,
+    MoneyMinor? targetAmountMinor,
+    MoneyMinor? currentAmountMinor,
     String? currencyCode,
     DateTime? deadline,
     DateTime? createdAt,
@@ -116,8 +117,8 @@ class Goal {
       'customCategoryName': customCategoryName,
       'priority': priority.name,
       'status': status.name,
-      'targetAmountMinor': targetAmountMinor,
-      'currentAmountMinor': currentAmountMinor,
+      'targetAmountMinor': targetAmountMinor?.toJson(),
+      'currentAmountMinor': currentAmountMinor?.toJson(),
       'currencyCode': currencyCode,
       'deadline': deadline.toIso8601String(),
       'createdAt': createdAt.toIso8601String(),
@@ -129,6 +130,10 @@ class Goal {
     };
   }
 
+  /// Never throws — corrupt/legacy amount values are dropped (`null`)
+  /// rather than crashing local storage reads. [MoneyMinor.fromJson]
+  /// transparently accepts legacy `int`/`num` amounts alongside the current
+  /// decimal-string wire format.
   factory Goal.fromJson(Map<String, dynamic> json) {
     final milestonesJson = json['milestones'];
     final milestones = <GoalMilestone>[];
@@ -165,8 +170,8 @@ class Goal {
         json['status'] as String?,
         GoalStatus.active,
       ),
-      targetAmountMinor: (json['targetAmountMinor'] as num?)?.toInt(),
-      currentAmountMinor: (json['currentAmountMinor'] as num?)?.toInt(),
+      targetAmountMinor: MoneyMinor.fromJson(json['targetAmountMinor']),
+      currentAmountMinor: MoneyMinor.fromJson(json['currentAmountMinor']),
       currencyCode: json['currencyCode'] as String?,
       deadline:
           DateTime.tryParse(json['deadline'] as String? ?? '') ??

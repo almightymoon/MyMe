@@ -2,90 +2,55 @@
 
 ## Why Flutter is being introduced
 
-The HTML/CSS/JavaScript application under `/app` is the approved **visual prototype**. It validated navigation, tone, and information architecture quickly in the browser.
-
-Production MeMy needs a native-quality mobile client with:
-
-- Reliable offline-friendly UI foundations
-- Shared code across Android and iOS
-- A maintainable feature-first codebase
-- Room for future auth, API, and device integrations without rewriting the UI layer
-
-Flutter is introduced **beside** the prototype so design iteration can continue in HTML while the mobile foundation hardens in Dart.
+The HTML/CSS/JavaScript application under `/app` is the approved **visual prototype**. Production MeMy needs a native-quality mobile client beside that prototype.
 
 ## How the prototype and mobile app coexist
 
 | Path | Role |
 |------|------|
-| `/app` | Design prototype and interaction reference — do not convert wholesale |
-| `/index.html` | Design-system / marketing reference page |
-| `/apps/mobile` | Production Flutter mobile foundation |
-| `/reference images` | Visual references and screenshots |
+| `/app` | Design prototype — do not convert wholesale |
+| `/apps/mobile` | Production Flutter mobile client |
+| `/apps/api` | NestJS Goals API |
+| `/reference images` | Visual references |
 
-Rules:
-
-- Do not delete or rewrite the prototype to “make room” for Flutter.
-- Port **design language and IA**, not DOM structure or JavaScript modules.
-- When Flutter screens diverge, update ADRs / product docs rather than silently mutating the prototype.
-
-## Chosen mobile architecture
+## Architecture
 
 Feature-first layout under `apps/mobile/lib`:
 
 ```
 lib/
   app/          # bootstrap, router, theme
-  core/         # shared constants and reusable widgets
-  features/     # feature modules (presentation first in this milestone)
+  core/         # config, network, errors, shared widgets
+  features/     # feature modules (domain / data / application / presentation)
 ```
 
-Principles for this foundation:
+### Networking (Goals vertical slice)
 
-- **Presentation-first features** — screens and shell only; no real repositories yet
-- **Thin `app/` layer** — theme, routing, and bootstrap stay centralized
-- **Reusable MeMy primitives** — cards, buttons, empty states, page headers
-- **Material 3 base** — heavily themed to match MeMy tokens (canvas, ember, Fraunces/Inter)
+- `EnvironmentConfig` — `--dart-define` for `API_BASE_URL`, `GOALS_DATA_SOURCE`, `DEV_USER_ID`
+- `ApiClient` — Dio wrapper, timeouts, debug-only logging (no sensitive payloads)
+- `ApiErrorParser` / `AppException` — consistent user-facing errors
+- Dev auth header only when `kDebugMode`
 
-Future layers (not in this milestone):
+### Goals repositories
 
-- `domain/` entities and use cases
-- `data/` repository implementations and DTOs
-- platform adapters (health, notifications, secure storage)
+| Mode | Class |
+|------|--------|
+| `fake` | `FakeGoalRepository` |
+| `local` | `LocalGoalRepository` |
+| `api` | `ApiGoalRepository` (+ local read-cache) |
 
-## Navigation strategy
+Selected via `goalRepositoryProvider` / `goalsDataSourceProvider`. Widgets depend on `GoalRepository` only.
 
-- **go_router** for declarative, deep-linkable routes
-- Initial route: `/signin` (demo-only)
-- Primary tabs use **`StatefulShellRoute.indexedStack`** so Today / Plan / Coach / More preserve scroll and nested stack state
-- Central **Quick Add** is a shell-owned modal, not a fifth tab destination
-- Secondary feature routes (`/goals`, `/finance`, …) are top-level routes reachable from Plan, More, or Quick Add
+## Navigation
 
-## State-management strategy
+- **go_router** with `StatefulShellRoute.indexedStack` for Today / Plan / Coach / More
+- Quick Add is a shell modal
 
-- **flutter_riverpod** as the default app-wide state approach
-- This foundation keeps providers minimal (router / shell concerns only as needed)
-- Prefer immutable UI state and small providers as features grow
-- Avoid introducing code-generation (Freezed, Riverpod codegen) until complexity warrants it
+## State management
 
-## Repository abstraction strategy
+- **flutter_riverpod**
+- Goals: stream providers over `GoalRepository.watchGoals()` so list, detail, Plan, and Today stay in sync after mutations
 
-Not implemented in this milestone. Intended direction:
+## Run with API mode
 
-1. Define repository interfaces in `domain/` (or feature `domain/`)
-2. Provide demo / in-memory implementations for UI development
-3. Swap to remote implementations behind the same interfaces when a backend exists
-4. Keep presentation unaware of HTTP, databases, or vendor SDKs
-
-Until then, screens use clearly labeled **demo content** only.
-
-## Future backend integration approach
-
-When backend work begins:
-
-1. Introduce a thin API client layer (not in this milestone)
-2. Map network models → domain models in `data/`
-3. Auth tokens and session live behind an auth repository — never inside widgets
-4. AI Coach becomes a streaming/message repository; UI must still show offline / unavailable states honestly
-5. Health / sensors remain optional platform adapters with graceful fallbacks
-
-This foundation intentionally **does not** include Firebase, Auth0, OpenAI, Dio, databases, or real authentication.
+See root `README.md` for PostgreSQL + API + Flutter commands.

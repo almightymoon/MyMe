@@ -1,3 +1,5 @@
+import '../value_objects/money_minor.dart';
+
 /// Forecast status for financial goals.
 enum GoalForecastStatus {
   onTrack,
@@ -23,11 +25,11 @@ class GoalForecast {
 
   final GoalForecastStatus status;
   final DateTime asOf;
-  final int? remainingAmountMinor;
+  final MoneyMinor? remainingAmountMinor;
   final int? daysRemaining;
   final int? estimatedMonthsRemaining;
-  final int? requiredMonthlyContributionMinor;
-  final int? requiredWeeklyContributionMinor;
+  final MoneyMinor? requiredMonthlyContributionMinor;
+  final MoneyMinor? requiredWeeklyContributionMinor;
   final DateTime? projectedCompletionDate;
   final String message;
 }

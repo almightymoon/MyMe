@@ -958,7 +958,8 @@ img { display: block; max-width: 100%; }
 .ho-heart {
   position: absolute;
   right: -8px;
-  top: 44px;
+  top: auto;
+  bottom: -28px;
   width: min(300px, 82%);
   height: auto;
   max-height: 340px;

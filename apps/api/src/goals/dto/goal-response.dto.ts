@@ -6,11 +6,13 @@ import {
   GoalPriority,
   GoalProgressEntry,
   GoalStatus,
+  Prisma,
 } from '@prisma/client';
 import {
   ForecastStatus,
   GoalForecast,
 } from '../forecast/goal-forecast.service';
+import { moneyMinorToApiString } from '../money/money-minor';
 
 export class MilestoneResponseDto {
   @ApiProperty()
@@ -57,11 +59,11 @@ export class ProgressEntryResponseDto {
   @ApiProperty()
   newProgressPercent!: number;
 
-  @ApiPropertyOptional({ nullable: true })
-  previousAmountMinor!: number | null;
+  @ApiPropertyOptional({ nullable: true, type: String, example: '0' })
+  previousAmountMinor!: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
-  newAmountMinor!: number | null;
+  @ApiPropertyOptional({ nullable: true, type: String, example: '250000000' })
+  newAmountMinor!: string | null;
 
   @ApiPropertyOptional({ nullable: true })
   note!: string | null;
@@ -70,15 +72,15 @@ export class ProgressEntryResponseDto {
   createdAt!: string;
 }
 
-export class ForecastResponseDto implements GoalForecast {
+export class ForecastResponseDto {
   @ApiProperty({ enum: ForecastStatus })
   status!: ForecastStatus;
 
   @ApiProperty({ example: '2026-08-08' })
   asOf!: string;
 
-  @ApiPropertyOptional()
-  remainingAmountMinor?: number;
+  @ApiPropertyOptional({ type: String, example: '15000000000' })
+  remainingAmountMinor?: string;
 
   @ApiPropertyOptional()
   daysRemaining?: number;
@@ -86,11 +88,11 @@ export class ForecastResponseDto implements GoalForecast {
   @ApiPropertyOptional()
   estimatedMonthsRemaining?: number;
 
-  @ApiPropertyOptional()
-  requiredMonthlyContributionMinor?: number;
+  @ApiPropertyOptional({ type: String, example: '123456790' })
+  requiredMonthlyContributionMinor?: string;
 
-  @ApiPropertyOptional()
-  requiredWeeklyContributionMinor?: number;
+  @ApiPropertyOptional({ type: String, example: '28767124' })
+  requiredWeeklyContributionMinor?: string;
 
   @ApiPropertyOptional()
   projectedCompletionDate?: string;
@@ -124,11 +126,20 @@ export class GoalResponseDto {
   @ApiProperty({ enum: GoalStatus })
   status!: GoalStatus;
 
-  @ApiPropertyOptional({ nullable: true })
-  targetAmountMinor!: number | null;
+  @ApiPropertyOptional({
+    nullable: true,
+    type: String,
+    example: '15000000000',
+    description: 'Minor units as whole-number decimal string',
+  })
+  targetAmountMinor!: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
-  currentAmountMinor!: number | null;
+  @ApiPropertyOptional({
+    nullable: true,
+    type: String,
+    example: '250000000',
+  })
+  currentAmountMinor!: string | null;
 
   @ApiPropertyOptional({ nullable: true })
   currencyCode!: string | null;
@@ -161,6 +172,15 @@ export class GoalResponseDto {
   forecast!: ForecastResponseDto;
 }
 
+/** Response for POST /goals/:goalId/milestones */
+export class MilestoneCreateResponseDto {
+  @ApiProperty({ type: GoalResponseDto })
+  goal!: GoalResponseDto;
+
+  @ApiProperty({ type: MilestoneResponseDto })
+  createdMilestone!: MilestoneResponseDto;
+}
+
 export type GoalWithRelations = Goal & {
   milestones: GoalMilestone[];
   progressEntries?: GoalProgressEntry[];
@@ -187,10 +207,24 @@ export function toProgressDto(e: GoalProgressEntry): ProgressEntryResponseDto {
     goalId: e.goalId,
     previousProgressPercent: e.previousProgressPercent,
     newProgressPercent: e.newProgressPercent,
-    previousAmountMinor: e.previousAmountMinor,
-    newAmountMinor: e.newAmountMinor,
+    previousAmountMinor: moneyMinorToApiString(e.previousAmountMinor),
+    newAmountMinor: moneyMinorToApiString(e.newAmountMinor),
     note: e.note,
     createdAt: e.createdAt.toISOString(),
+  };
+}
+
+export function toForecastDto(forecast: GoalForecast): ForecastResponseDto {
+  return {
+    status: forecast.status,
+    asOf: forecast.asOf,
+    remainingAmountMinor: forecast.remainingAmountMinor,
+    daysRemaining: forecast.daysRemaining,
+    estimatedMonthsRemaining: forecast.estimatedMonthsRemaining,
+    requiredMonthlyContributionMinor: forecast.requiredMonthlyContributionMinor,
+    requiredWeeklyContributionMinor: forecast.requiredWeeklyContributionMinor,
+    projectedCompletionDate: forecast.projectedCompletionDate,
+    message: forecast.message,
   };
 }
 
@@ -208,8 +242,12 @@ export function toGoalDto(
     customCategoryName: goal.customCategoryName,
     priority: goal.priority,
     status: goal.status,
-    targetAmountMinor: goal.targetAmountMinor,
-    currentAmountMinor: goal.currentAmountMinor,
+    targetAmountMinor: moneyMinorToApiString(
+      goal.targetAmountMinor as Prisma.Decimal | null,
+    ),
+    currentAmountMinor: moneyMinorToApiString(
+      goal.currentAmountMinor as Prisma.Decimal | null,
+    ),
     currencyCode: goal.currencyCode,
     deadline: goal.deadline.toISOString(),
     progressPercent: goal.progressPercent,
@@ -223,6 +261,6 @@ export function toGoalDto(
     progressEntries: includeProgress
       ? (goal.progressEntries ?? []).map(toProgressDto)
       : undefined,
-    forecast,
+    forecast: toForecastDto(forecast),
   };
 }

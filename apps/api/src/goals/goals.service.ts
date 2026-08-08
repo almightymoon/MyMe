@@ -18,9 +18,17 @@ import {
 import {
   GoalResponseDto,
   GoalWithRelations,
+  MilestoneCreateResponseDto,
   toGoalDto,
+  toMilestoneDto,
 } from './dto/goal-response.dto';
 import { GoalForecastService } from './forecast/goal-forecast.service';
+import {
+  moneyMinorToApiString,
+  parseOptionalMoneyMinorString,
+  progressPercentFromAmounts,
+} from './money/money-minor';
+import { GoalBusinessValidator } from './validation/goal-business.validator';
 
 @Injectable()
 export class GoalsService {
@@ -59,25 +67,76 @@ export class GoalsService {
   }
 
   async create(userId: string, dto: CreateGoalDto): Promise<GoalResponseDto> {
-    this.assertCustomCategory(dto.category, dto.customCategoryName);
+    const name = GoalBusinessValidator.assertName(dto.name, true)!;
+    const status = dto.status ?? GoalStatus.active;
+    const deadline = new Date(dto.deadline);
+    GoalBusinessValidator.assertDeadlineNotPastForActiveCreate(
+      deadline,
+      status,
+    );
 
-    const goal = await this.prisma.goal.create({
-      data: {
-        userId,
-        name: dto.name.trim(),
-        description: dto.description?.trim() ?? '',
-        category: dto.category,
-        customCategoryName: dto.customCategoryName?.trim() ?? null,
-        priority: dto.priority ?? 'medium',
-        status: dto.status ?? 'active',
-        targetAmountMinor: dto.targetAmountMinor,
-        currentAmountMinor: dto.currentAmountMinor ?? 0,
-        currencyCode: dto.currencyCode?.toUpperCase() ?? null,
-        deadline: new Date(dto.deadline),
-        progressPercent: dto.progressPercent ?? 0,
-        notes: dto.notes?.trim() ?? '',
-      },
-      include: { milestones: true },
+    const { customCategoryName } = GoalBusinessValidator.assertCategory(
+      dto.category,
+      dto.customCategoryName,
+    );
+
+    const money = GoalBusinessValidator.parseAndAssertMoney({
+      targetAmountMinor: dto.targetAmountMinor,
+      currentAmountMinor: dto.currentAmountMinor,
+      currencyCode: dto.currencyCode,
+    });
+
+    const milestonesInput = dto.milestones ?? [];
+    const normalizedMilestones =
+      this.normalizeInitialMilestones(milestonesInput);
+
+    let progressPercent =
+      GoalBusinessValidator.assertProgressPercent(dto.progressPercent) ?? 0;
+
+    const target = money.targetAmountMinor ?? null;
+    const current =
+      money.currentAmountMinor !== undefined
+        ? money.currentAmountMinor
+        : target != null
+          ? new Prisma.Decimal(0)
+          : null;
+
+    if (
+      dto.progressPercent === undefined &&
+      target != null &&
+      current != null &&
+      target.gt(0)
+    ) {
+      progressPercent = progressPercentFromAmounts(current, target);
+    }
+
+    const goal = await this.prisma.$transaction(async (tx) => {
+      return tx.goal.create({
+        data: {
+          userId,
+          name,
+          description: dto.description?.trim() ?? '',
+          category: dto.category,
+          customCategoryName,
+          priority: dto.priority ?? 'medium',
+          status,
+          targetAmountMinor: target,
+          currentAmountMinor: current,
+          currencyCode: money.currencyCode ?? null,
+          deadline,
+          progressPercent,
+          notes: dto.notes?.trim() ?? '',
+          milestones: {
+            create: normalizedMilestones.map((m) => ({
+              title: m.title,
+              description: m.description ?? null,
+              targetDate: m.targetDate ? new Date(m.targetDate) : null,
+              order: m.order,
+            })),
+          },
+        },
+        include: { milestones: { orderBy: { order: 'asc' } } },
+      });
     });
 
     return this.mapGoal(goal);
@@ -88,49 +147,94 @@ export class GoalsService {
     id: string,
     dto: UpdateGoalDto,
   ): Promise<GoalResponseDto> {
-    await this.findOwnedGoal(userId, id, false);
-    if (dto.category !== undefined || dto.customCategoryName !== undefined) {
-      const existing = await this.prisma.goal.findFirst({
-        where: { id, userId },
-      });
-      const category = dto.category ?? existing!.category;
-      const custom =
-        dto.customCategoryName !== undefined
-          ? dto.customCategoryName
-          : existing!.customCategoryName;
-      this.assertCustomCategory(category, custom);
+    const existing = await this.findOwnedGoal(userId, id, false);
+
+    if (dto.name !== undefined) {
+      GoalBusinessValidator.assertName(dto.name, true);
     }
+
+    const category = dto.category ?? existing.category;
+    const customIncoming =
+      dto.customCategoryName !== undefined
+        ? dto.customCategoryName
+        : existing.customCategoryName;
+    const { customCategoryName } = GoalBusinessValidator.assertCategory(
+      category,
+      // When category changes away from custom, force clear even if stale value present
+      dto.category !== undefined && dto.category !== 'custom'
+        ? dto.customCategoryName === undefined
+          ? null
+          : dto.customCategoryName
+        : customIncoming,
+    );
+
+    const money = GoalBusinessValidator.parseAndAssertMoney(
+      {
+        ...(dto.targetAmountMinor !== undefined
+          ? { targetAmountMinor: dto.targetAmountMinor }
+          : {}),
+        ...(dto.currentAmountMinor !== undefined
+          ? { currentAmountMinor: dto.currentAmountMinor }
+          : {}),
+        ...(dto.currencyCode !== undefined
+          ? { currencyCode: dto.currencyCode }
+          : {}),
+      },
+      {
+        targetAmountMinor: existing.targetAmountMinor,
+        currentAmountMinor: existing.currentAmountMinor,
+        currencyCode: existing.currencyCode,
+      },
+    );
 
     const data: Prisma.GoalUpdateInput = {};
     if (dto.name !== undefined) data.name = dto.name.trim();
-    if (dto.description !== undefined)
+    if (dto.description !== undefined) {
       data.description = dto.description.trim();
-    if (dto.category !== undefined) data.category = dto.category;
-    if (dto.customCategoryName !== undefined) {
-      data.customCategoryName =
-        dto.customCategoryName === null ? null : dto.customCategoryName.trim();
+    }
+    if (dto.category !== undefined) {
+      data.category = dto.category;
+      data.customCategoryName = customCategoryName;
+    } else if (dto.customCategoryName !== undefined) {
+      data.customCategoryName = customCategoryName;
     }
     if (dto.priority !== undefined) data.priority = dto.priority;
     if (dto.status !== undefined) {
       data.status = dto.status;
       data.archivedAt = dto.status === GoalStatus.archived ? new Date() : null;
     }
-    if (dto.targetAmountMinor !== undefined) {
-      data.targetAmountMinor = dto.targetAmountMinor;
+    if (money.targetAmountMinor !== undefined) {
+      data.targetAmountMinor = money.targetAmountMinor;
     }
-    if (dto.currentAmountMinor !== undefined) {
-      data.currentAmountMinor = dto.currentAmountMinor;
+    if (money.currentAmountMinor !== undefined) {
+      data.currentAmountMinor = money.currentAmountMinor;
     }
-    if (dto.currencyCode !== undefined) {
-      data.currencyCode = dto.currencyCode
-        ? dto.currencyCode.toUpperCase()
-        : null;
+    if (money.currencyCode !== undefined) {
+      data.currencyCode = money.currencyCode;
     }
     if (dto.deadline !== undefined) data.deadline = new Date(dto.deadline);
-    if (dto.progressPercent !== undefined) {
-      data.progressPercent = dto.progressPercent;
-    }
     if (dto.notes !== undefined) data.notes = dto.notes.trim();
+
+    // Prefer server-calculated financial progress when amounts are present.
+    const nextTarget =
+      money.targetAmountMinor !== undefined
+        ? money.targetAmountMinor
+        : existing.targetAmountMinor;
+    const nextCurrent =
+      money.currentAmountMinor !== undefined
+        ? money.currentAmountMinor
+        : existing.currentAmountMinor;
+
+    if (nextTarget != null && nextCurrent != null && nextTarget.gt(0)) {
+      data.progressPercent = progressPercentFromAmounts(
+        nextCurrent,
+        nextTarget,
+      );
+    } else if (dto.progressPercent !== undefined) {
+      data.progressPercent = GoalBusinessValidator.assertProgressPercent(
+        dto.progressPercent,
+      );
+    }
 
     const goal = await this.prisma.goal.update({
       where: { id },
@@ -177,27 +281,43 @@ export class GoalsService {
       });
     }
 
-    const newAmount =
-      dto.currentAmountMinor !== undefined
-        ? dto.currentAmountMinor
-        : existing.currentAmountMinor;
+    let newAmount: Prisma.Decimal | null = existing.currentAmountMinor;
+    if (dto.currentAmountMinor !== undefined) {
+      newAmount = parseOptionalMoneyMinorString(dto.currentAmountMinor, {
+        field: 'currentAmountMinor',
+        code: ErrorCodes.GOAL_TARGET_AMOUNT_INVALID,
+      })!;
+      if (
+        existing.targetAmountMinor != null &&
+        newAmount.gt(existing.targetAmountMinor)
+      ) {
+        throw new BadRequestException({
+          code: ErrorCodes.GOAL_CURRENT_AMOUNT_EXCEEDS_TARGET,
+          message: 'currentAmountMinor may not exceed targetAmountMinor',
+          details: {
+            currentAmountMinor: moneyMinorToApiString(newAmount),
+            targetAmountMinor: moneyMinorToApiString(
+              existing.targetAmountMinor,
+            ),
+          },
+        });
+      }
+    }
+
     let newPercent =
       dto.progressPercent !== undefined
-        ? dto.progressPercent
+        ? GoalBusinessValidator.assertProgressPercent(dto.progressPercent)!
         : existing.progressPercent;
 
     if (
       dto.progressPercent === undefined &&
-      dto.currentAmountMinor !== undefined &&
+      newAmount != null &&
       existing.targetAmountMinor != null &&
-      existing.targetAmountMinor > 0
+      existing.targetAmountMinor.gt(0)
     ) {
-      newPercent = Math.min(
-        100,
-        Math.max(
-          0,
-          (dto.currentAmountMinor / existing.targetAmountMinor) * 100,
-        ),
+      newPercent = progressPercentFromAmounts(
+        newAmount,
+        existing.targetAmountMinor,
       );
     }
 
@@ -229,8 +349,17 @@ export class GoalsService {
     userId: string,
     goalId: string,
     dto: CreateMilestoneDto,
-  ): Promise<GoalResponseDto> {
+  ): Promise<MilestoneCreateResponseDto> {
     await this.findOwnedGoal(userId, goalId, false);
+
+    const title = dto.title?.trim();
+    if (!title) {
+      throw new BadRequestException({
+        code: ErrorCodes.GOAL_MILESTONE_INVALID,
+        message: 'Milestone title is required',
+        details: {},
+      });
+    }
 
     let order = dto.order;
     if (order === undefined) {
@@ -241,17 +370,21 @@ export class GoalsService {
       order = (agg._max.order ?? -1) + 1;
     }
 
-    await this.prisma.goalMilestone.create({
+    const created = await this.prisma.goalMilestone.create({
       data: {
         goalId,
-        title: dto.title.trim(),
+        title,
         description: dto.description?.trim() ?? null,
         targetDate: dto.targetDate ? new Date(dto.targetDate) : null,
         order,
       },
     });
 
-    return this.getById(userId, goalId, false);
+    const goal = await this.getById(userId, goalId, false);
+    return {
+      goal,
+      createdMilestone: toMilestoneDto(created),
+    };
   }
 
   async updateMilestone(
@@ -263,7 +396,17 @@ export class GoalsService {
     await this.findOwnedMilestone(userId, goalId, milestoneId);
 
     const data: Prisma.GoalMilestoneUpdateInput = {};
-    if (dto.title !== undefined) data.title = dto.title.trim();
+    if (dto.title !== undefined) {
+      const title = dto.title.trim();
+      if (!title) {
+        throw new BadRequestException({
+          code: ErrorCodes.GOAL_MILESTONE_INVALID,
+          message: 'Milestone title is required',
+          details: {},
+        });
+      }
+      data.title = title;
+    }
     if (dto.description !== undefined) {
       data.description =
         dto.description === null ? null : dto.description.trim();
@@ -334,6 +477,45 @@ export class GoalsService {
     return this.forecastService.forecast(goal);
   }
 
+  private normalizeInitialMilestones(
+    milestones: CreateGoalDto['milestones'],
+  ): Array<{
+    title: string;
+    description?: string | null;
+    targetDate?: string;
+    order: number;
+  }> {
+    if (!milestones || milestones.length === 0) return [];
+
+    const normalized = milestones.map((m, index) => {
+      if (!m || typeof m !== 'object') {
+        throw new BadRequestException({
+          code: ErrorCodes.GOAL_MILESTONE_INVALID,
+          message: 'Empty milestone objects are rejected',
+          details: { index },
+        });
+      }
+      const title = m.title?.trim() ?? '';
+      if (!title) {
+        throw new BadRequestException({
+          code: ErrorCodes.GOAL_MILESTONE_INVALID,
+          message: 'Milestone title is required',
+          details: { index },
+        });
+      }
+      return {
+        title,
+        description: m.description?.trim() ?? null,
+        targetDate: m.targetDate,
+        order: m.order ?? index,
+      };
+    });
+
+    // Normalize duplicate orders deterministically by stable index sort then reindex.
+    normalized.sort((a, b) => a.order - b.order);
+    return normalized.map((m, index) => ({ ...m, order: index }));
+  }
+
   private mapGoal(
     goal: GoalWithRelations,
     includeProgress = false,
@@ -358,7 +540,6 @@ export class GoalsService {
     });
 
     if (!goal) {
-      // Distinguish missing vs other-user for security: always 404
       const exists = await this.prisma.goal.findUnique({ where: { id } });
       if (exists && exists.userId !== userId) {
         throw new ForbiddenException({
@@ -394,18 +575,5 @@ export class GoalsService {
       });
     }
     return milestone;
-  }
-
-  private assertCustomCategory(
-    category: string,
-    customCategoryName?: string | null,
-  ): void {
-    if (category === 'custom' && !customCategoryName?.trim()) {
-      throw new BadRequestException({
-        code: ErrorCodes.VALIDATION_ERROR,
-        message: 'customCategoryName is required when category is custom',
-        details: {},
-      });
-    }
   }
 }

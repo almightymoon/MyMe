@@ -1,6 +1,7 @@
 import '../entities/goal.dart';
 import '../entities/goal_enums.dart';
 import '../entities/goal_milestone.dart';
+import '../value_objects/money_minor.dart';
 
 /// Recalculates [Goal.progressPercent] from amounts and/or milestones.
 abstract final class GoalProgressCalculator {
@@ -8,9 +9,17 @@ abstract final class GoalProgressCalculator {
     if (goal.status == GoalStatus.completed) return 100;
 
     final target = goal.targetAmountMinor;
-    if (target != null && target > 0) {
-      final current = (goal.currentAmountMinor ?? 0).clamp(0, target);
-      return ((current / target) * 100).clamp(0, 100);
+    if (target != null && target.isPositive) {
+      final rawCurrent = (goal.currentAmountMinor ?? MoneyMinor.zero).value;
+      final currentValue = rawCurrent > target.value
+          ? target.value
+          : rawCurrent;
+      // Scale by 10_000 (percent * 100) using BigInt division so the full
+      // minor-unit amounts never pass through `double`; only the resulting
+      // small percentage value is converted at the very end.
+      final scaledPercent = (currentValue * BigInt.from(10000)) ~/ target.value;
+      final percent = scaledPercent.toDouble() / 100.0;
+      return percent.clamp(0, 100);
     }
 
     if (goal.milestones.isNotEmpty) {

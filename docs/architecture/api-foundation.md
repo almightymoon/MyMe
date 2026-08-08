@@ -51,7 +51,9 @@ Client-supplied `userId` fields are ignored. Ownership is always taken from `Req
 
 Prisma models: `User`, `Goal`, `GoalMilestone`, `GoalProgressEntry`.
 
-Money uses **integer minor units**. Timestamps are ISO-8601 UTC via Prisma `DateTime`.
+Money uses **`DECIMAL(30,0)`** minor units in PostgreSQL and **decimal digit strings** in API JSON (never IEEE `Number` for stored amounts). Flutter mirrors this with `MoneyMinor` (`BigInt`). Timestamps are ISO-8601 UTC via Prisma `DateTime`.
+
+E2E tests must use `memy_test` (or any DB name ending in `_test`) via `.env.test`; destructive cleanup is guarded and will refuse the development database.
 
 ## Local infrastructure
 

@@ -28,7 +28,10 @@ import {
   UpdateGoalDto,
   UpdateMilestoneDto,
 } from './dto/goal.dto';
-import { GoalResponseDto } from './dto/goal-response.dto';
+import {
+  GoalResponseDto,
+  MilestoneCreateResponseDto,
+} from './dto/goal-response.dto';
 import { GoalsService } from './goals.service';
 
 @ApiTags('goals')
@@ -54,7 +57,9 @@ export class GoalsController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Create a goal' })
+  @ApiOperation({
+    summary: 'Create a goal (optionally with initial milestones, atomically)',
+  })
   @ApiResponse({ status: 201, type: GoalResponseDto })
   create(
     @CurrentUser() user: RequestUser,
@@ -113,12 +118,17 @@ export class GoalsController {
   }
 
   @Post(':goalId/milestones')
-  @ApiOperation({ summary: 'Add a milestone to a goal' })
+  @ApiOperation({
+    summary: 'Add a milestone to a goal',
+    description:
+      'Returns the updated goal plus the exact created milestone (duplicate titles are allowed).',
+  })
+  @ApiResponse({ status: 201, type: MilestoneCreateResponseDto })
   addMilestone(
     @CurrentUser() user: RequestUser,
     @Param('goalId', ParseUUIDPipe) goalId: string,
     @Body() dto: CreateMilestoneDto,
-  ): Promise<GoalResponseDto> {
+  ): Promise<MilestoneCreateResponseDto> {
     return this.goalsService.addMilestone(user.id, goalId, dto);
   }
 

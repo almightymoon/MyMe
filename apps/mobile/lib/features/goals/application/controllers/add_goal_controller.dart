@@ -5,6 +5,7 @@ import '../../domain/entities/goal_enums.dart';
 import '../../domain/entities/goal_milestone.dart';
 import '../../domain/services/goal_progress_calculator.dart';
 import '../../domain/services/money_format.dart';
+import '../../domain/value_objects/money_minor.dart';
 import '../providers/goal_providers.dart';
 import '../../../../core/errors/app_exception.dart';
 
@@ -150,8 +151,8 @@ class AddGoalController extends StateNotifier<AddGoalFormState> {
       errors['customCategoryName'] = 'Enter a custom category name';
     }
 
-    int? targetMinor;
-    int? currentMinor;
+    MoneyMinor? targetMinor;
+    MoneyMinor? currentMinor;
     try {
       targetMinor = MoneyFormat.parseMajorToMinor(state.targetAmountText);
     } on FormatException {
@@ -163,12 +164,10 @@ class AddGoalController extends StateNotifier<AddGoalFormState> {
       errors['currentAmount'] = 'Enter a valid current amount';
     }
 
-    if (targetMinor != null && targetMinor <= 0) {
+    if (targetMinor != null && !targetMinor.isPositive) {
       errors['targetAmount'] = 'Target amount must be positive';
     }
-    if (currentMinor != null && currentMinor < 0) {
-      errors['currentAmount'] = 'Current amount cannot be negative';
-    }
+    // currentMinor is a MoneyMinor, which cannot be negative by construction.
     if ((targetMinor != null || currentMinor != null) &&
         state.currencyCode.trim().isEmpty) {
       errors['currencyCode'] = 'Currency is required when an amount is set';

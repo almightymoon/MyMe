@@ -1,5 +1,6 @@
 import '../entities/goal.dart';
 import '../entities/goal_milestone.dart';
+import '../value_objects/money_minor.dart';
 
 /// Contract for goal persistence.
 ///
@@ -33,7 +34,7 @@ abstract class GoalRepository {
 
   Future<Goal> updateGoalProgress({
     required String goalId,
-    int? currentAmountMinor,
+    MoneyMinor? currentAmountMinor,
     double? progressPercent,
   });
 }

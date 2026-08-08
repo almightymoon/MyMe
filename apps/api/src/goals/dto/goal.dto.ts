@@ -1,6 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GoalCategory, GoalPriority, GoalStatus } from '@prisma/client';
 import {
+  IsArray,
+  IsBoolean,
   IsDateString,
   IsEnum,
   IsInt,
@@ -11,17 +13,46 @@ import {
   MaxLength,
   Min,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
+import { IsMoneyMinorString } from '../money/is-money-minor-string.decorator';
+
+export class CreateGoalMilestoneDto {
+  @ApiProperty({ example: 'Build deposit fund' })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(200)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  title!: string;
+
+  @ApiPropertyOptional({ example: 'Save the initial deposit' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  description?: string;
+
+  @ApiPropertyOptional({ example: '2027-03-31T00:00:00.000Z' })
+  @IsOptional()
+  @IsDateString()
+  targetDate?: string;
+
+  @ApiPropertyOptional({ example: 0 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  order?: number;
+}
 
 export class CreateGoalDto {
-  @ApiProperty({ example: 'Emergency fund' })
+  @ApiProperty({ example: 'Buy a House' })
   @IsString()
   @MinLength(1)
   @MaxLength(200)
   name!: string;
 
-  @ApiPropertyOptional({ example: 'Six months of expenses' })
+  @ApiPropertyOptional({ example: 'Purchase a family home' })
   @IsOptional()
   @IsString()
   @MaxLength(5000)
@@ -48,21 +79,24 @@ export class CreateGoalDto {
   status?: GoalStatus;
 
   @ApiPropertyOptional({
-    description: 'Target amount in minor currency units (e.g. cents)',
-    example: 50000000,
+    description:
+      'Target amount in minor currency units as a whole-number decimal string',
+    example: '15000000000',
+    type: String,
   })
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(0)
-  targetAmountMinor?: number;
+  @IsMoneyMinorString()
+  targetAmountMinor?: string;
 
-  @ApiPropertyOptional({ example: 0 })
+  @ApiPropertyOptional({
+    description:
+      'Current amount in minor units as a whole-number decimal string',
+    example: '0',
+    type: String,
+  })
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(0)
-  currentAmountMinor?: number;
+  @IsMoneyMinorString()
+  currentAmountMinor?: string;
 
   @ApiPropertyOptional({ example: 'PKR' })
   @IsOptional()
@@ -71,7 +105,7 @@ export class CreateGoalDto {
   @MaxLength(3)
   currencyCode?: string;
 
-  @ApiProperty({ example: '2026-12-31T00:00:00.000Z' })
+  @ApiProperty({ example: '2027-12-31T00:00:00.000Z' })
   @IsDateString()
   deadline!: string;
 
@@ -88,6 +122,16 @@ export class CreateGoalDto {
   @IsString()
   @MaxLength(5000)
   notes?: string;
+
+  @ApiPropertyOptional({
+    type: [CreateGoalMilestoneDto],
+    description: 'Initial milestones created atomically with the goal',
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateGoalMilestoneDto)
+  milestones?: CreateGoalMilestoneDto[];
 }
 
 export class UpdateGoalDto {
@@ -125,21 +169,17 @@ export class UpdateGoalDto {
   @IsEnum(GoalStatus)
   status?: GoalStatus;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: String, nullable: true, example: '15000000000' })
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(0)
-  targetAmountMinor?: number | null;
+  @IsMoneyMinorString({ allowNull: true })
+  targetAmountMinor?: string | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: String, nullable: true, example: '250000000' })
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(0)
-  currentAmountMinor?: number | null;
+  @IsMoneyMinorString({ allowNull: true })
+  currentAmountMinor?: string | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ nullable: true })
   @IsOptional()
   @IsString()
   @MinLength(3)
@@ -178,13 +218,13 @@ export class RecordProgressDto {
   progressPercent?: number;
 
   @ApiPropertyOptional({
-    description: 'New current amount in minor units',
+    description: 'New current amount in minor units (decimal string)',
+    example: '250000000',
+    type: String,
   })
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(0)
-  currentAmountMinor?: number;
+  @IsMoneyMinorString()
+  currentAmountMinor?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -198,6 +238,7 @@ export class CreateMilestoneDto {
   @IsString()
   @MinLength(1)
   @MaxLength(200)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   title!: string;
 
   @ApiPropertyOptional()
@@ -260,7 +301,10 @@ export class ListGoalsQueryDto {
   @Transform(({ value }) => {
     if (value === undefined || value === null || value === '') return undefined;
     if (typeof value === 'boolean') return value;
-    return value === 'true' || value === '1';
+    if (value === 'true' || value === '1') return true;
+    if (value === 'false' || value === '0') return false;
+    return value;
   })
+  @IsBoolean()
   includeArchived?: boolean;
 }

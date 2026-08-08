@@ -4,6 +4,7 @@ import '../../domain/entities/goal_milestone.dart';
 import '../../domain/entities/goal_summary.dart';
 import '../../domain/services/goal_progress_calculator.dart';
 import '../../domain/services/money_format.dart';
+import '../../domain/value_objects/money_minor.dart';
 
 /// Demo seed goals inspired by `/app/js/data.js`.
 ///
@@ -115,8 +116,12 @@ abstract final class GoalsSeed {
       category: category,
       priority: priority,
       status: GoalStatus.active,
-      targetAmountMinor: targetMinor,
-      currentAmountMinor: currentMinor,
+      targetAmountMinor: targetMinor == null
+          ? null
+          : MoneyMinor.fromInt(targetMinor),
+      currentAmountMinor: currentMinor == null
+          ? null
+          : MoneyMinor.fromInt(currentMinor),
       currencyCode: targetMinor == null
           ? null
           : MoneyFormat.defaultCurrencyCode,

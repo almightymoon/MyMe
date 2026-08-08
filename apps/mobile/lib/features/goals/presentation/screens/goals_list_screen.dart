@@ -19,6 +19,7 @@ import '../../application/providers/goal_providers.dart';
 import '../../domain/entities/goal.dart';
 import '../../domain/entities/goal_enums.dart';
 import '../../domain/services/money_format.dart';
+import '../../domain/value_objects/money_minor.dart';
 
 class GoalsListScreen extends ConsumerWidget {
   const GoalsListScreen({super.key});
@@ -266,7 +267,7 @@ class _GoalListTile extends StatelessWidget {
     final amount = goal.targetAmountMinor == null || goal.currencyCode == null
         ? goal.displayCategory
         : MoneyFormat.formatMinor(
-            goal.currentAmountMinor ?? 0,
+            goal.currentAmountMinor ?? MoneyMinor.zero,
             goal.currencyCode!,
           );
 

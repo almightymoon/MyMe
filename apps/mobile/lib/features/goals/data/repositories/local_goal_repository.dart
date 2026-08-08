@@ -8,6 +8,7 @@ import '../../domain/entities/goal_enums.dart';
 import '../../domain/entities/goal_milestone.dart';
 import '../../domain/repositories/goal_repository.dart';
 import '../../domain/services/goal_progress_calculator.dart';
+import '../../domain/value_objects/money_minor.dart';
 import '../seed/goals_seed.dart';
 
 /// Local JSON persistence for goals (SharedPreferences).
@@ -22,6 +23,12 @@ import '../seed/goals_seed.dart';
 ///
 /// Initialization flag `memy_goals_initialized_v1` ensures demo goals seed
 /// only once. Deleting all goals does not reseed.
+///
+/// `schemaVersion` stays `1`: this is a dual-read format, not a breaking
+/// schema change. `Goal.toJson()`/`Goal.fromJson()` write monetary amounts
+/// as decimal strings going forward, but [MoneyMinor.fromJson] transparently
+/// reads legacy `int`/`num` amounts persisted by earlier app versions, so
+/// existing on-disk documents keep loading without a migration step.
 class LocalGoalRepository implements GoalRepository {
   LocalGoalRepository({required this.prefs, this.seedBuilder});
 
@@ -290,7 +297,7 @@ class LocalGoalRepository implements GoalRepository {
   @override
   Future<Goal> updateGoalProgress({
     required String goalId,
-    int? currentAmountMinor,
+    MoneyMinor? currentAmountMinor,
     double? progressPercent,
   }) async {
     final goals = [...await _requireCache()];

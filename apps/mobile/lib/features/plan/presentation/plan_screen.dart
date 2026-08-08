@@ -16,6 +16,7 @@ import '../../../core/widgets/section_header.dart';
 import '../../calendar/application/providers/calendar_providers.dart';
 import '../../calendar/domain/entities/schedule_item.dart';
 import '../../goals/application/providers/goal_providers.dart';
+import '../../goals/domain/entities/goal.dart';
 import '../../goals/domain/entities/goal_summary.dart';
 import '../../habits/application/providers/habit_providers.dart';
 import '../../habits/domain/entities/habit_summary.dart';
@@ -79,7 +80,7 @@ class _PlanSummaryCard extends StatelessWidget {
     required this.eventsAsync,
   });
 
-  final AsyncValue<List<GoalSummary>> goalsAsync;
+  final AsyncValue<List<Goal>> goalsAsync;
   final AsyncValue<List<HabitSummary>> habitsAsync;
   final AsyncValue<List<ScheduleItem>> eventsAsync;
 
@@ -121,7 +122,7 @@ class _GoalsPlanSection extends StatelessWidget {
     required this.onOpen,
   });
 
-  final AsyncValue<List<GoalSummary>> asyncValue;
+  final AsyncValue<List<Goal>> asyncValue;
   final VoidCallback onRetry;
   final VoidCallback onOpen;
 
@@ -160,9 +161,9 @@ class _GoalsPlanSection extends StatelessWidget {
                 subtitle: 'Track outcomes and milestones',
               ),
               for (final goal in goals.take(3)) ...[
-                Text(goal.title, style: AppTextStyles.titleSmall()),
+                Text(goal.name, style: AppTextStyles.titleSmall()),
                 Text(
-                  '${goal.progressPercent.round()}% · ${goal.subtitle}',
+                  '${goal.progressPercent.round()}% · ${GoalSummary.fromGoal(goal).subtitle}',
                   style: AppTextStyles.bodySmall(),
                 ),
                 const SizedBox(height: AppSpacing.sm),

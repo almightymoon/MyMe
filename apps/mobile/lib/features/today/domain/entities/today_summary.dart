@@ -35,4 +35,24 @@ class TodaySummary {
   factory TodaySummary.empty({required String greetingName}) {
     return TodaySummary(greetingName: greetingName);
   }
+
+  TodaySummary copyWith({
+    String? greetingName,
+    DailyFocus? focus,
+    List<ScheduleItem>? schedule,
+    List<GoalSummary>? goals,
+    List<HabitSummary>? habits,
+    FinanceSummary? finance,
+    CoachSuggestion? coachRecommendation,
+  }) {
+    return TodaySummary(
+      greetingName: greetingName ?? this.greetingName,
+      focus: focus ?? this.focus,
+      schedule: schedule ?? this.schedule,
+      goals: goals ?? this.goals,
+      habits: habits ?? this.habits,
+      finance: finance ?? this.finance,
+      coachRecommendation: coachRecommendation ?? this.coachRecommendation,
+    );
+  }
 }

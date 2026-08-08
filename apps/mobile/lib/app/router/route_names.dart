@@ -6,6 +6,7 @@ abstract final class RouteNames {
   static const String more = 'more';
   static const String goals = 'goals';
   static const String addGoal = 'addGoal';
+  static const String goalDetail = 'goalDetail';
   static const String habits = 'habits';
   static const String addHabit = 'addHabit';
   static const String finance = 'finance';
@@ -27,6 +28,7 @@ abstract final class RoutePaths {
   static const String more = '/more';
   static const String goals = '/goals';
   static const String addGoal = '/goals/new';
+  static const String goalDetail = '/goals/:goalId';
   static const String habits = '/habits';
   static const String addHabit = '/habits/new';
   static const String finance = '/finance';
@@ -38,4 +40,6 @@ abstract final class RoutePaths {
   static const String wardrobe = '/wardrobe';
   static const String settings = '/settings';
   static const String nutritionComingSoon = '/nutrition/coming-soon';
+
+  static String goalDetailPath(String goalId) => '/goals/$goalId';
 }

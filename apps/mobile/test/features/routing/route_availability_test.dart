@@ -26,12 +26,11 @@ void main() {
     );
   });
 
-  testWidgets('primary feature routes are available', (tester) async {
+  testWidgets('placeholder feature routes are available', (tester) async {
     await pumpMemyApp(tester);
     await signInToToday(tester);
 
     final routes = <String, Finder>{
-      RoutePaths.goals: find.text('Goals'),
       RoutePaths.habits: find.text('Habits'),
       RoutePaths.finance: find.text('Finance'),
       RoutePaths.calendar: find.text('Calendar'),
@@ -39,7 +38,6 @@ void main() {
       RoutePaths.exercise: find.text('Exercise'),
       RoutePaths.wardrobe: find.text('Wardrobe'),
       RoutePaths.settings: find.text('Settings'),
-      RoutePaths.addGoal: find.text('Add Goal'),
       RoutePaths.nutritionComingSoon: find.text('Nutrition logging'),
     };
 
@@ -53,6 +51,23 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text(AppStrings.comingSoon), findsOneWidget);
     }
+  });
+
+  testWidgets('Goals routes are live (not placeholders)', (tester) async {
+    await pumpMemyApp(tester);
+    await signInToToday(tester);
+    final router = GoRouter.of(
+      tester.element(find.textContaining('Good day,')),
+    );
+
+    router.go(RoutePaths.goals);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('goals_list')), findsOneWidget);
+    expect(find.text(AppStrings.comingSoon), findsNothing);
+
+    router.go(RoutePaths.addGoal);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('add_goal_form')), findsOneWidget);
   });
 
   testWidgets('Quick Add Add Goal maps to /goals/new', (tester) async {

@@ -1,11 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:memy/core/constants/app_strings.dart';
+import 'package:memy/features/goals/application/providers/goal_providers.dart';
 import 'package:memy/features/goals/data/seed/goals_seed.dart';
+import 'package:memy/features/goals/domain/entities/goal.dart';
 import 'package:memy/features/today/application/providers/today_providers.dart';
 import 'package:memy/features/today/data/seed/today_seed.dart';
+import 'package:memy/features/today/domain/entities/today_summary.dart';
 import 'package:memy/features/today/presentation/today_screen.dart';
 
 import '../../helpers/test_app.dart';
@@ -16,13 +21,17 @@ void main() {
   });
 
   testWidgets('Today shows loading skeletons while fetching', (tester) async {
+    final prefs = await setupTestPreferences(seedGoals: false);
+    final completer = Completer<TodaySummary>();
+
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          todaySummaryProvider.overrideWith((ref) async {
-            await Future<void>.delayed(const Duration(milliseconds: 500));
-            return TodaySeed.populated();
-          }),
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          todayBaseProvider.overrideWith((ref) => completer.future),
+          goalsProvider.overrideWith(
+            (ref) => Stream<List<Goal>>.value(const []),
+          ),
         ],
         child: const MaterialApp(home: TodayScreen()),
       ),
@@ -31,7 +40,7 @@ void main() {
     await tester.pump();
     expect(find.byKey(const Key('today_loading')), findsOneWidget);
 
-    await tester.pump(const Duration(milliseconds: 600));
+    completer.complete(TodaySeed.populated());
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('today_populated')), findsOneWidget);
   });
@@ -42,7 +51,7 @@ void main() {
 
     expect(find.byKey(const Key('today_populated')), findsOneWidget);
     expect(find.text(TodaySeed.demoFocus.title), findsOneWidget);
-    expect(find.text(GoalsSeed.featured.title), findsOneWidget);
+    expect(find.text(GoalsSeed.featured.name), findsOneWidget);
     expect(find.textContaining('Team Meeting'), findsOneWidget);
     expect(find.textContaining('PKR 4,250'), findsOneWidget);
   });
@@ -65,10 +74,14 @@ void main() {
     expect(find.text(TodaySeed.demoFocus.title), findsOneWidget);
   });
 
-  testWidgets('Today shows empty state when repository returns empty', (
+  testWidgets('Today shows empty state when base and goals are empty', (
     tester,
   ) async {
-    await pumpMemyApp(tester, config: createTestFakeConfig(forceEmpty: true));
+    await pumpMemyApp(
+      tester,
+      config: createTestFakeConfig(forceEmpty: true),
+      seedGoals: false,
+    );
     await signInToToday(tester);
 
     expect(find.byKey(const Key('today_empty')), findsOneWidget);

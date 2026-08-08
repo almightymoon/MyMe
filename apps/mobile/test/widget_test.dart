@@ -62,7 +62,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Add Goal'), findsOneWidget);
-    expect(find.text(AppStrings.comingSoon), findsOneWidget);
+    expect(find.byKey(const Key('add_goal_form')), findsOneWidget);
 
     final context = tester.element(find.text('Add Goal').first);
     expect(GoRouter.of(context).state.uri.path, '/goals/new');

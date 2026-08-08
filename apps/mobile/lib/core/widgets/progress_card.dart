@@ -15,6 +15,7 @@ class ProgressCard extends StatelessWidget {
     required this.progressPercent,
     this.detail,
     this.onTap,
+    this.trailing,
   });
 
   final String title;
@@ -22,6 +23,7 @@ class ProgressCard extends StatelessWidget {
   final double progressPercent;
   final String? detail;
   final VoidCallback? onTap;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +34,7 @@ class ProgressCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SectionHeader(title: title),
+          SectionHeader(title: title, trailing: trailing),
           Text(headline, style: AppTextStyles.titleMedium()),
           const SizedBox(height: AppSpacing.md),
           ClipRRect(

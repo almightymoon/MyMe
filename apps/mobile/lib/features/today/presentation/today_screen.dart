@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../app/router/route_names.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
@@ -16,6 +18,7 @@ import '../../../core/widgets/section_header.dart';
 import '../../calendar/domain/entities/schedule_item.dart';
 import '../../coach/domain/entities/coach_suggestion.dart';
 import '../../finance/domain/entities/finance_summary.dart';
+import '../../goals/application/providers/goal_providers.dart';
 import '../../goals/domain/entities/goal_summary.dart';
 import '../../habits/domain/entities/habit_summary.dart';
 import '../application/providers/today_providers.dart';
@@ -43,7 +46,10 @@ class TodayScreen extends ConsumerWidget {
           child: InlineErrorCard(
             key: const Key('today_error'),
             message: error.toString(),
-            onRetry: () => ref.invalidate(todaySummaryProvider),
+            onRetry: () {
+              ref.invalidate(todayBaseProvider);
+              ref.invalidate(goalsProvider);
+            },
           ),
         ),
         data: (summary) {
@@ -272,15 +278,39 @@ class _GoalsSection extends StatelessWidget {
       );
     }
 
-    final goal = goals.first;
     return MemyCard(
+      key: const Key('today_goals_card'),
+      onTap: () => context.push(RoutePaths.goalDetailPath(goals.first.id)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionHeader(title: AppStrings.goalProgress),
-          Text(goal.title, style: AppTextStyles.titleSmall()),
-          const SizedBox(height: 4),
-          Text(goal.subtitle, style: AppTextStyles.mono(fontSize: 16)),
+          SectionHeader(
+            title: AppStrings.goalProgress,
+            trailing: TextButton(
+              onPressed: () => context.push(RoutePaths.goals),
+              child: const Text('All'),
+            ),
+          ),
+          for (final goal in goals.take(3)) ...[
+            InkWell(
+              key: Key('today_goal_${goal.id}'),
+              onTap: () => context.push(RoutePaths.goalDetailPath(goal.id)),
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(goal.title, style: AppTextStyles.titleSmall()),
+                    const SizedBox(height: 4),
+                    Text(
+                      goal.subtitle,
+                      style: AppTextStyles.mono(fontSize: 16),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

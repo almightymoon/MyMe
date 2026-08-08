@@ -9,8 +9,9 @@ import '../../features/coach/presentation/coach_screen.dart';
 import '../../features/exercise/presentation/exercise_placeholder_screen.dart';
 import '../../features/finance/presentation/add_transaction_placeholder_screen.dart';
 import '../../features/finance/presentation/finance_placeholder_screen.dart';
-import '../../features/goals/presentation/add_goal_placeholder_screen.dart';
-import '../../features/goals/presentation/goals_placeholder_screen.dart';
+import '../../features/goals/presentation/screens/add_goal_screen.dart';
+import '../../features/goals/presentation/screens/goal_detail_screen.dart';
+import '../../features/goals/presentation/screens/goals_list_screen.dart';
 import '../../features/habits/presentation/add_habit_placeholder_screen.dart';
 import '../../features/habits/presentation/habits_placeholder_screen.dart';
 import '../../features/health/presentation/health_placeholder_screen.dart';
@@ -88,15 +89,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
-        path: RoutePaths.goals,
-        name: RouteNames.goals,
-        builder: (context, state) => const GoalsPlaceholderScreen(),
+        path: RoutePaths.addGoal,
+        name: RouteNames.addGoal,
+        builder: (context, state) => const AddGoalScreen(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
-        path: RoutePaths.addGoal,
-        name: RouteNames.addGoal,
-        builder: (context, state) => const AddGoalPlaceholderScreen(),
+        path: RoutePaths.goals,
+        name: RouteNames.goals,
+        builder: (context, state) => const GoalsListScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.goalDetail,
+        name: RouteNames.goalDetail,
+        builder: (context, state) {
+          final goalId = state.pathParameters['goalId'] ?? '';
+          return GoalDetailScreen(goalId: goalId);
+        },
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

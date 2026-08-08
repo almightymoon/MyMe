@@ -19,7 +19,7 @@ void main() {
     expect(find.byKey(const Key('plan_goals_populated')), findsOneWidget);
     expect(find.byKey(const Key('plan_habits_populated')), findsOneWidget);
     expect(find.byKey(const Key('plan_calendar_populated')), findsOneWidget);
-    expect(find.text(GoalsSeed.demoGoals.first.title), findsOneWidget);
+    expect(find.text(GoalsSeed.demoGoals().first.name), findsOneWidget);
     expect(
       find.textContaining(HabitsSeed.demoHabits.first.title),
       findsOneWidget,

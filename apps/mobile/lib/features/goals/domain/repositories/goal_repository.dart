@@ -1,7 +1,9 @@
 import '../entities/goal.dart';
 import '../entities/goal_milestone.dart';
 
-/// Contract for goal persistence. Swap [LocalGoalRepository] for an API impl later.
+/// Contract for goal persistence.
+///
+/// Implementations: [LocalGoalRepository], [ApiGoalRepository], [FakeGoalRepository].
 abstract class GoalRepository {
   Stream<List<Goal>> watchGoals();
 

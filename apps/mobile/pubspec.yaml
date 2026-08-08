@@ -40,6 +40,7 @@ dependencies:
   intl: ^0.20.3
   shared_preferences: ^2.5.5
   uuid: ^4.6.0
+  dio: ^5.11.0
 
 dev_dependencies:
   flutter_test:
@@ -62,6 +63,12 @@ flutter:
 
   assets:
     - assets/images/branding/
+    - assets/images/exercise/strength-lunge-dumbbells.webp
+    - assets/images/exercise/running-cardio.webp
+    - assets/images/exercise/yoga-warrior.webp
+    - assets/images/exercise/cycling-cardio.webp
+    - assets/images/exercise/hiit-bodyweight-squat.webp
+    - assets/images/exercise/mobility-side-stretch.webp
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

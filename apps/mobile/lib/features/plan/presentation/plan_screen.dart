@@ -7,6 +7,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/errors/app_exception.dart';
 import '../../../core/widgets/empty_feature_card.dart';
 import '../../../core/widgets/inline_error_card.dart';
 import '../../../core/widgets/loading_card_skeleton.dart';
@@ -137,7 +138,7 @@ class _GoalsPlanSection extends StatelessWidget {
       error: (error, _) => InlineErrorCard(
         key: const Key('plan_goals_error'),
         title: 'Goals',
-        message: error.toString(),
+        message: userFacingErrorMessage(error),
         onRetry: onRetry,
       ),
       data: (goals) {

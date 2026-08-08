@@ -6,7 +6,9 @@ import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/calendar/presentation/add_event_placeholder_screen.dart';
 import '../../features/calendar/presentation/calendar_placeholder_screen.dart';
 import '../../features/coach/presentation/coach_screen.dart';
-import '../../features/exercise/presentation/exercise_placeholder_screen.dart';
+import '../../features/exercise/presentation/screens/exercise_library_screen.dart';
+import '../../features/exercise/presentation/screens/exercise_overview_screen.dart';
+import '../../features/exercise/presentation/screens/workout_session_placeholder_screen.dart';
 import '../../features/finance/presentation/add_transaction_placeholder_screen.dart';
 import '../../features/finance/presentation/finance_placeholder_screen.dart';
 import '../../features/goals/presentation/screens/add_goal_screen.dart';
@@ -154,7 +156,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         path: RoutePaths.exercise,
         name: RouteNames.exercise,
-        builder: (context, state) => const ExercisePlaceholderScreen(),
+        builder: (context, state) => const ExerciseOverviewScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.exerciseLibrary,
+        name: RouteNames.exerciseLibrary,
+        builder: (context, state) => ExerciseLibraryScreen(
+          categoryId: state.uri.queryParameters['category'],
+        ),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.workoutSession,
+        name: RouteNames.workoutSession,
+        builder: (context, state) => const WorkoutSessionPlaceholderScreen(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

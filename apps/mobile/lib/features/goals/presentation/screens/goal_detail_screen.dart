@@ -8,6 +8,7 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_radii.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/inline_error_card.dart';
 import '../../../../core/widgets/loading_card_skeleton.dart';
 import '../../../../core/widgets/memy_card.dart';
@@ -40,7 +41,7 @@ class GoalDetailScreen extends ConsumerWidget {
           error: (error, _) => Padding(
             padding: const EdgeInsets.all(AppSpacing.page),
             child: InlineErrorCard(
-              message: error.toString(),
+              message: userFacingErrorMessage(error),
               onRetry: () => ref.invalidate(goalByIdProvider(goalId)),
             ),
           ),
@@ -83,37 +84,48 @@ class GoalDetailScreen extends ConsumerWidget {
                     key: const Key('goal_detail_menu'),
                     onSelected: (value) async {
                       final repo = ref.read(goalRepositoryProvider);
-                      if (value == 'archive') {
-                        await repo.archiveGoal(goal.id);
+                      try {
+                        if (value == 'archive') {
+                          await repo.archiveGoal(goal.id);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Goal archived')),
+                            );
+                          }
+                        } else if (value == 'delete') {
+                          final ok = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Delete goal?'),
+                              content: Text('Delete “${goal.name}”?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
+                                  child: const Text('Cancel'),
+                                ),
+                                FilledButton(
+                                  key: const Key('confirm_delete_goal'),
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const Text('Delete'),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (ok == true) {
+                            await repo.deleteGoal(goal.id);
+                            if (context.mounted) {
+                              context.go(RoutePaths.goals);
+                            }
+                          }
+                        }
+                      } catch (error) {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Goal archived')),
+                            SnackBar(
+                              content: Text(userFacingErrorMessage(error)),
+                            ),
                           );
-                        }
-                      } else if (value == 'delete') {
-                        final ok = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Delete goal?'),
-                            content: Text('Delete “${goal.name}”?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Cancel'),
-                              ),
-                              FilledButton(
-                                key: const Key('confirm_delete_goal'),
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text('Delete'),
-                              ),
-                            ],
-                          ),
-                        );
-                        if (ok == true) {
-                          await repo.deleteGoal(goal.id);
-                          if (context.mounted) {
-                            context.go(RoutePaths.goals);
-                          }
                         }
                       }
                     },
@@ -535,6 +547,12 @@ class _UpdateProgressCardState extends ConsumerState<_UpdateProgressCard> {
                   ScaffoldMessenger.of(
                     context,
                   ).showSnackBar(SnackBar(content: Text(error.message)));
+                }
+              } catch (error) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(userFacingErrorMessage(error))),
+                  );
                 }
               }
             },

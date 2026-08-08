@@ -6,6 +6,7 @@ import '../../domain/entities/goal_milestone.dart';
 import '../../domain/services/goal_progress_calculator.dart';
 import '../../domain/services/money_format.dart';
 import '../providers/goal_providers.dart';
+import '../../../../core/errors/app_exception.dart';
 
 class AddGoalFormState {
   const AddGoalFormState({
@@ -251,7 +252,7 @@ class AddGoalController extends StateNotifier<AddGoalFormState> {
     } catch (error) {
       state = state.copyWith(
         isSubmitting: false,
-        errorMessage: 'Could not save goal. $error',
+        errorMessage: userFacingErrorMessage(error),
       );
       return null;
     }

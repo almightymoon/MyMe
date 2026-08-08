@@ -8,6 +8,7 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/widgets/empty_feature_card.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/inline_error_card.dart';
 import '../../../../core/widgets/loading_card_skeleton.dart';
 import '../../../../core/widgets/memy_card.dart';
@@ -100,7 +101,7 @@ class GoalsListScreen extends ConsumerWidget {
                 error: (error, _) => Padding(
                   padding: const EdgeInsets.all(AppSpacing.page),
                   child: InlineErrorCard(
-                    message: error.toString(),
+                    message: userFacingErrorMessage(error),
                     onRetry: () => ref.invalidate(goalsProvider),
                   ),
                 ),
@@ -173,11 +174,18 @@ class GoalsListScreen extends ConsumerWidget {
   };
 
   Future<void> _archive(BuildContext context, WidgetRef ref, Goal goal) async {
-    await ref.read(goalRepositoryProvider).archiveGoal(goal.id);
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Archived “${goal.name}”')));
+    try {
+      await ref.read(goalRepositoryProvider).archiveGoal(goal.id);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Archived “${goal.name}”')));
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(userFacingErrorMessage(error))));
+    }
   }
 
   Future<void> _confirmDelete(
@@ -208,20 +216,27 @@ class GoalsListScreen extends ConsumerWidget {
     if (confirmed != true) return;
 
     final repo = ref.read(goalRepositoryProvider);
-    await repo.deleteGoal(goal.id);
-    if (!context.mounted) return;
+    try {
+      await repo.deleteGoal(goal.id);
+      if (!context.mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Deleted “${goal.name}”'),
-        action: SnackBarAction(
-          label: 'Undo',
-          onPressed: () {
-            repo.createGoal(goal);
-          },
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Deleted “${goal.name}”'),
+          action: SnackBarAction(
+            label: 'Undo',
+            onPressed: () {
+              repo.createGoal(goal);
+            },
+          ),
         ),
-      ),
-    );
+      );
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(userFacingErrorMessage(error))));
+    }
   }
 }
 

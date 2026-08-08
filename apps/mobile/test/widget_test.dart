@@ -75,10 +75,11 @@ void main() {
     await tester.tap(find.byKey(const Key('nav_more')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('more_exercise')));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.text('Exercise'), findsWidgets);
-    final context = tester.element(find.text('Exercise').first);
+    expect(find.byKey(const Key('exercise_overview')), findsOneWidget);
+    final context = tester.element(find.byKey(const Key('exercise_overview')));
     expect(GoRouter.of(context).state.uri.path, '/exercise');
   });
 

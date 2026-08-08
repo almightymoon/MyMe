@@ -110,6 +110,24 @@ class LocalGoalRepository implements GoalRepository {
 
   Future<void> _replace(List<Goal> next) => _persist(next);
 
+  /// Replace the entire local store (used as API read-cache).
+  Future<void> replaceAll(List<Goal> goals) async {
+    await ensureInitialized();
+    await _persist(List<Goal>.unmodifiable(goals));
+  }
+
+  /// Insert or update a single goal in the local store.
+  Future<void> upsert(Goal goal) async {
+    final goals = [...await _requireCache()];
+    final index = goals.indexWhere((g) => g.id == goal.id);
+    if (index < 0) {
+      goals.add(goal);
+    } else {
+      goals[index] = goal;
+    }
+    await _persist(goals);
+  }
+
   Goal _requireGoal(List<Goal> goals, String id) {
     return goals.firstWhere(
       (g) => g.id == id,

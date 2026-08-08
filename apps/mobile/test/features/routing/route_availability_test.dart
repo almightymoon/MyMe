@@ -35,7 +35,6 @@ void main() {
       RoutePaths.finance: find.text('Finance'),
       RoutePaths.calendar: find.text('Calendar'),
       RoutePaths.health: find.text('Health'),
-      RoutePaths.exercise: find.text('Exercise'),
       RoutePaths.wardrobe: find.text('Wardrobe'),
       RoutePaths.settings: find.text('Settings'),
       RoutePaths.nutritionComingSoon: find.text('Nutrition logging'),
@@ -51,6 +50,19 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text(AppStrings.comingSoon), findsOneWidget);
     }
+  });
+
+  testWidgets('Exercise route is live (not a placeholder)', (tester) async {
+    await pumpMemyApp(tester);
+    await signInToToday(tester);
+    final router = GoRouter.of(
+      tester.element(find.textContaining('Good day,')),
+    );
+    router.go(RoutePaths.exercise);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byKey(const Key('exercise_overview')), findsOneWidget);
+    expect(find.text(AppStrings.comingSoon), findsNothing);
   });
 
   testWidgets('Goals routes are live (not placeholders)', (tester) async {

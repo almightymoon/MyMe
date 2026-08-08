@@ -2,6 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../core/config/environment_config.dart';
+import '../../../../core/network/api_client.dart';
+import '../../data/repositories/api_goal_repository.dart';
+import '../../data/repositories/fake_goal_repository.dart';
 import '../../data/repositories/local_goal_repository.dart';
 import '../../domain/entities/goal.dart';
 import '../../domain/entities/goal_enums.dart';
@@ -18,10 +22,52 @@ final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
 
 final uuidProvider = Provider<Uuid>((ref) => const Uuid());
 
-final goalRepositoryProvider = Provider<GoalRepository>((ref) {
-  final repo = LocalGoalRepository(prefs: ref.watch(sharedPreferencesProvider));
+/// Override in tests to force `fake` / `local` / `api` without dart-defines.
+final goalsDataSourceProvider = Provider<GoalsDataSource>((ref) {
+  return EnvironmentConfig.goalsDataSource;
+});
+
+final apiClientProvider = Provider<ApiClient>((ref) {
+  final client = ApiClient();
+  return client;
+});
+
+/// Local persistence used either as primary store (`local`) or API read-cache.
+final localGoalRepositoryProvider = Provider<LocalGoalRepository>((ref) {
+  final prefs = ref.watch(sharedPreferencesProvider);
+  final source = ref.watch(goalsDataSourceProvider);
+  final repo = LocalGoalRepository(
+    prefs: prefs,
+    // Avoid demo seed when acting as API cache.
+    seedBuilder: source == GoalsDataSource.api ? () => const [] : null,
+  );
   ref.onDispose(repo.dispose);
   return repo;
+});
+
+/// Resolves [GoalRepository] from [goalsDataSourceProvider].
+///
+/// Modes (`--dart-define=GOALS_DATA_SOURCE=`):
+/// - `fake` — in-memory [FakeGoalRepository]
+/// - `local` — [LocalGoalRepository] (default offline/demo)
+/// - `api` — [ApiGoalRepository] with local read-cache
+final goalRepositoryProvider = Provider<GoalRepository>((ref) {
+  final source = ref.watch(goalsDataSourceProvider);
+  switch (source) {
+    case GoalsDataSource.fake:
+      final repo = FakeGoalRepository();
+      ref.onDispose(repo.dispose);
+      return repo;
+    case GoalsDataSource.local:
+      return ref.watch(localGoalRepositoryProvider);
+    case GoalsDataSource.api:
+      final repo = ApiGoalRepository(
+        client: ref.watch(apiClientProvider),
+        cache: ref.watch(localGoalRepositoryProvider),
+      );
+      ref.onDispose(repo.dispose);
+      return repo;
+  }
 });
 
 final goalForecastServiceProvider = Provider<GoalForecastService>((ref) {

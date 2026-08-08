@@ -225,8 +225,15 @@ class GoalsListScreen extends ConsumerWidget {
           content: Text('Deleted “${goal.name}”'),
           action: SnackBarAction(
             label: 'Undo',
-            onPressed: () {
-              repo.createGoal(goal);
+            onPressed: () async {
+              try {
+                await repo.createGoal(goal);
+              } catch (error) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(userFacingErrorMessage(error))),
+                );
+              }
             },
           ),
         ),

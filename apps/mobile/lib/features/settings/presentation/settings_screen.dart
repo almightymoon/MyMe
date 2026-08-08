@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/widgets/coming_soon_view.dart';
+import '../../../app/router/route_names.dart';
+import '../../../core/widgets/coming_soon_view.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -18,7 +19,7 @@ class SettingsScreen extends StatelessWidget {
             if (context.canPop()) {
               context.pop();
             } else {
-              context.go('/today');
+              context.go(RoutePaths.today);
             }
           },
         ),

@@ -8,6 +8,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/errors/app_exception.dart';
 import '../../../core/widgets/empty_feature_card.dart';
 import '../../../core/widgets/inline_error_card.dart';
 import '../../../core/widgets/loading_card_skeleton.dart';
@@ -45,7 +46,7 @@ class TodayScreen extends ConsumerWidget {
           dateLabel: dateLabel,
           child: InlineErrorCard(
             key: const Key('today_error'),
-            message: error.toString(),
+            message: userFacingErrorMessage(error),
             onRetry: () {
               ref.invalidate(todayBaseProvider);
               ref.invalidate(goalsProvider);
@@ -280,7 +281,6 @@ class _GoalsSection extends StatelessWidget {
 
     return MemyCard(
       key: const Key('today_goals_card'),
-      onTap: () => context.push(RoutePaths.goalDetailPath(goals.first.id)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

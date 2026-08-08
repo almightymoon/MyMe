@@ -31,6 +31,7 @@ class AddGoalScreen extends ConsumerWidget {
               subtitle: 'Create a locally saved goal',
               leading: IconButton(
                 key: const Key('add_goal_back'),
+                tooltip: 'Back',
                 onPressed: form.isSubmitting ? null : () => context.pop(),
                 icon: const Icon(Icons.arrow_back_rounded),
               ),
@@ -210,6 +211,7 @@ class AddGoalScreen extends ConsumerWidget {
                           ),
                         ),
                         IconButton(
+                          tooltip: 'Remove milestone',
                           onPressed: () => controller.removeMilestoneField(i),
                           icon: const Icon(Icons.remove_circle_outline),
                         ),

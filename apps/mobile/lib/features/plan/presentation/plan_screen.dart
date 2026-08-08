@@ -148,6 +148,8 @@ class _GoalsPlanSection extends StatelessWidget {
             title: 'Goals',
             message: AppStrings.sectionEmptyMessage,
             icon: Icons.flag_outlined,
+            actionLabel: AppStrings.addGoal,
+            onAction: () => context.push(RoutePaths.addGoal),
           );
         }
 
@@ -204,7 +206,7 @@ class _HabitsPlanSection extends StatelessWidget {
       error: (error, _) => InlineErrorCard(
         key: const Key('plan_habits_error'),
         title: 'Habits',
-        message: error.toString(),
+        message: userFacingErrorMessage(error),
         onRetry: onRetry,
       ),
       data: (habits) {
@@ -270,7 +272,7 @@ class _CalendarPlanSection extends StatelessWidget {
       error: (error, _) => InlineErrorCard(
         key: const Key('plan_calendar_error'),
         title: 'Calendar',
-        message: error.toString(),
+        message: userFacingErrorMessage(error),
         onRetry: onRetry,
       ),
       data: (events) {

@@ -114,25 +114,30 @@ class ExerciseOverviewScreen extends StatelessWidget {
                   ...recent.map(
                     (item) => Padding(
                       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                      child: ListTile(
-                        key: Key('recent_${item.id}'),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          side: const BorderSide(color: AppColors.line),
-                        ),
-                        tileColor: AppColors.surface,
-                        leading: CircleAvatar(
-                          backgroundColor: AppColors.canvasDeep,
-                          child: Text(
-                            item.category.label.characters.first,
-                            style: AppTextStyles.titleSmall(),
+                      child: Semantics(
+                        label:
+                            '${item.title}, ${item.completedLabel}, ${item.durationMinutes} minutes',
+                        child: ListTile(
+                          key: Key('recent_${item.id}'),
+                          enabled: false,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: const BorderSide(color: AppColors.line),
                           ),
+                          tileColor: AppColors.surface,
+                          leading: CircleAvatar(
+                            backgroundColor: AppColors.canvasDeep,
+                            child: Text(
+                              item.category.label.characters.first,
+                              style: AppTextStyles.titleSmall(),
+                            ),
+                          ),
+                          title: Text(item.title),
+                          subtitle: Text(
+                            '${item.completedLabel} · ${item.durationMinutes} min',
+                          ),
+                          minVerticalPadding: 12,
                         ),
-                        title: Text(item.title),
-                        subtitle: Text(
-                          '${item.completedLabel} · ${item.durationMinutes} min',
-                        ),
-                        minVerticalPadding: 12,
                       ),
                     ),
                   ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/router/route_names.dart';
+
 import '../../../../core/widgets/coming_soon_view.dart';
 
 class FinancePlaceholderScreen extends StatelessWidget {
@@ -17,7 +19,7 @@ class FinancePlaceholderScreen extends StatelessWidget {
             if (context.canPop()) {
               context.pop();
             } else {
-              context.go('/today');
+              context.go(RoutePaths.today);
             }
           },
         ),

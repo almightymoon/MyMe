@@ -7,6 +7,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/errors/app_exception.dart';
 import '../../../core/widgets/inline_error_card.dart';
 import '../../../core/widgets/loading_card_skeleton.dart';
 import '../../../core/widgets/memy_card.dart';
@@ -78,7 +79,7 @@ class MoreScreen extends ConsumerWidget {
               error: (error, _) => InlineErrorCard(
                 key: const Key('more_profile_error'),
                 title: 'Profile',
-                message: error.toString(),
+                message: userFacingErrorMessage(error),
                 onRetry: () => ref.invalidate(userProfileProvider),
               ),
               data: (profile) => _ProfileCard(profile: profile),

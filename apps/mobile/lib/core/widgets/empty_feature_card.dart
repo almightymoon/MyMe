@@ -13,11 +13,15 @@ class EmptyFeatureCard extends StatelessWidget {
     required this.title,
     required this.message,
     this.icon = Icons.inbox_outlined,
+    this.actionLabel,
+    this.onAction,
   });
 
   final String title;
   final String message;
   final IconData icon;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +46,14 @@ class EmptyFeatureCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(message, style: AppTextStyles.bodyMedium()),
+                    if (actionLabel != null && onAction != null) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      TextButton(
+                        key: const Key('empty_feature_action'),
+                        onPressed: onAction,
+                        child: Text(actionLabel!),
+                      ),
+                    ],
                   ],
                 ),
               ),

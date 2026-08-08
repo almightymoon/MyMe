@@ -6,6 +6,7 @@ import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/errors/app_exception.dart';
 import '../../../core/widgets/empty_feature_card.dart';
 import '../../../core/widgets/inline_error_card.dart';
 import '../../../core/widgets/loading_card_skeleton.dart';
@@ -79,7 +80,7 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
                   ),
                   error: (error, _) => InlineErrorCard(
                     key: const Key('coach_prompts_error'),
-                    message: error.toString(),
+                    message: userFacingErrorMessage(error),
                     onRetry: () => ref.invalidate(coachPromptsProvider),
                   ),
                   data: (prompts) {
@@ -144,7 +145,7 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
                       key: const Key('coach_send'),
                       onPressed: _sendComposer,
                       icon: const Icon(Icons.send_rounded),
-                      tooltip: AppStrings.demoResponseLabel,
+                      tooltip: 'Send message',
                     ),
                   ),
                 ),

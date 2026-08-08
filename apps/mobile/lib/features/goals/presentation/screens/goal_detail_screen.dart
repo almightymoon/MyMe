@@ -52,6 +52,7 @@ class GoalDetailScreen extends ConsumerWidget {
                   MemyPageHeader(
                     title: 'Goal',
                     leading: IconButton(
+                      tooltip: 'Back',
                       onPressed: () => context.pop(),
                       icon: const Icon(Icons.arrow_back_rounded),
                     ),
@@ -71,6 +72,7 @@ class GoalDetailScreen extends ConsumerWidget {
                   subtitle: '${goal.displayCategory} · ${goal.status.label}',
                   leading: IconButton(
                     key: const Key('goal_detail_back'),
+                    tooltip: 'Back',
                     onPressed: () {
                       if (context.canPop()) {
                         context.pop();
@@ -354,13 +356,36 @@ class _MetaCard extends StatelessWidget {
   }
 }
 
-class _MilestonesCard extends ConsumerWidget {
+class _MilestonesCard extends ConsumerStatefulWidget {
   const _MilestonesCard({required this.goal});
 
   final Goal goal;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_MilestonesCard> createState() => _MilestonesCardState();
+}
+
+class _MilestonesCardState extends ConsumerState<_MilestonesCard> {
+  bool _busy = false;
+
+  Future<void> _runMutation(Future<void> Function() action) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await action();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(userFacingErrorMessage(error))));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final goal = widget.goal;
     return MemyCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -369,7 +394,7 @@ class _MilestonesCard extends ConsumerWidget {
             title: 'Milestones',
             trailing: TextButton(
               key: const Key('add_milestone_button'),
-              onPressed: () => _addMilestone(context, ref),
+              onPressed: _busy ? null : () => _addMilestone(context),
               child: const Text('Add'),
             ),
           ),
@@ -393,22 +418,26 @@ class _MilestonesCard extends ConsumerWidget {
                       : Text(milestone.description!),
                   secondary: IconButton(
                     tooltip: 'Delete milestone',
-                    onPressed: () async {
-                      await ref
-                          .read(goalRepositoryProvider)
-                          .deleteMilestone(goal.id, milestone.id);
-                    },
+                    onPressed: _busy
+                        ? null
+                        : () => _runMutation(
+                            () => ref
+                                .read(goalRepositoryProvider)
+                                .deleteMilestone(goal.id, milestone.id),
+                          ),
                     icon: const Icon(Icons.delete_outline),
                   ),
-                  onChanged: (value) async {
-                    await ref
-                        .read(goalRepositoryProvider)
-                        .setMilestoneCompletion(
-                          goalId: goal.id,
-                          milestoneId: milestone.id,
-                          isCompleted: value ?? false,
-                        );
-                  },
+                  onChanged: _busy
+                      ? null
+                      : (value) => _runMutation(
+                          () => ref
+                              .read(goalRepositoryProvider)
+                              .setMilestoneCompletion(
+                                goalId: goal.id,
+                                milestoneId: milestone.id,
+                                isCompleted: value ?? false,
+                              ),
+                        ),
                 ),
               ),
         ],
@@ -416,7 +445,7 @@ class _MilestonesCard extends ConsumerWidget {
     );
   }
 
-  Future<void> _addMilestone(BuildContext context, WidgetRef ref) async {
+  Future<void> _addMilestone(BuildContext context) async {
     final titleController = TextEditingController();
     final ok = await showDialog<bool>(
       context: context,
@@ -445,18 +474,21 @@ class _MilestonesCard extends ConsumerWidget {
     titleController.dispose();
     if (ok != true || title.isEmpty) return;
 
+    final goal = widget.goal;
     final id = ref.read(uuidProvider).v4();
-    await ref
-        .read(goalRepositoryProvider)
-        .addMilestone(
-          goal.id,
-          GoalMilestone(
-            id: id,
-            goalId: goal.id,
-            title: title,
-            order: goal.milestones.length,
+    await _runMutation(
+      () => ref
+          .read(goalRepositoryProvider)
+          .addMilestone(
+            goal.id,
+            GoalMilestone(
+              id: id,
+              goalId: goal.id,
+              title: title,
+              order: goal.milestones.length,
+            ),
           ),
-        );
+    );
   }
 }
 
@@ -472,6 +504,7 @@ class _UpdateProgressCard extends ConsumerStatefulWidget {
 
 class _UpdateProgressCardState extends ConsumerState<_UpdateProgressCard> {
   late final TextEditingController _controller;
+  bool _saving = false;
 
   @override
   void initState() {
@@ -497,6 +530,40 @@ class _UpdateProgressCardState extends ConsumerState<_UpdateProgressCard> {
     super.dispose();
   }
 
+  Future<void> _save() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    try {
+      final minor = MoneyFormat.parseMajorToMinor(_controller.text);
+      if (minor == null) return;
+      await ref
+          .read(goalRepositoryProvider)
+          .updateGoalProgress(
+            goalId: widget.goal.id,
+            currentAmountMinor: minor,
+          );
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Progress updated')));
+      }
+    } on FormatException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(userFacingErrorMessage(error))));
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.goal.targetAmountMinor == null) {
@@ -511,6 +578,7 @@ class _UpdateProgressCardState extends ConsumerState<_UpdateProgressCard> {
           TextField(
             key: const Key('update_current_amount_field'),
             controller: _controller,
+            enabled: !_saving,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
               labelText:
@@ -527,36 +595,8 @@ class _UpdateProgressCardState extends ConsumerState<_UpdateProgressCard> {
                 borderRadius: AppRadii.controlRadius,
               ),
             ),
-            onPressed: () async {
-              try {
-                final minor = MoneyFormat.parseMajorToMinor(_controller.text);
-                if (minor == null) return;
-                await ref
-                    .read(goalRepositoryProvider)
-                    .updateGoalProgress(
-                      goalId: widget.goal.id,
-                      currentAmountMinor: minor,
-                    );
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Progress updated')),
-                  );
-                }
-              } on FormatException catch (error) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text(error.message)));
-                }
-              } catch (error) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(userFacingErrorMessage(error))),
-                  );
-                }
-              }
-            },
-            child: const Text('Save progress'),
+            onPressed: _saving ? null : _save,
+            child: Text(_saving ? 'Saving…' : 'Save progress'),
           ),
         ],
       ),

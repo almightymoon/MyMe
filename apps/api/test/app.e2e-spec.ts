@@ -98,8 +98,12 @@ describe('Goals API (e2e)', () => {
   });
 
   afterAll(async () => {
-    await app.close();
-    await prisma.$disconnect();
+    if (app) {
+      await app.close();
+    }
+    if (prisma) {
+      await prisma.$disconnect();
+    }
   });
 
   it('GET /health', async () => {

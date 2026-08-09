@@ -26,12 +26,13 @@ function loadEnvTest(): void {
     ) {
       value = value.slice(1, -1);
     }
-    // Prefer explicit shell overrides; otherwise set from file.
+    // Prefer explicit shell / CI overrides; otherwise set from file.
     if (process.env[key] === undefined) {
       process.env[key] = value;
     }
   }
-  process.env.NODE_ENV = 'test';
+  // Do not overwrite NODE_ENV — .env.test (or CI) must already set NODE_ENV=test.
+  // Forcing it here would hide unsafe environments from assertSafeE2eDatabase.
 }
 
 loadEnvTest();

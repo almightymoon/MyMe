@@ -49,6 +49,11 @@ jobs:
       DEV_USER_DISPLAY_NAME: Emma Chen
       DEV_USER_TIMEZONE: Asia/Karachi
       DEV_USER_CURRENCY: PKR
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: memy_test
+      POSTGRES_USER: memy
+      POSTGRES_PASSWORD: memy_dev_password
       # Prisma schema datasource reads DATABASE_URL — must be the isolated
       # test DB before format / validate / generate / build / migrate.
       DATABASE_URL: postgresql://memy:memy_dev_password@localhost:5432/memy_test?schema=public
@@ -104,6 +109,11 @@ jobs:
             'DEV_USER_DISPLAY_NAME=Emma Chen' \
             'DEV_USER_TIMEZONE=Asia/Karachi' \
             'DEV_USER_CURRENCY=PKR' \
+            'POSTGRES_HOST=localhost' \
+            'POSTGRES_PORT=5432' \
+            'POSTGRES_DB=memy_test' \
+            'POSTGRES_USER=memy' \
+            'POSTGRES_PASSWORD=memy_dev_password' \
             'DATABASE_URL=postgresql://memy:memy_dev_password@localhost:5432/memy_test?schema=public' \
             'DATABASE_URL_TEST=postgresql://memy:memy_dev_password@localhost:5432/memy_test?schema=public' \
             'DEV_DATABASE_URL=postgresql://memy:memy_dev_password@localhost:5432/memy?schema=public' \

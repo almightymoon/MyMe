@@ -72,6 +72,15 @@ describe('e2e-db-guard', () => {
       ).toThrow(/NODE_ENV=test/);
     });
 
+    it('rejects missing NODE_ENV', () => {
+      expect(() =>
+        assertSafeE2eDatabase({
+          nodeEnv: undefined,
+          databaseUrlTest: safe,
+        }),
+      ).toThrow(/NODE_ENV=test/);
+    });
+
     it('rejects production', () => {
       expect(() =>
         assertSafeE2eDatabase({

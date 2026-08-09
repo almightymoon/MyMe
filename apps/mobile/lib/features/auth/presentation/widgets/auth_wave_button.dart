@@ -34,6 +34,7 @@ class _AuthWaveButtonState extends State<AuthWaveButton>
     with TickerProviderStateMixin {
   static const double _glowPad = 36;
   static const double _waveHeight = 118;
+
   /// Extra paint below / beside so transform never reveals canvas white.
   static const double _bleed = 48;
 
@@ -105,7 +106,8 @@ class _AuthWaveButtonState extends State<AuthWaveButton>
         final ripple = rippleT.value;
 
         // Traveling liquid surface (idle).
-        final crestLift = math.sin(t) * 0.034 + math.sin(t * 1.65 + 0.4) * 0.018;
+        final crestLift =
+            math.sin(t) * 0.034 + math.sin(t * 1.65 + 0.4) * 0.018;
         final sideBreath = math.sin(t * 0.9 + 0.5) * 0.022;
         final skew = math.sin(t * 0.55) * 0.035;
         final rippleAmp = (1 - ripple) * math.sin(ripple * math.pi) * 0.055;
@@ -180,12 +182,13 @@ class _AuthWaveButtonState extends State<AuthWaveButton>
                               ),
                             Text(
                               widget.label,
-                              style: AppTextStyles.titleMedium(
-                                color: Colors.white,
-                              ).copyWith(
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -0.15,
-                              ),
+                              style:
+                                  AppTextStyles.titleMedium(
+                                    color: Colors.white,
+                                  ).copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: -0.15,
+                                  ),
                             ),
                           ],
                         ),
@@ -251,7 +254,8 @@ class _WavePainter extends CustomPainter {
       final baseY = ui.lerpDouble(shoulderY, crestY, arch)!;
 
       // Traveling micro-waves along the surface.
-      final micro = math.sin(u * math.pi * 3.2 + crestLift * 40) *
+      final micro =
+          math.sin(u * math.pi * 3.2 + crestLift * 40) *
               2.4 *
               (1 - press * 0.35) +
           math.sin(u * math.pi * 5.6 + sideBreath * 55) * 1.2;
@@ -259,11 +263,8 @@ class _WavePainter extends CustomPainter {
       // Press ripple expands from center like a liquid slap.
       final dist = (u - 0.5).abs() * 2;
       final ring = (dist - ripple * 1.15).abs();
-      final slap = math.exp(-ring * ring * 28) *
-          rippleAmp *
-          h *
-          1.8 *
-          (1 - dist * 0.35);
+      final slap =
+          math.exp(-ring * ring * 28) * rippleAmp * h * 1.8 * (1 - dist * 0.35);
 
       // Slight center pull toward press point.
       final pressDip = press * arch * 6.0;
@@ -309,10 +310,7 @@ class _WavePainter extends CustomPainter {
       ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 8);
     canvas.save();
     canvas.clipPath(path);
-    canvas.drawRect(
-      Rect.fromLTWH(0, glowPad - 4, size.width, 44),
-      highlight,
-    );
+    canvas.drawRect(Rect.fromLTWH(0, glowPad - 4, size.width, 44), highlight);
     canvas.restore();
   }
 

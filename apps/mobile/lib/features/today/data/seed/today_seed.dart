@@ -1,6 +1,5 @@
 import '../../../calendar/data/seed/calendar_seed.dart';
 import '../../../coach/data/seed/coach_seed.dart';
-import '../../../finance/data/seed/finance_seed.dart';
 import '../../../habits/data/seed/habits_seed.dart';
 import '../../../user/data/seed/user_seed.dart';
 import '../../domain/entities/daily_focus.dart';
@@ -8,8 +7,8 @@ import '../../domain/entities/today_summary.dart';
 
 /// Assembles Today demo data from feature seeds.
 ///
-/// Goals are injected by [todaySummaryProvider] from [GoalRepository]
-/// so Today stays reactive to goal CRUD.
+/// Goals are injected by [todaySummaryProvider] from [GoalRepository].
+/// Finance is injected from [FinanceRepository] via [todayFinanceSummaryProvider].
 abstract final class TodaySeed {
   static const DailyFocus demoFocus = DailyFocus(
     title: 'Finish AI Research Paper',
@@ -22,13 +21,10 @@ abstract final class TodaySeed {
       greetingName: UserSeed.demoProfile.displayName,
       focus: demoFocus,
       // Home glance matches prototype: Team Meeting + Gym Workout.
-      schedule: [
-        CalendarSeed.demoAgenda[0],
-        CalendarSeed.demoAgenda[2],
-      ],
+      schedule: [CalendarSeed.demoAgenda[0], CalendarSeed.demoAgenda[2]],
       goals: const [],
       habits: HabitsSeed.demoHabits.take(2).toList(growable: false),
-      finance: FinanceSeed.demoSummary,
+      finance: null,
       coachRecommendation: CoachSeed.dailyRecommendation,
     );
   }

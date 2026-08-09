@@ -59,13 +59,16 @@ void main() {
     expect(find.text("Today's Tasks"), findsOneWidget);
     expect(find.text('2 of 5'), findsOneWidget);
     expect(find.text('Morning stretch routine'), findsOneWidget);
-    // Home matches HTML: no goals / finance / habits blocks after tasks.
-    expect(find.byKey(const Key('today_goals_card')), findsNothing);
-    expect(find.textContaining('Spent today'), findsNothing);
+    // Active goals and live Finance glance appear when data exists.
+    expect(find.byKey(const Key('today_goals_card')), findsOneWidget);
+    expect(find.byKey(const Key('today_finance_card')), findsOneWidget);
+    expect(find.textContaining('Spent today'), findsOneWidget);
     expect(find.text(AppStrings.habitPreview), findsNothing);
   });
 
-  testWidgets('Today tasks checklist toggles and updates count', (tester) async {
+  testWidgets('Today tasks checklist toggles and updates count', (
+    tester,
+  ) async {
     await pumpMemyApp(tester);
     await signInToToday(tester);
 
@@ -107,6 +110,7 @@ void main() {
       tester,
       config: createTestFakeConfig(forceEmpty: true),
       seedGoals: false,
+      seedFinance: false,
     );
     await signInToToday(tester);
 

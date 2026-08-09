@@ -16,8 +16,11 @@ Back behavior: placeholder / feature routes use `context.pop()` when possible, o
 | `/goals/:goalId` | Goals list / Today goal row | `GoalDetailScreen` | Live — detail, milestones, forecast | Pop or go `/goals` |
 | `/habits` | Plan → Habits card | `HabitsPlaceholderScreen` | Explicit Coming Soon placeholder | Pop → Plan (or Today) |
 | `/habits/new` | Quick Add → Add Habit | `AddHabitPlaceholderScreen` | Explicit Coming Soon placeholder | Pop → previous |
-| `/finance` | More → Finance | `FinancePlaceholderScreen` | Explicit Coming Soon placeholder | Pop → More (or Today) |
-| `/finance/new` | Quick Add → Add Transaction | `AddTransactionPlaceholderScreen` | Explicit Coming Soon placeholder | Pop → previous |
+| `/finance` | More → Finance; Today shortcut | `FinanceOverviewScreen` | Live — local/fake persistence | Pop → More (or Today) |
+| `/finance/new` | Quick Add → Add Transaction; Finance + | `AddTransactionScreen` | Live — create + validate | Pop → previous |
+| `/finance/history` | Finance → See All | `TransactionHistoryScreen` | Live — chronological list | Pop → Finance |
+| `/finance/tx/:transactionId` | History / after save | `TransactionDetailScreen` | Live — detail, edit, delete | Pop or go history |
+| `/finance/tx/:transactionId/edit` | Detail → Edit | `EditTransactionScreen` | Live — update + validate | Pop → detail |
 | `/calendar` | Plan → Calendar card | `CalendarPlaceholderScreen` | Explicit Coming Soon placeholder | Pop → Plan (or Today) |
 | `/calendar/new` | Quick Add → Add Event | `AddEventPlaceholderScreen` | Explicit Coming Soon placeholder | Pop → previous |
 | `/health` | More → Health | `HealthPlaceholderScreen` | Explicit Coming Soon placeholder | Pop → More (or Today) |
@@ -36,8 +39,8 @@ Back behavior: placeholder / feature routes use `context.pop()` when possible, o
 | Coach tab | Branch to Coach | Wired |
 | More tab | Branch to More | Wired |
 | Quick Add FAB | Open Quick Add sheet | Wired |
-| Quick Add → Add Goal | `/goals/new` placeholder | Wired |
-| Quick Add → Add Transaction | `/finance/new` placeholder | Wired |
+| Quick Add → Add Goal | `/goals/new` live form | Wired |
+| Quick Add → Add Transaction | `/finance/new` live form | Wired |
 | Quick Add → Add Event | `/calendar/new` placeholder | Wired |
 | Quick Add → Add Habit | `/habits/new` placeholder | Wired |
 | Quick Add → Log Meal | `/nutrition/coming-soon` placeholder | Wired |

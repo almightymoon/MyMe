@@ -116,9 +116,8 @@ class CalendarController extends Notifier<CalendarState> {
 
     state = state.copyWith(isSaving: true);
     try {
-      final color =
-          CalendarSeed.eventPalette[state.events.length %
-              CalendarSeed.eventPalette.length];
+      final color = CalendarSeed
+          .eventPalette[state.events.length % CalendarSeed.eventPalette.length];
       final event = ScheduleItem(
         id: 'evt_${DateTime.now().microsecondsSinceEpoch}',
         title: trimmed,

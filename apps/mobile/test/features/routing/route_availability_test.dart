@@ -44,9 +44,7 @@ void main() {
       RoutePaths.profile: find.byKey(const Key('profile_scroll')),
     };
 
-    final router = GoRouter.of(
-      tester.element(find.textContaining('Hi,')),
-    );
+    final router = GoRouter.of(tester.element(find.textContaining('Hi,')));
     for (final entry in comingSoonRoutes.entries) {
       router.go(entry.key);
       await tester.pumpAndSettle();
@@ -58,14 +56,19 @@ void main() {
     for (final entry in liveModuleRoutes.entries) {
       router.go(entry.key);
       await tester.pumpAndSettle();
-      expect(entry.value, findsOneWidget, reason: 'Missing UI for ${entry.key}');
-      if (entry.key == RoutePaths.settings ||
-          entry.key == RoutePaths.profile) {
+      expect(
+        entry.value,
+        findsOneWidget,
+        reason: 'Missing UI for ${entry.key}',
+      );
+      if (entry.key == RoutePaths.settings || entry.key == RoutePaths.profile) {
         expect(
           find.byKey(
-            Key(entry.key == RoutePaths.settings
-                ? 'settings_back'
-                : 'profile_back'),
+            Key(
+              entry.key == RoutePaths.settings
+                  ? 'settings_back'
+                  : 'profile_back',
+            ),
           ),
           findsOneWidget,
         );
@@ -81,9 +84,7 @@ void main() {
   testWidgets('Exercise route is live (not a placeholder)', (tester) async {
     await pumpMemyApp(tester);
     await signInToToday(tester);
-    final router = GoRouter.of(
-      tester.element(find.textContaining('Hi,')),
-    );
+    final router = GoRouter.of(tester.element(find.textContaining('Hi,')));
     router.go(RoutePaths.exercise);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
@@ -94,9 +95,7 @@ void main() {
   testWidgets('Goals routes are live (not placeholders)', (tester) async {
     await pumpMemyApp(tester);
     await signInToToday(tester);
-    final router = GoRouter.of(
-      tester.element(find.textContaining('Hi,')),
-    );
+    final router = GoRouter.of(tester.element(find.textContaining('Hi,')));
 
     router.go(RoutePaths.goals);
     await tester.pumpAndSettle();

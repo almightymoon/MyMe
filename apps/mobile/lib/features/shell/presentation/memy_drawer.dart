@@ -88,9 +88,7 @@ class MemyDrawer extends ConsumerWidget {
                         ),
                       ],
                       image: const DecorationImage(
-                        image: AssetImage(
-                          'assets/images/branding/avatar.png',
-                        ),
+                        image: AssetImage('assets/images/branding/avatar.png'),
                         fit: BoxFit.cover,
                       ),
                     ),

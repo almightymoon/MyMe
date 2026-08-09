@@ -26,10 +26,14 @@ lib/
 
 ### Networking (Goals vertical slice)
 
-- `EnvironmentConfig` — `--dart-define` for `API_BASE_URL`, `GOALS_DATA_SOURCE`, `DEV_USER_ID`
+- `EnvironmentConfig` — `--dart-define` for `API_BASE_URL`, `GOALS_DATA_SOURCE`, `FINANCE_DATA_SOURCE`, `DEV_USER_ID`
 - `ApiClient` — Dio wrapper, timeouts, debug-only logging (no sensitive payloads)
 - `ApiErrorParser` / `AppException` — consistent user-facing errors
 - Dev auth header only when `kDebugMode`
+
+### Shared money
+
+- `MoneyMinor` / `MoneyFormat` live under `lib/core/domain/` and are reused by Goals and Finance (Goals paths re-export for compatibility)
 
 ### Goals repositories
 
@@ -41,6 +45,15 @@ lib/
 
 Selected via `goalRepositoryProvider` / `goalsDataSourceProvider`. Widgets depend on `GoalRepository` only.
 
+### Finance repositories
+
+| Mode | Class |
+|------|--------|
+| `fake` | `FakeFinanceRepository` |
+| `local` | `LocalFinanceRepository` (default) |
+
+Selected via `financeRepositoryProvider` / `financeDataSourceProvider`. No Finance API yet. Summary math is pure (`FinanceSummaryService`). Today composes live finance when the ledger is non-empty.
+
 ## Navigation
 
 - **go_router** with `StatefulShellRoute.indexedStack` for Today / Plan / Coach / More
@@ -50,6 +63,7 @@ Selected via `goalRepositoryProvider` / `goalsDataSourceProvider`. Widgets depen
 
 - **flutter_riverpod**
 - Goals: stream providers over `GoalRepository.watchGoals()` so list, detail, Plan, and Today stay in sync after mutations
+- Finance: stream providers over `FinanceRepository.watchTransactions()` so overview, history, detail, and Today stay in sync
 
 ## Run with API mode
 

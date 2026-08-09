@@ -78,6 +78,7 @@ class MemyModuleScaffold extends StatelessWidget {
     this.fallbackPath = RoutePaths.plan,
     this.showDemoLabel = false,
     this.decoration,
+
     /// When true, child fills remaining viewport (for pinned bottom layouts).
     this.fillBody = false,
     this.padding = const EdgeInsets.fromLTRB(
@@ -122,10 +123,7 @@ class MemyModuleScaffold extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(
-            width: 36,
-            child: trailing ?? const SizedBox.shrink(),
-          ),
+          SizedBox(width: 36, child: trailing ?? const SizedBox.shrink()),
         ],
       ),
     );
@@ -142,12 +140,9 @@ class MemyModuleScaffold extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.canvas,
       extendBody: showBottomNav,
-      endDrawer: showBottomNav
-          ? MemyDrawer(activeShellIndex: navIndex)
-          : null,
+      endDrawer: showBottomNav ? MemyDrawer(activeShellIndex: navIndex) : null,
       body: DecoratedBox(
-        decoration:
-            decoration ?? const BoxDecoration(color: AppColors.canvas),
+        decoration: decoration ?? const BoxDecoration(color: AppColors.canvas),
         child: SafeArea(
           bottom: !showBottomNav,
           child: fillBody
@@ -165,8 +160,7 @@ class MemyModuleScaffold extends StatelessWidget {
                             width: heroSize,
                             height: heroSize,
                             fit: BoxFit.contain,
-                            errorBuilder: (_, _, _) =>
-                                const SizedBox.shrink(),
+                            errorBuilder: (_, _, _) => const SizedBox.shrink(),
                           ),
                         ),
                       ],

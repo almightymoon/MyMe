@@ -25,7 +25,7 @@ abstract final class AppStrings {
   static const String emailLabel = 'Email';
   static const String passwordLabel = 'Password';
   static const String demoAuthNote =
-      'Demo only — this does not securely authenticate you.';
+      'Demo mode — authentication is not connected yet.';
 
   static const String today = 'Home';
   static const String plan = 'Dashboard';

@@ -5,7 +5,7 @@ import 'package:flutter/widgets.dart';
 ///
 /// Disabled under [TestWidgetsFlutterBinding] so `pumpAndSettle` can finish.
 bool ambientMotionEnabled([BuildContext? context]) {
-  if (context != null && !TickerMode.of(context)) return false;
+  if (context != null && !TickerMode.valuesOf(context).enabled) return false;
   final binding = SchedulerBinding.instance;
   return !binding.runtimeType.toString().contains('TestWidgetsFlutterBinding');
 }

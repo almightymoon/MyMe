@@ -12,8 +12,11 @@ import '../../features/coach/presentation/coach_screen.dart';
 import '../../features/exercise/presentation/screens/exercise_library_screen.dart';
 import '../../features/exercise/presentation/screens/exercise_overview_screen.dart';
 import '../../features/exercise/presentation/screens/workout_session_placeholder_screen.dart';
-import '../../features/finance/presentation/add_transaction_placeholder_screen.dart';
-import '../../features/finance/presentation/finance_placeholder_screen.dart';
+import '../../features/finance/presentation/screens/add_transaction_screen.dart';
+import '../../features/finance/presentation/screens/edit_transaction_screen.dart';
+import '../../features/finance/presentation/screens/finance_overview_screen.dart';
+import '../../features/finance/presentation/screens/transaction_detail_screen.dart';
+import '../../features/finance/presentation/screens/transaction_history_screen.dart';
 import '../../features/goals/presentation/screens/add_goal_screen.dart';
 import '../../features/goals/presentation/screens/goal_detail_screen.dart';
 import '../../features/goals/presentation/screens/goals_list_screen.dart';
@@ -140,13 +143,35 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         path: RoutePaths.finance,
         name: RouteNames.finance,
-        builder: (context, state) => const FinancePlaceholderScreen(),
+        builder: (context, state) => const FinanceOverviewScreen(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: RoutePaths.addTransaction,
         name: RouteNames.addTransaction,
-        builder: (context, state) => const AddTransactionPlaceholderScreen(),
+        builder: (context, state) => const AddTransactionScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.transactionHistory,
+        name: RouteNames.transactionHistory,
+        builder: (context, state) => const TransactionHistoryScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.transactionDetail,
+        name: RouteNames.transactionDetail,
+        builder: (context, state) => TransactionDetailScreen(
+          transactionId: state.pathParameters['transactionId']!,
+        ),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.editTransaction,
+        name: RouteNames.editTransaction,
+        builder: (context, state) => EditTransactionScreen(
+          transactionId: state.pathParameters['transactionId']!,
+        ),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

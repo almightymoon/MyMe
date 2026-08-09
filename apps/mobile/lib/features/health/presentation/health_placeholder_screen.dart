@@ -313,24 +313,24 @@ class _MetricCard extends StatelessWidget {
                           height: 1.05,
                         ),
                       ),
-                    if (unit != null)
-                      TextSpan(
-                        text: ' $unit',
-                        style: AppTextStyles.bodySmall().copyWith(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFFA8A8AE),
+                      if (unit != null)
+                        TextSpan(
+                          text: ' $unit',
+                          style: AppTextStyles.bodySmall().copyWith(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFFA8A8AE),
+                          ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const Spacer(),
-              footer,
-            ],
+                const Spacer(),
+                footer,
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }

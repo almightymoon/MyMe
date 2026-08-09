@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:memy/app/app.dart';
 import 'package:memy/core/data/fake_repository_config.dart';
+import 'package:memy/features/finance/data/repositories/local_finance_repository.dart';
+import 'package:memy/features/finance/data/seed/finance_seed.dart';
 import 'package:memy/features/goals/application/controllers/add_goal_controller.dart';
 import 'package:memy/features/goals/application/providers/goal_providers.dart';
 import 'package:memy/features/goals/data/repositories/local_goal_repository.dart';
@@ -23,7 +27,13 @@ FakeRepositoryConfig createTestFakeConfig({
 
 /// [seedGoals]: when true (default), first launch seeds demo goals.
 /// When false, marks storage initialized with an empty goal list.
-Future<SharedPreferences> setupTestPreferences({bool seedGoals = true}) async {
+///
+/// [seedFinance]: when true (default), first launch seeds demo finance.
+/// When false, marks storage initialized with an empty finance ledger.
+Future<SharedPreferences> setupTestPreferences({
+  bool seedGoals = true,
+  bool seedFinance = true,
+}) async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
   if (!seedGoals) {
@@ -31,6 +41,21 @@ Future<SharedPreferences> setupTestPreferences({bool seedGoals = true}) async {
     await prefs.setString(
       LocalGoalRepository.storageKey,
       '{"schemaVersion":1,"goals":[]}',
+    );
+  }
+  if (!seedFinance) {
+    await prefs.setBool(LocalFinanceRepository.initializedKey, true);
+    final categoriesJson = FinanceSeed.demoCategories()
+        .map((c) => c.toJson())
+        .toList();
+    await prefs.setString(
+      LocalFinanceRepository.storageKey,
+      jsonEncode({
+        'schemaVersion': 1,
+        'baseCurrencyCode': 'PKR',
+        'categories': categoriesJson,
+        'transactions': <Map<String, dynamic>>[],
+      }),
     );
   }
   return prefs;
@@ -41,10 +66,16 @@ Future<void> pumpMemyApp(
   FakeRepositoryConfig? config,
   List<Override> overrides = const [],
   bool seedGoals = true,
+  bool seedFinance = true,
   SharedPreferences? prefs,
 }) async {
   GoogleFonts.config.allowRuntimeFetching = false;
-  final preferences = prefs ?? await setupTestPreferences(seedGoals: seedGoals);
+  final preferences =
+      prefs ??
+      await setupTestPreferences(
+        seedGoals: seedGoals,
+        seedFinance: seedFinance,
+      );
   await tester.pumpWidget(
     ProviderScope(
       overrides: [

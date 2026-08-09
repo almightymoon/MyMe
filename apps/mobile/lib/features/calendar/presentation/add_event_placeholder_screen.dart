@@ -74,16 +74,12 @@ class _AddEventPlaceholderScreenState
   }
 
   Future<void> _pickTime({required bool start}) async {
-    final initial = TimeOfDay(
-      hour: start ? 10 : 11,
-      minute: 0,
-    );
+    final initial = TimeOfDay(hour: start ? 10 : 11, minute: 0);
     final picked = await showTimePicker(context: context, initialTime: initial);
     if (picked == null || !mounted) return;
-    final label = MaterialLocalizations.of(context).formatTimeOfDay(
-      picked,
-      alwaysUse24HourFormat: false,
-    );
+    final label = MaterialLocalizations.of(
+      context,
+    ).formatTimeOfDay(picked, alwaysUse24HourFormat: false);
     setState(() {
       if (start) {
         _start.text = label;
@@ -95,7 +91,9 @@ class _AddEventPlaceholderScreenState
 
   Future<void> _save() async {
     setState(() => _error = null);
-    final err = await ref.read(calendarControllerProvider.notifier).addEvent(
+    final err = await ref
+        .read(calendarControllerProvider.notifier)
+        .addEvent(
           title: _title.text,
           date: _eventDate,
           start: _start.text,
@@ -112,9 +110,7 @@ class _AddEventPlaceholderScreenState
     final reminder = _reminderMinutes != null;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          reminder ? 'Event saved · reminder set' : 'Event saved',
-        ),
+        content: Text(reminder ? 'Event saved · reminder set' : 'Event saved'),
       ),
     );
     if (context.canPop()) {
@@ -176,7 +172,10 @@ class _AddEventPlaceholderScreenState
                       readOnly: true,
                       onTap: _pickDate,
                       decoration: const InputDecoration(
-                        suffixIcon: Icon(Icons.calendar_today_outlined, size: 18),
+                        suffixIcon: Icon(
+                          Icons.calendar_today_outlined,
+                          size: 18,
+                        ),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md),
@@ -265,9 +264,7 @@ class _AddEventPlaceholderScreenState
                       Text(
                         _error!,
                         key: const Key('event_error'),
-                        style: AppTextStyles.bodySmall(
-                          color: AppColors.health,
-                        ),
+                        style: AppTextStyles.bodySmall(color: AppColors.health),
                       ),
                     ],
                     const SizedBox(height: AppSpacing.lg),

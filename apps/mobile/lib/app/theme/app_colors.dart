@@ -5,6 +5,7 @@ abstract final class AppColors {
   /// Page background — soft cool grey so white cards lift off the canvas.
   /// Design home screens use this (stronger than pure `#FAFAFA`).
   static const Color canvas = Color(0xFFF5F5F7);
+
   /// Slightly deeper wash for nested wells / chips.
   static const Color canvasDeep = Color(0xFFEEEFF1);
   static const Color surface = Color(0xFFFFFFFF);

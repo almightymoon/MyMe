@@ -8,6 +8,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/domain/services/money_format.dart';
 import '../../../core/errors/app_exception.dart';
 import '../../../core/widgets/empty_feature_card.dart';
 import '../../../core/widgets/inline_error_card.dart';
@@ -15,7 +16,10 @@ import '../../../core/widgets/life_score_ring.dart';
 import '../../../core/widgets/loading_card_skeleton.dart';
 import '../../../core/widgets/memy_card.dart';
 import '../../calendar/domain/entities/schedule_item.dart';
+import '../../finance/application/providers/finance_providers.dart';
+import '../../finance/domain/entities/finance_summary.dart';
 import '../../goals/application/providers/goal_providers.dart';
+import '../../goals/domain/entities/goal_summary.dart';
 import '../../shell/presentation/memy_bottom_navigation.dart';
 import '../application/providers/today_providers.dart';
 import '../application/providers/today_tasks_provider.dart';
@@ -48,6 +52,7 @@ class TodayScreen extends ConsumerWidget {
             onRetry: () {
               ref.invalidate(todayBaseProvider);
               ref.invalidate(goalsProvider);
+              ref.invalidate(todayFinanceSummaryProvider);
             },
           ),
         ),
@@ -139,18 +144,18 @@ class _TodayScaffold extends StatelessWidget {
                                 children: [
                                   TextSpan(
                                     text: _dayPart,
-                                    style: AppTextStyles.displayMedium().copyWith(
-                                      fontSize: 26,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: -0.9,
-                                      height: 1.15,
-                                    ),
+                                    style: AppTextStyles.displayMedium()
+                                        .copyWith(
+                                          fontSize: 26,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: -0.9,
+                                          height: 1.15,
+                                        ),
                                   ),
                                   TextSpan(
                                     text: ' $_dayEmoji',
-                                    style: AppTextStyles.displayMedium().copyWith(
-                                      fontSize: 22,
-                                    ),
+                                    style: AppTextStyles.displayMedium()
+                                        .copyWith(fontSize: 22),
                                   ),
                                 ],
                               ),
@@ -250,6 +255,14 @@ class _TodayPopulatedBody extends StatelessWidget {
         ],
         const _ShortcutRow(),
         const SizedBox(height: 12),
+        if (summary.goals.isNotEmpty) ...[
+          _TodayGoalsCard(goals: summary.goals),
+          const SizedBox(height: 12),
+        ],
+        if (summary.finance != null) ...[
+          _TodayFinanceCard(summary: summary.finance!),
+          const SizedBox(height: 12),
+        ],
         _GlanceSection(items: summary.schedule),
         const SizedBox(height: 12),
         const _TasksSection(),
@@ -324,6 +337,105 @@ class _LifeScoreCard extends StatelessWidget {
   }
 }
 
+class _TodayGoalsCard extends StatelessWidget {
+  const _TodayGoalsCard({required this.goals});
+
+  final List<GoalSummary> goals;
+
+  @override
+  Widget build(BuildContext context) {
+    return MemyCard(
+      key: const Key('today_goals_card'),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      onTap: () => context.push(RoutePaths.goals),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Goals',
+            style: AppTextStyles.titleSmall().copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 10),
+          for (var i = 0; i < goals.length && i < 3; i++) ...[
+            if (i > 0) const SizedBox(height: 8),
+            Text(
+              goals[i].title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.bodyMedium().copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Text(
+              goals[i].subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.bodySmall(color: AppColors.faintText),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _TodayFinanceCard extends StatelessWidget {
+  const _TodayFinanceCard({required this.summary});
+
+  final FinanceSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    return MemyCard(
+      key: const Key('today_finance_card'),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      onTap: () => context.push(RoutePaths.finance),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  AppStrings.financePreview,
+                  style: AppTextStyles.titleSmall().copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Text(
+                MoneyFormat.formatSignedMinor(
+                  summary.currentBalanceMinor,
+                  summary.currencyCode,
+                ),
+                key: const Key('today_finance_balance'),
+                style: AppTextStyles.bodyMedium().copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Spent today ${MoneyFormat.formatMinor(summary.spentTodayMinor, summary.currencyCode)}',
+            key: const Key('today_finance_spent'),
+            style: AppTextStyles.bodySmall(color: AppColors.faintText),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'This month · In ${MoneyFormat.formatMinor(summary.periodIncomeMinor, summary.currencyCode)}'
+            ' · Out ${MoneyFormat.formatMinor(summary.periodExpenseMinor, summary.currencyCode)}',
+            key: const Key('today_finance_period'),
+            style: AppTextStyles.bodySmall(color: AppColors.faintText),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ShortcutRow extends StatelessWidget {
   const _ShortcutRow();
 
@@ -392,12 +504,13 @@ class _ShortcutRow extends StatelessWidget {
                           const SizedBox(height: 8),
                           Text(
                             items[i].label,
-                            style: AppTextStyles.labelSmall(
-                              color: AppColors.primaryText,
-                            ).copyWith(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style:
+                                AppTextStyles.labelSmall(
+                                  color: AppColors.primaryText,
+                                ).copyWith(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
                           ),
                         ],
                       ),
@@ -487,7 +600,7 @@ class _GlanceSection extends StatelessWidget {
 
     return MemyCard(
       key: const Key('today_glance'),
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -504,7 +617,6 @@ class _GlanceSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                flex: 10,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -536,14 +648,16 @@ class _GlanceSection extends StatelessWidget {
                   ],
                 ),
               ),
-              Expanded(
-                flex: 14,
+              const SizedBox(width: 16),
+              Flexible(
                 child: events.isEmpty
                     ? Text(
                         AppStrings.sectionEmptyMessage,
                         style: AppTextStyles.bodySmall(),
+                        textAlign: TextAlign.end,
                       )
                     : Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           for (var i = 0; i < events.length; i++) ...[
                             if (i > 0) const SizedBox(height: 14),
@@ -588,6 +702,7 @@ class _GlanceEventRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: 36,
@@ -600,7 +715,8 @@ class _GlanceEventRow extends StatelessWidget {
           child: Icon(icon, size: 17, color: _GlanceSection._eventBlue),
         ),
         const SizedBox(width: 10),
-        Expanded(
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 140),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

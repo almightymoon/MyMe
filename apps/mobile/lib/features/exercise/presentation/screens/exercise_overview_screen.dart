@@ -44,8 +44,7 @@ class ExerciseOverviewScreen extends StatelessWidget {
               leading: IconButton(
                 key: const Key('exercise_back'),
                 tooltip: 'Back',
-                onPressed: () =>
-                    memyBack(context, fallback: RoutePaths.more),
+                onPressed: () => memyBack(context, fallback: RoutePaths.more),
                 icon: const Icon(Icons.arrow_back_rounded),
               ),
             ),

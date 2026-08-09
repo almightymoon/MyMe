@@ -270,9 +270,7 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
             backgroundColor: AppColors.ember,
             foregroundColor: Colors.white,
             minimumSize: const Size.fromHeight(48),
-            shape: RoundedRectangleBorder(
-              borderRadius: AppRadii.controlRadius,
-            ),
+            shape: RoundedRectangleBorder(borderRadius: AppRadii.controlRadius),
           ),
           child: const Text('Add to Today'),
         ),
@@ -329,9 +327,7 @@ class _QuickAddRow extends StatelessWidget {
                         accent.withValues(alpha: 0.14),
                       ],
                     ),
-                    border: Border.all(
-                      color: accent.withValues(alpha: 0.16),
-                    ),
+                    border: Border.all(color: accent.withValues(alpha: 0.16)),
                   ),
                   child: Icon(icon, size: 20, color: accent),
                 ),

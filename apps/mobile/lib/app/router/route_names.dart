@@ -13,6 +13,9 @@ abstract final class RouteNames {
   static const String addHabit = 'addHabit';
   static const String finance = 'finance';
   static const String addTransaction = 'addTransaction';
+  static const String transactionHistory = 'transactionHistory';
+  static const String transactionDetail = 'transactionDetail';
+  static const String editTransaction = 'editTransaction';
   static const String calendar = 'calendar';
   static const String addEvent = 'addEvent';
   static const String health = 'health';
@@ -41,6 +44,9 @@ abstract final class RoutePaths {
   static const String addHabit = '/habits/new';
   static const String finance = '/finance';
   static const String addTransaction = '/finance/new';
+  static const String transactionHistory = '/finance/history';
+  static const String transactionDetail = '/finance/tx/:transactionId';
+  static const String editTransaction = '/finance/tx/:transactionId/edit';
   static const String calendar = '/calendar';
   static const String addEvent = '/calendar/new';
   static const String health = '/health';
@@ -54,6 +60,12 @@ abstract final class RoutePaths {
   static const String nutritionComingSoon = '/nutrition/coming-soon';
 
   static String goalDetailPath(String goalId) => '/goals/$goalId';
+
+  static String transactionDetailPath(String transactionId) =>
+      '/finance/tx/$transactionId';
+
+  static String editTransactionPath(String transactionId) =>
+      '/finance/tx/$transactionId/edit';
 
   static String exerciseLibraryPath([String? categoryId]) {
     if (categoryId == null || categoryId.isEmpty) return exerciseLibrary;

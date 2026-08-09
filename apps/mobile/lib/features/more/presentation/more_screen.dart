@@ -37,198 +37,195 @@ class MoreScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-          Text(
-            'This week',
-            style: AppTextStyles.bodySmall().copyWith(
-              color: AppColors.faintText,
-              fontWeight: FontWeight.w500,
+            Text(
+              'This week',
+              style: AppTextStyles.bodySmall().copyWith(
+                color: AppColors.faintText,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            AppStrings.insightsTitle,
-            style: AppTextStyles.displayMedium().copyWith(fontSize: 28),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          MemyCard(
-            key: const Key('insights_life_trend'),
-            padding: const EdgeInsets.fromLTRB(20, 20, 18, 18),
-            child: Row(
+            const SizedBox(height: 2),
+            Text(
+              AppStrings.insightsTitle,
+              style: AppTextStyles.displayMedium().copyWith(fontSize: 28),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            MemyCard(
+              key: const Key('insights_life_trend'),
+              padding: const EdgeInsets.fromLTRB(20, 20, 18, 18),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Life Score trend', style: AppTextStyles.kicker()),
+                        const SizedBox(height: 4),
+                        Text(
+                          '+6%',
+                          style: AppTextStyles.mono(
+                            fontSize: 32,
+                          ).copyWith(fontWeight: FontWeight.w700),
+                        ),
+                        Text(
+                          'vs last week',
+                          style: AppTextStyles.bodySmall(
+                            color: AppColors.faintText,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const LifeScoreRing(score: 84, size: 84),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Life Score trend',
-                        style: AppTextStyles.kicker(),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '+6%',
-                        style: AppTextStyles.mono(fontSize: 32).copyWith(
-                          fontWeight: FontWeight.w700,
+                  child: MemyCard(
+                    key: const Key('insights_saved'),
+                    onTap: () => context.push(RoutePaths.finance),
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Saved',
+                          style: AppTextStyles.bodySmall(
+                            color: AppColors.faintText,
+                          ),
                         ),
-                      ),
-                      Text(
-                        'vs last week',
-                        style: AppTextStyles.bodySmall(
-                          color: AppColors.faintText,
+                        const SizedBox(height: 6),
+                        Text(
+                          'PKR 12K',
+                          style: AppTextStyles.titleLarge(
+                            color: AppColors.finance,
+                          ).copyWith(fontSize: 22),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                const LifeScoreRing(score: 84, size: 84),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            children: [
-              Expanded(
-                child: MemyCard(
-                  key: const Key('insights_saved'),
-                  onTap: () => context.push(RoutePaths.finance),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Saved',
-                        style: AppTextStyles.bodySmall(
-                          color: AppColors.faintText,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'PKR 12K',
-                        style: AppTextStyles.titleLarge(
-                          color: AppColors.finance,
-                        ).copyWith(fontSize: 22),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: MemyCard(
-                  key: const Key('insights_goals_track'),
-                  onTap: () => context.push(RoutePaths.goals),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Goals on track',
-                        style: AppTextStyles.bodySmall(
-                          color: AppColors.faintText,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        '3 / 4',
-                        style: AppTextStyles.titleLarge().copyWith(
-                          fontSize: 22,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          MemyCard(
-            key: const Key('insights_tip'),
-            padding: const EdgeInsets.all(16),
-            color: AppColors.orangeSoft,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  alignment: Alignment.center,
-                  decoration: const BoxDecoration(
-                    color: AppColors.ember,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    'i',
-                    style: AppTextStyles.labelSmall(
-                      color: Colors.white,
-                    ).copyWith(fontWeight: FontWeight.w700),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    'Weekend spending is up 32%. Try a no-spend Saturday to stay on your emergency fund goal.',
-                    style: AppTextStyles.bodySmall().copyWith(
-                      fontWeight: FontWeight.w500,
-                      height: 1.4,
+                  child: MemyCard(
+                    key: const Key('insights_goals_track'),
+                    onTap: () => context.push(RoutePaths.goals),
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Goals on track',
+                          style: AppTextStyles.bodySmall(
+                            color: AppColors.faintText,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '3 / 4',
+                          style: AppTextStyles.titleLarge().copyWith(
+                            fontSize: 22,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            'Modules',
-            style: AppTextStyles.titleMedium().copyWith(fontSize: 16),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          profileAsync.when(
-            loading: () => const LoadingCardSkeleton(
-              key: Key('more_profile_loading'),
-              height: 88,
-              lines: 2,
-            ),
-            error: (error, _) => InlineErrorCard(
-              key: const Key('more_profile_error'),
-              title: 'Profile',
-              message: userFacingErrorMessage(error),
-              onRetry: () => ref.invalidate(userProfileProvider),
-            ),
-            data: (profile) => _ProfileCard(profile: profile),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          for (final item in _moduleItems)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: MemyCard(
-                key: Key(item.keyName),
-                onTap: () => context.push(item.path),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: item.color.withValues(alpha: 0.12),
-                        borderRadius: AppRadii.chipRadius,
-                      ),
-                      child: Icon(item.icon, color: item.color),
+            const SizedBox(height: AppSpacing.sm),
+            MemyCard(
+              key: const Key('insights_tip'),
+              padding: const EdgeInsets.all(16),
+              color: AppColors.orangeSoft,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 28,
+                    height: 28,
+                    alignment: Alignment.center,
+                    decoration: const BoxDecoration(
+                      color: AppColors.ember,
+                      shape: BoxShape.circle,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        item.title,
-                        style: AppTextStyles.titleSmall(),
+                    child: Text(
+                      'i',
+                      style: AppTextStyles.labelSmall(
+                        color: Colors.white,
+                      ).copyWith(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Weekend spending is up 32%. Try a no-spend Saturday to stay on your emergency fund goal.',
+                      style: AppTextStyles.bodySmall().copyWith(
+                        fontWeight: FontWeight.w500,
+                        height: 1.4,
                       ),
                     ),
-                    const Icon(Icons.chevron_right_rounded),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              'Modules',
+              style: AppTextStyles.titleMedium().copyWith(fontSize: 16),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            profileAsync.when(
+              loading: () => const LoadingCardSkeleton(
+                key: Key('more_profile_loading'),
+                height: 88,
+                lines: 2,
+              ),
+              error: (error, _) => InlineErrorCard(
+                key: const Key('more_profile_error'),
+                title: 'Profile',
+                message: userFacingErrorMessage(error),
+                onRetry: () => ref.invalidate(userProfileProvider),
+              ),
+              data: (profile) => _ProfileCard(profile: profile),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            for (final item in _moduleItems)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: MemyCard(
+                  key: Key(item.keyName),
+                  onTap: () => context.push(item.path),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: item.color.withValues(alpha: 0.12),
+                          borderRadius: AppRadii.chipRadius,
+                        ),
+                        child: Icon(item.icon, color: item.color),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          item.title,
+                          style: AppTextStyles.titleSmall(),
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right_rounded),
+                    ],
+                  ),
+                ),
+              ),
           ],
         ),
       ),

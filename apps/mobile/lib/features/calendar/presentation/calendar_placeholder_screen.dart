@@ -52,7 +52,10 @@ class CalendarPlaceholderScreen extends ConsumerWidget {
                 key: const Key('calendar_next_month'),
                 tooltip: 'Next month',
                 onPressed: controller.nextMonth,
-                icon: const Icon(Icons.chevron_right_rounded, color: AppColors.faintText),
+                icon: const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.faintText,
+                ),
               ),
             ],
           ),
@@ -89,7 +92,8 @@ class CalendarPlaceholderScreen extends ConsumerWidget {
                               selectedMonth: cal.selectedDay.month,
                               selectedYear: cal.selectedDay.year,
                               visibleMonth: cal.visibleMonth,
-                              hasEvent: cells[row * 7 + col] != null &&
+                              hasEvent:
+                                  cells[row * 7 + col] != null &&
                                   eventDays.contains(cells[row * 7 + col]),
                               onTap: (day) => controller.selectDay(
                                 DateTime(
@@ -192,10 +196,12 @@ class _DayCell extends StatelessWidget {
   Widget build(BuildContext context) {
     if (day == null) return const SizedBox(height: 38);
 
-    final isSelected = day == selectedDay &&
+    final isSelected =
+        day == selectedDay &&
         visibleMonth.month == selectedMonth &&
         visibleMonth.year == selectedYear;
-    final isDemoToday = day == CalendarSeed.demoDay.day &&
+    final isDemoToday =
+        day == CalendarSeed.demoDay.day &&
         visibleMonth.month == CalendarSeed.demoDay.month &&
         visibleMonth.year == CalendarSeed.demoDay.year;
 

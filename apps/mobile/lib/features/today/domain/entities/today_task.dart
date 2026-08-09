@@ -11,12 +11,7 @@ class TodayTask {
   final String meta;
   final bool isDone;
 
-  TodayTask copyWith({
-    String? id,
-    String? title,
-    String? meta,
-    bool? isDone,
-  }) {
+  TodayTask copyWith({String? id, String? title, String? meta, bool? isDone}) {
     return TodayTask(
       id: id ?? this.id,
       title: title ?? this.title,

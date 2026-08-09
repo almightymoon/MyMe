@@ -39,8 +39,7 @@ class ComingSoonView extends StatelessWidget {
             child: TextButton.icon(
               key: const Key('coming_soon_back'),
               onPressed:
-                  onBack ??
-                  () => memyBack(context, fallback: fallbackPath),
+                  onBack ?? () => memyBack(context, fallback: fallbackPath),
               icon: const Icon(Icons.arrow_back_rounded),
               label: const Text(AppStrings.back),
             ),

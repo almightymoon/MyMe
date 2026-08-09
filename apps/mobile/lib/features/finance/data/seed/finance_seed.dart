@@ -1,148 +1,195 @@
-import '../../domain/entities/finance_summary.dart';
+import '../../../../core/domain/value_objects/money_minor.dart';
+import '../../domain/entities/finance_category.dart';
+import '../../domain/entities/finance_enums.dart';
+import '../../domain/entities/finance_transaction.dart';
 
-class SpendCategory {
-  const SpendCategory({
-    required this.name,
-    required this.pct,
-    required this.amountLabel,
-    required this.color,
-  });
-
-  final String name;
-  final double pct;
-  final String amountLabel;
-  final ColorValue color;
-}
-
-/// Tiny RGB holder so seed stays free of Flutter imports.
-class ColorValue {
-  const ColorValue(this.value);
-  final int value;
-}
-
-class MoneyParty {
-  const MoneyParty({
-    required this.name,
-    required this.note,
-    required this.amount,
-    required this.amountLabel,
-    required this.dueLabel,
-    required this.status,
-  });
-
-  final String name;
-  final String note;
-  final int amount;
-  final String amountLabel;
-  final String dueLabel;
-
-  /// overdue | due-soon | upcoming
-  final String status;
-}
-
-/// Demo seed data from `/app/js/data.js` finance.
+/// Demo categories and transactions for first-run local / fake seeds only.
+///
+/// Presentation must never import this file.
 abstract final class FinanceSeed {
-  static const FinanceSummary demoSummary = FinanceSummary(
-    balanceLabel: 'PKR 245,000',
-    spentTodayLabel: 'PKR 4,250',
-    envelopeLabel: 'Coffee & lunch',
-    incomeLabel: 'PKR 180,000',
-    expensesLabel: 'PKR 89,000',
-  );
+  static const String baseCurrencyCode = 'PKR';
 
-  static const List<SpendCategory> categories = [
-    SpendCategory(
-      name: 'Food',
-      pct: 30,
-      amountLabel: 'PKR 26,700',
-      color: ColorValue(0xFFE8501F),
-    ),
-    SpendCategory(
-      name: 'Transport',
-      pct: 20,
-      amountLabel: 'PKR 17,800',
-      color: ColorValue(0xFFFF7A2F),
-    ),
-    SpendCategory(
-      name: 'Shopping',
-      pct: 15,
-      amountLabel: 'PKR 13,300',
-      color: ColorValue(0xFFFFA51F),
-    ),
-    SpendCategory(
-      name: 'Bills',
-      pct: 15,
-      amountLabel: 'PKR 13,300',
-      color: ColorValue(0xFF3B82F6),
-    ),
-    SpendCategory(
-      name: 'Others',
-      pct: 20,
-      amountLabel: 'PKR 17,900',
-      color: ColorValue(0xFF9CA3AF),
-    ),
-  ];
+  static List<FinanceCategory> demoCategories({DateTime? now}) {
+    final asOf = now ?? DateTime.now();
+    return [
+      FinanceCategory(
+        id: 'cat_food',
+        name: 'Food',
+        type: TransactionType.expense,
+        iconKey: 'food',
+        isCustom: false,
+        createdAt: asOf,
+      ),
+      FinanceCategory(
+        id: 'cat_transport',
+        name: 'Transport',
+        type: TransactionType.expense,
+        iconKey: 'transport',
+        isCustom: false,
+        createdAt: asOf,
+      ),
+      FinanceCategory(
+        id: 'cat_shopping',
+        name: 'Shopping',
+        type: TransactionType.expense,
+        iconKey: 'shopping',
+        isCustom: false,
+        createdAt: asOf,
+      ),
+      FinanceCategory(
+        id: 'cat_bills',
+        name: 'Bills',
+        type: TransactionType.expense,
+        iconKey: 'bills',
+        isCustom: false,
+        createdAt: asOf,
+      ),
+      FinanceCategory(
+        id: 'cat_others',
+        name: 'Others',
+        type: TransactionType.expense,
+        iconKey: 'other',
+        isCustom: false,
+        createdAt: asOf,
+      ),
+      FinanceCategory(
+        id: 'cat_salary',
+        name: 'Salary',
+        type: TransactionType.income,
+        iconKey: 'salary',
+        isCustom: false,
+        createdAt: asOf,
+      ),
+      FinanceCategory(
+        id: 'cat_other_income',
+        name: 'Other income',
+        type: TransactionType.income,
+        iconKey: 'income',
+        isCustom: false,
+        createdAt: asOf,
+      ),
+    ];
+  }
 
-  static const List<MoneyParty> lent = [
-    MoneyParty(
-      name: 'Sara Ahmed',
-      note: 'Trip expenses',
-      amount: 25000,
-      amountLabel: 'PKR 25,000',
-      dueLabel: 'Aug 20',
-      status: 'due-soon',
-    ),
-    MoneyParty(
-      name: 'Ali Raza',
-      note: 'Laptop contribution',
-      amount: 45000,
-      amountLabel: 'PKR 45,000',
-      dueLabel: 'Sep 05',
-      status: 'upcoming',
-    ),
-    MoneyParty(
-      name: 'Office lunch pool',
-      note: 'Shared meals',
-      amount: 3200,
-      amountLabel: 'PKR 3,200',
-      dueLabel: 'Aug 12',
-      status: 'overdue',
-    ),
-  ];
+  /// Deterministic demo ledger (amounts in paisa / 2-decimal minor units).
+  ///
+  /// All-time: income PKR 334,000 − expense PKR 89,000 = balance PKR 245,000.
+  static List<FinanceTransaction> demoTransactions({DateTime? now}) {
+    final asOf = now ?? DateTime.now();
+    final monthStart = DateTime(asOf.year, asOf.month, 1);
+    DateTime atDay(int day, {int hour = 12}) =>
+        DateTime(monthStart.year, monthStart.month, day, hour, 0);
 
-  static const List<MoneyParty> loans = [
-    MoneyParty(
-      name: 'HBL Personal Loan',
-      note: 'EMI · monthly',
-      amount: 18500,
-      amountLabel: 'PKR 18,500',
-      dueLabel: 'Aug 15',
-      status: 'due-soon',
-    ),
-    MoneyParty(
-      name: 'Mom',
-      note: 'Family support',
-      amount: 50000,
-      amountLabel: 'PKR 50,000',
-      dueLabel: 'Oct 01',
-      status: 'upcoming',
-    ),
-  ];
+    final created = monthStart;
+    return [
+      _tx(
+        id: 'tx_salary',
+        type: TransactionType.income,
+        amountMajor: 180000,
+        categoryId: 'cat_salary',
+        occurredAt: atDay(1, hour: 9),
+        method: PaymentMethod.bankTransfer,
+        merchant: 'Employer',
+        created: created,
+      ),
+      _tx(
+        id: 'tx_bonus',
+        type: TransactionType.income,
+        amountMajor: 154000,
+        categoryId: 'cat_other_income',
+        occurredAt: atDay(5, hour: 10),
+        method: PaymentMethod.bankTransfer,
+        merchant: 'Side project',
+        created: created,
+      ),
+      _tx(
+        id: 'tx_food_1',
+        type: TransactionType.expense,
+        amountMajor: 22450,
+        categoryId: 'cat_food',
+        occurredAt: atDay(3, hour: 13),
+        method: PaymentMethod.debitCard,
+        merchant: 'Grocery & cafes',
+        created: created,
+      ),
+      _tx(
+        id: 'tx_transport_1',
+        type: TransactionType.expense,
+        amountMajor: 17800,
+        categoryId: 'cat_transport',
+        occurredAt: atDay(4, hour: 8),
+        method: PaymentMethod.mobileWallet,
+        merchant: 'Commute',
+        created: created,
+      ),
+      _tx(
+        id: 'tx_shopping_1',
+        type: TransactionType.expense,
+        amountMajor: 13300,
+        categoryId: 'cat_shopping',
+        occurredAt: atDay(7, hour: 16),
+        method: PaymentMethod.creditCard,
+        merchant: 'Retail',
+        created: created,
+      ),
+      _tx(
+        id: 'tx_bills_1',
+        type: TransactionType.expense,
+        amountMajor: 13300,
+        categoryId: 'cat_bills',
+        occurredAt: atDay(8, hour: 11),
+        method: PaymentMethod.bankTransfer,
+        merchant: 'Utilities',
+        created: created,
+      ),
+      _tx(
+        id: 'tx_others_1',
+        type: TransactionType.expense,
+        amountMajor: 17900,
+        categoryId: 'cat_others',
+        occurredAt: atDay(10, hour: 15),
+        method: PaymentMethod.cash,
+        merchant: 'Misc',
+        created: created,
+      ),
+      // Spent today slice (local calendar day of [asOf]).
+      _tx(
+        id: 'tx_today_coffee',
+        type: TransactionType.expense,
+        amountMajor: 4250,
+        categoryId: 'cat_food',
+        occurredAt: DateTime(asOf.year, asOf.month, asOf.day, 12, 30),
+        method: PaymentMethod.mobileWallet,
+        merchant: 'Coffee & lunch',
+        created: created,
+        note: 'Today spend',
+      ),
+    ];
+  }
 
-  static int get lentTotal =>
-      lent.fold<int>(0, (sum, item) => sum + item.amount);
-
-  static int get loanTotal =>
-      loans.fold<int>(0, (sum, item) => sum + item.amount);
-
-  static String formatPkr(int amount) {
-    final digits = amount.toString();
-    final buf = StringBuffer();
-    for (var i = 0; i < digits.length; i++) {
-      final fromEnd = digits.length - i;
-      buf.write(digits[i]);
-      if (fromEnd > 1 && fromEnd % 3 == 1) buf.write(',');
-    }
-    return 'PKR $buf';
+  static FinanceTransaction _tx({
+    required String id,
+    required TransactionType type,
+    required int amountMajor,
+    required String categoryId,
+    required DateTime occurredAt,
+    required PaymentMethod method,
+    required DateTime created,
+    String? merchant,
+    String? note,
+  }) {
+    return FinanceTransaction(
+      id: id,
+      type: type,
+      amountMinor: MoneyMinor.fromInt(amountMajor * 100),
+      currencyCode: baseCurrencyCode,
+      categoryId: categoryId,
+      occurredAt: occurredAt,
+      paymentMethod: method,
+      merchantOrSource: merchant,
+      note: note,
+      createdAt: created,
+      updatedAt: created,
+    );
   }
 }

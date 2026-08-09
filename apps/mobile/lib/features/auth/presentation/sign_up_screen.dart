@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router/route_names.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/memy_primary_button.dart';
@@ -18,10 +20,18 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  final _nameController = TextEditingController(text: 'Emma Chen');
-  final _emailController = TextEditingController(text: 'emma@memy.app');
-  final _passwordController = TextEditingController(text: 'memy2026');
-  final _confirmController = TextEditingController(text: 'memy2026');
+  late final _nameController = TextEditingController(
+    text: kReleaseMode ? '' : 'Emma Chen',
+  );
+  late final _emailController = TextEditingController(
+    text: kReleaseMode ? '' : 'emma@memy.app',
+  );
+  late final _passwordController = TextEditingController(
+    text: kReleaseMode ? '' : 'memy2026',
+  );
+  late final _confirmController = TextEditingController(
+    text: kReleaseMode ? '' : 'memy2026',
+  );
   bool _obscure = true;
   bool _acceptedTerms = true;
   String? _error;
@@ -88,7 +98,37 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           const SizedBox(width: 40),
                         ],
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 20),
+                      Semantics(
+                        label: AppStrings.demoAuthNote,
+                        child: Container(
+                          key: const Key('demo_auth_notice'),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.orangeSoft.withValues(alpha: 0.85),
+                            borderRadius: AppRadii.controlRadius,
+                            border: Border.all(
+                              color: AppColors.ember.withValues(alpha: 0.18),
+                            ),
+                          ),
+                          child: Text(
+                            AppStrings.demoAuthNote,
+                            textAlign: TextAlign.center,
+                            style:
+                                AppTextStyles.bodySmall(
+                                  color: AppColors.emberDark,
+                                ).copyWith(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  height: 1.35,
+                                ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
                       Text(
                         AppStrings.createAccountTitle,
                         style: AppTextStyles.displayMedium(),

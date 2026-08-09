@@ -44,8 +44,9 @@ function loadEnvFile(path: string): void {
 function main(): void {
   const envPath = resolve(__dirname, '../.env.test');
   loadEnvFile(envPath);
-  process.env.NODE_ENV = 'test';
 
+  // Do NOT overwrite NODE_ENV — an unsafe environment must stay visible to
+  // assertSafeE2eDatabase rather than being silently rewritten to "test".
   const testUrl = assertSafeE2eDatabase({
     nodeEnv: process.env.NODE_ENV,
     databaseUrlTest: process.env.DATABASE_URL_TEST,

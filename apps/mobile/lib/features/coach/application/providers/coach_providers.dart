@@ -17,9 +17,8 @@ final coachPromptsProvider = FutureProvider.autoDispose<List<CoachSuggestion>>((
 });
 
 final coachConversationProvider =
-    StateNotifierProvider.autoDispose<
-      CoachConversationController,
-      CoachConversationState
-    >((ref) {
+    StateNotifierProvider<CoachConversationController, CoachConversationState>((
+      ref,
+    ) {
       return CoachConversationController();
     });

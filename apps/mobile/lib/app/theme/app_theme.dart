@@ -116,9 +116,7 @@ abstract final class AppTheme {
       ),
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: AppRadii.sheetRadius,
-        ),
+        shape: RoundedRectangleBorder(borderRadius: AppRadii.sheetRadius),
         showDragHandle: false,
       ),
       snackBarTheme: SnackBarThemeData(

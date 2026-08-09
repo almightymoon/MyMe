@@ -92,9 +92,7 @@ class WardrobePlaceholderScreen extends StatelessWidget {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: style.$2
-                            ? AppColors.ember
-                            : AppColors.surface,
+                        color: style.$2 ? AppColors.ember : AppColors.surface,
                         borderRadius: AppRadii.pillRadius,
                         boxShadow: style.$2 ? null : AppColors.softShadow,
                       ),

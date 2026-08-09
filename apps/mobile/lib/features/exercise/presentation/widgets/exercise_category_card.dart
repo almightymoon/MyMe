@@ -62,7 +62,9 @@ class ExerciseCategoryCard extends StatelessWidget {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.surface.withValues(alpha: 0.92),
+                                color: AppColors.surface.withValues(
+                                  alpha: 0.92,
+                                ),
                                 borderRadius: AppRadii.pillRadius,
                               ),
                               child: Text(

@@ -72,15 +72,19 @@ class _BodyCompositionScreenState extends State<BodyCompositionScreen> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.orangeSoft,
                   borderRadius: AppRadii.pillRadius,
                 ),
                 child: Text(
                   '7 Days',
-                  style: AppTextStyles.labelSmall(color: AppColors.ember)
-                      .copyWith(fontWeight: FontWeight.w700),
+                  style: AppTextStyles.labelSmall(
+                    color: AppColors.ember,
+                  ).copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
             ],
@@ -88,9 +92,9 @@ class _BodyCompositionScreenState extends State<BodyCompositionScreen> {
           const SizedBox(height: 10),
           _AiPlanCard(
             onStart: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Starting AI plan')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Starting AI plan')));
               context.push(RoutePaths.exercise);
             },
           ),
@@ -98,7 +102,10 @@ class _BodyCompositionScreenState extends State<BodyCompositionScreen> {
           Row(
             children: [
               Expanded(
-                child: Text("Today's Workout", style: AppTextStyles.titleMedium()),
+                child: Text(
+                  "Today's Workout",
+                  style: AppTextStyles.titleMedium(),
+                ),
               ),
               TextButton(
                 key: const Key('body_workout_view_all'),
@@ -132,9 +139,9 @@ class _BodyCompositionScreenState extends State<BodyCompositionScreen> {
                         _selectedMoves.add(move.id);
                       }
                     });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(move.name)),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(move.name)));
                   },
                 );
               },
@@ -336,10 +343,9 @@ class _BodyHero extends StatelessWidget {
                     children: [
                       TextSpan(
                         text: '${BodySeed.bodyScore}',
-                        style: AppTextStyles.mono(fontSize: 22).copyWith(
-                          fontWeight: FontWeight.w700,
-                          height: 1,
-                        ),
+                        style: AppTextStyles.mono(
+                          fontSize: 22,
+                        ).copyWith(fontWeight: FontWeight.w700, height: 1),
                       ),
                       TextSpan(
                         text: '/100',
@@ -520,10 +526,9 @@ class _MetricTile extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             status,
-            style: AppTextStyles.labelSmall(color: statusColor).copyWith(
-              fontWeight: FontWeight.w600,
-              fontSize: 12,
-            ),
+            style: AppTextStyles.labelSmall(
+              color: statusColor,
+            ).copyWith(fontWeight: FontWeight.w600, fontSize: 12),
           ),
         ],
       ),
@@ -560,7 +565,8 @@ class _MuscleBalanceCard extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  for (final m in BodySeed.muscleBalance) _MuscleBarRow(stat: m),
+                  for (final m in BodySeed.muscleBalance)
+                    _MuscleBarRow(stat: m),
                 ],
               ),
             ),

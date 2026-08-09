@@ -78,9 +78,7 @@ void main() {
     await pumpMemyApp(tester, seedGoals: false);
     await signInToToday(tester);
 
-    final router = GoRouter.of(
-      tester.element(find.textContaining('Hi,')),
-    );
+    final router = GoRouter.of(tester.element(find.textContaining('Hi,')));
     router.go(RoutePaths.exercise);
     await tester.pump();
     for (var i = 0; i < 10; i++) {
@@ -111,9 +109,7 @@ void main() {
   testWidgets('category navigation opens filtered library', (tester) async {
     await pumpMemyApp(tester, seedGoals: false);
     await signInToToday(tester);
-    final router = GoRouter.of(
-      tester.element(find.textContaining('Hi,')),
-    );
+    final router = GoRouter.of(tester.element(find.textContaining('Hi,')));
     router.go(RoutePaths.exerciseLibraryPath('yoga'));
     await tester.pump();
     for (var i = 0; i < 8; i++) {
@@ -127,9 +123,7 @@ void main() {
   testWidgets('view library button opens full catalog', (tester) async {
     await pumpMemyApp(tester, seedGoals: false);
     await signInToToday(tester);
-    final router = GoRouter.of(
-      tester.element(find.textContaining('Hi,')),
-    );
+    final router = GoRouter.of(tester.element(find.textContaining('Hi,')));
     router.go(RoutePaths.exerciseLibrary);
     await tester.pump();
     for (var i = 0; i < 8; i++) {
@@ -143,9 +137,7 @@ void main() {
   testWidgets('start workout route is reachable and labeled', (tester) async {
     await pumpMemyApp(tester, seedGoals: false);
     await signInToToday(tester);
-    final router = GoRouter.of(
-      tester.element(find.textContaining('Hi,')),
-    );
+    final router = GoRouter.of(tester.element(find.textContaining('Hi,')));
     router.go(RoutePaths.workoutSession);
     await tester.pump();
     for (var i = 0; i < 8; i++) {
@@ -191,9 +183,7 @@ void main() {
   testWidgets('empty category shows empty state', (tester) async {
     await pumpMemyApp(tester, seedGoals: false);
     await signInToToday(tester);
-    final router = GoRouter.of(
-      tester.element(find.textContaining('Hi,')),
-    );
+    final router = GoRouter.of(tester.element(find.textContaining('Hi,')));
     router.go('${RoutePaths.exerciseLibrary}?category=unknown');
     await tester.pump();
     for (var i = 0; i < 8; i++) {

@@ -30,8 +30,7 @@ class SettingsScreen extends StatelessWidget {
               children: [
                 IconButton(
                   key: const Key('settings_back'),
-                  onPressed: () =>
-                      memyBack(context, fallback: RoutePaths.more),
+                  onPressed: () => memyBack(context, fallback: RoutePaths.more),
                   icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
                 ),
                 Expanded(
@@ -53,7 +52,10 @@ class SettingsScreen extends StatelessWidget {
                   label: 'Profile Information',
                   isFirst: true,
                 ),
-                _SetRow(icon: Icons.lock_outline_rounded, label: 'Change Password'),
+                _SetRow(
+                  icon: Icons.lock_outline_rounded,
+                  label: 'Change Password',
+                ),
                 _SetRow(icon: Icons.shield_outlined, label: 'Security'),
                 _SetRow(
                   icon: Icons.link_rounded,
@@ -106,10 +108,7 @@ class SettingsScreen extends StatelessWidget {
                   icon: Icons.description_outlined,
                   label: 'Terms & Conditions',
                 ),
-                _SetRow(
-                  icon: Icons.policy_outlined,
-                  label: 'Privacy Policy',
-                ),
+                _SetRow(icon: Icons.policy_outlined, label: 'Privacy Policy'),
                 _SetRow(
                   icon: Icons.info_outline_rounded,
                   label: 'About MeMy',
@@ -221,17 +220,13 @@ class _SetRow extends StatelessWidget {
           decoration: BoxDecoration(
             border: isLast
                 ? null
-                : const Border(
-                    bottom: BorderSide(color: Color(0x0D000000)),
-                  ),
+                : const Border(bottom: BorderSide(color: Color(0x0D000000))),
           ),
           child: Row(
             children: [
               Icon(icon, size: 22, color: AppColors.ember),
               const SizedBox(width: 12),
-              Expanded(
-                child: Text(label, style: AppTextStyles.bodyMedium()),
-              ),
+              Expanded(child: Text(label, style: AppTextStyles.bodyMedium())),
               if (value != null)
                 Text(
                   value!,

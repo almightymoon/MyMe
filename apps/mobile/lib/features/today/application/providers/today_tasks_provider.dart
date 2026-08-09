@@ -19,14 +19,14 @@ class TodayTasksNotifier extends StateNotifier<List<TodayTask>> {
     if (trimmed.isEmpty) return;
 
     final id = 'task-${DateTime.now().microsecondsSinceEpoch}';
-    state = [
-      ...state,
-      TodayTask(id: id, title: trimmed, meta: meta),
-    ];
+    state = [...state, TodayTask(id: id, title: trimmed, meta: meta)];
   }
 
   void remove(String id) {
-    state = [for (final task in state) if (task.id != id) task];
+    state = [
+      for (final task in state)
+        if (task.id != id) task,
+    ];
   }
 
   void resetDemo() {

@@ -4,10 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'route_names.dart';
 
 /// Pop when possible; otherwise land on a safe shell tab.
-void memyBack(
-  BuildContext context, {
-  String fallback = RoutePaths.today,
-}) {
+void memyBack(BuildContext context, {String fallback = RoutePaths.today}) {
   if (context.canPop()) {
     context.pop();
     return;

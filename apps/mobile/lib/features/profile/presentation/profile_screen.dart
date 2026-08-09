@@ -78,9 +78,7 @@ class ProfileScreen extends ConsumerWidget {
                       shape: BoxShape.circle,
                       color: AppColors.orangeSoft,
                       image: const DecorationImage(
-                        image: AssetImage(
-                          'assets/images/branding/avatar.png',
-                        ),
+                        image: AssetImage('assets/images/branding/avatar.png'),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -189,14 +187,13 @@ class _ProfileRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
           child: Row(
             children: [
-              Expanded(
-                child: Text(label, style: AppTextStyles.bodyMedium()),
-              ),
+              Expanded(child: Text(label, style: AppTextStyles.bodyMedium())),
               Text(
                 value,
                 style: AppTextStyles.bodyMedium().copyWith(
                   fontWeight: FontWeight.w600,
-                  color: valueColor ??
+                  color:
+                      valueColor ??
                       (mutedValue
                           ? AppColors.faintText
                           : AppColors.primaryText),

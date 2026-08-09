@@ -47,8 +47,7 @@ class GoalsListScreen extends ConsumerWidget {
               leading: IconButton(
                 key: const Key('goals_back'),
                 tooltip: AppStrings.back,
-                onPressed: () =>
-                    memyBack(context, fallback: RoutePaths.plan),
+                onPressed: () => memyBack(context, fallback: RoutePaths.plan),
                 icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
               ),
               trailing: IconButton(

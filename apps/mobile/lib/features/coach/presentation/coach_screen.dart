@@ -35,6 +35,7 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
 
   void _sendComposer() {
     final text = _composerController.text;
+    if (text.trim().isEmpty) return;
     ref.read(coachConversationProvider.notifier).sendUserMessage(text);
     _composerController.clear();
   }

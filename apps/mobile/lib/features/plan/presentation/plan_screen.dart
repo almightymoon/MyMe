@@ -23,8 +23,9 @@ class PlanScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final goalsAsync = ref.watch(goalsProvider);
     final goals = goalsAsync.asData?.value ?? const <Goal>[];
-    final activeGoals =
-        goals.where((g) => g.status == GoalStatus.active).toList();
+    final activeGoals = goals
+        .where((g) => g.status == GoalStatus.active)
+        .toList();
     final avgProgress = activeGoals.isEmpty
         ? 0
         : (activeGoals
@@ -180,12 +181,6 @@ class _DashboardHeader extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        MemyIconPlain(
-          key: const Key('dashboard_open_drawer'),
-          icon: Icons.menu_rounded,
-          onPressed: () => openMemyDrawer(context),
-        ),
-        const SizedBox(width: 8),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,6 +228,12 @@ class _DashboardHeader extends StatelessWidget {
               ),
             ),
           ),
+        ),
+        const SizedBox(width: 4),
+        MemyIconPlain(
+          key: const Key('dashboard_open_drawer'),
+          icon: Icons.menu_rounded,
+          onPressed: () => openMemyDrawer(context),
         ),
       ],
     );
@@ -364,10 +365,9 @@ class _GoalsModuleCopy extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           '$pct%',
-          style: AppTextStyles.mono(fontSize: 28).copyWith(
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.5,
-          ),
+          style: AppTextStyles.mono(
+            fontSize: 28,
+          ).copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.5),
         ),
         Text(
           'avg progress',
@@ -424,10 +424,11 @@ class _StaticModuleCopy extends StatelessWidget {
           big,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: (bigSmall
-                  ? AppTextStyles.titleMedium().copyWith(fontSize: 16)
-                  : AppTextStyles.mono(fontSize: 22))
-              .copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.4),
+          style:
+              (bigSmall
+                      ? AppTextStyles.titleMedium().copyWith(fontSize: 16)
+                      : AppTextStyles.mono(fontSize: 22))
+                  .copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.4),
         ),
         const SizedBox(height: 4),
         Text(
@@ -484,7 +485,11 @@ class _CoachStrip extends StatelessWidget {
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFFFF8A4C), AppColors.ember, AppColors.emberDark],
+                colors: [
+                  Color(0xFFFF8A4C),
+                  AppColors.ember,
+                  AppColors.emberDark,
+                ],
               ),
               boxShadow: AppColors.orangeGlow,
             ),

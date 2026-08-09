@@ -103,9 +103,10 @@ flutter run --dart-define=GOALS_DATA_SOURCE=api \
 cd apps/mobile
 flutter run
 # or: flutter run --dart-define=GOALS_DATA_SOURCE=local
+# Finance defaults to local; optional: --dart-define=FINANCE_DATA_SOURCE=fake
 ```
 
-Local goals use `MoneyMinor` (`BigInt`); legacy integer SharedPreferences amounts still load.
+Local goals and finance use shared `MoneyMinor` (`BigInt`); legacy integer SharedPreferences goal amounts still load. Finance has no backend API yet — see `docs/product/finance-feature.md`.
 
 ### 7. Run tests
 
@@ -123,6 +124,9 @@ flutter build apk --debug
 
 Large financial Goal flow (Quick Add → PKR 150,000,000 + two milestones) is covered in
 `apps/mobile/test/features/goals/widget/large_financial_goal_flow_test.dart`.
+
+Finance local flow (Quick Add → expense PKR 25,000 Food + persistence) is covered in
+`apps/mobile/test/features/finance/widget/finance_flow_test.dart`.
 
 **API**
 

@@ -28,10 +28,7 @@ class MemyAppShell extends StatelessWidget {
       backgroundColor: AppColors.canvas,
       extendBody: true,
       endDrawer: MemyDrawer(activeShellIndex: navigationShell.currentIndex),
-      body: ColoredBox(
-        color: AppColors.canvas,
-        child: navigationShell,
-      ),
+      body: ColoredBox(color: AppColors.canvas, child: navigationShell),
       bottomNavigationBar: MemyBottomNavigation(
         currentIndex: navigationShell.currentIndex,
         onDestinationSelected: _onTap,

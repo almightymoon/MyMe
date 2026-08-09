@@ -49,15 +49,18 @@ jobs:
       DEV_USER_DISPLAY_NAME: Emma Chen
       DEV_USER_TIMEZONE: Asia/Karachi
       DEV_USER_CURRENCY: PKR
+      # Prisma schema datasource reads DATABASE_URL — must be the isolated
+      # test DB before format / validate / generate / build / migrate.
+      DATABASE_URL: postgresql://memy:memy_dev_password@localhost:5432/memy_test?schema=public
       DATABASE_URL_TEST: postgresql://memy:memy_dev_password@localhost:5432/memy_test?schema=public
       DEV_DATABASE_URL: postgresql://memy:memy_dev_password@localhost:5432/memy?schema=public
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '20'
           cache: npm
@@ -101,6 +104,7 @@ jobs:
             'DEV_USER_DISPLAY_NAME=Emma Chen' \
             'DEV_USER_TIMEZONE=Asia/Karachi' \
             'DEV_USER_CURRENCY=PKR' \
+            'DATABASE_URL=postgresql://memy:memy_dev_password@localhost:5432/memy_test?schema=public' \
             'DATABASE_URL_TEST=postgresql://memy:memy_dev_password@localhost:5432/memy_test?schema=public' \
             'DEV_DATABASE_URL=postgresql://memy:memy_dev_password@localhost:5432/memy?schema=public' \
             > .env.test

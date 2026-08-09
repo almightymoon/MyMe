@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router/route_names.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/memy_primary_button.dart';
@@ -19,8 +21,13 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-  final _emailController = TextEditingController(text: 'emma@memy.app');
-  final _passwordController = TextEditingController(text: 'memy2026');
+  // Prefill credentials only in debug/profile demo builds — never in release.
+  late final _emailController = TextEditingController(
+    text: kReleaseMode ? '' : 'emma@memy.app',
+  );
+  late final _passwordController = TextEditingController(
+    text: kReleaseMode ? '' : 'memy2026',
+  );
   bool _obscure = true;
   String? _error;
 
@@ -70,6 +77,36 @@ class _SignInScreenState extends State<SignInScreen> {
                         style: AppTextStyles.bodyMedium(
                           color: AppColors.primaryText,
                         ).copyWith(fontSize: 15, fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(height: 12),
+                      Semantics(
+                        label: AppStrings.demoAuthNote,
+                        child: Container(
+                          key: const Key('demo_auth_notice'),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.orangeSoft.withValues(alpha: 0.85),
+                            borderRadius: AppRadii.controlRadius,
+                            border: Border.all(
+                              color: AppColors.ember.withValues(alpha: 0.18),
+                            ),
+                          ),
+                          child: Text(
+                            AppStrings.demoAuthNote,
+                            textAlign: TextAlign.center,
+                            style:
+                                AppTextStyles.bodySmall(
+                                  color: AppColors.emberDark,
+                                ).copyWith(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  height: 1.35,
+                                ),
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 18),
                       Center(

@@ -10,17 +10,18 @@ void main() {
     await pumpMemyApp(tester);
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.welcomeHeading), findsOneWidget);
-    expect(find.text(AppStrings.demoMode), findsOneWidget);
-    expect(find.text(AppStrings.continueToMemy), findsOneWidget);
+    expect(find.text(AppStrings.appName), findsWidgets);
+    expect(find.text(AppStrings.tagline), findsOneWidget);
+    expect(find.text(AppStrings.signIn), findsOneWidget);
+    expect(find.byKey(const Key('continue_to_memy')), findsOneWidget);
   });
 
-  testWidgets('Continue to MeMy navigates to Today', (tester) async {
+  testWidgets('Sign In navigates to Today', (tester) async {
     await pumpMemyApp(tester);
     await signInToToday(tester);
 
-    expect(find.text('Good day, Emma'), findsOneWidget);
-    expect(find.text(AppStrings.dayAtAGlance), findsOneWidget);
+    expect(find.text('Hi, Emma!'), findsOneWidget);
+    expect(find.byKey(const Key('today_life_score')), findsOneWidget);
   });
 
   testWidgets('primary navigation items work', (tester) async {
@@ -29,7 +30,8 @@ void main() {
 
     await tester.tap(find.byKey(const Key('nav_plan')));
     await tester.pumpAndSettle();
-    expect(find.text('Weekly planning summary'), findsOneWidget);
+    expect(find.text('Dashboard'), findsWidgets);
+    expect(find.byKey(const Key('dashboard_module_goals')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_coach')));
     await tester.pumpAndSettle();
@@ -37,13 +39,15 @@ void main() {
 
     await tester.tap(find.byKey(const Key('nav_more')));
     await tester.pumpAndSettle();
+    expect(find.text('Insights'), findsWidgets);
     expect(find.text('Finance'), findsOneWidget);
     expect(find.text('Exercise'), findsOneWidget);
     expect(find.byKey(const Key('more_profile')), findsOneWidget);
+    expect(find.byKey(const Key('insights_life_trend')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_today')));
     await tester.pumpAndSettle();
-    expect(find.text('Good day, Emma'), findsOneWidget);
+    expect(find.text('Hi, Emma!'), findsOneWidget);
   });
 
   testWidgets('Quick Add opens sheet and Add Goal routes to /goals/new', (
@@ -74,6 +78,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('nav_more')));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('more_exercise')));
     await tester.tap(find.byKey(const Key('more_exercise')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));

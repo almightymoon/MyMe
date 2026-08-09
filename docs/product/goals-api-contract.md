@@ -84,7 +84,22 @@ Incorrect: JSON numbers (`15000000000`), floats (`"100.5"`), signed values, comm
 - `currentAmountMinor` ≥ 0
 - `currentAmountMinor` ≤ `targetAmountMinor` when both set
 - `currencyCode` required when any amount is supplied — exactly three uppercase ASCII letters (`PKR`)
-- Financial progress percent is **server-calculated** from amounts when possible (integer ratio, not floating money)
+- Financial progress percent is **server-authoritative** whenever both
+  `targetAmountMinor` and an effective `currentAmountMinor` are present:
+
+```
+progressPercent = floor(currentAmountMinor × 100 ÷ targetAmountMinor)
+# then clamp to [0, 100]
+# current ≥ target → 100; current ≤ 0 → 0
+```
+
+  Client-supplied `progressPercent` is **accepted but ignored** in that case
+  (create, update, and record-progress). The response always returns the
+  calculated value. Flutter omits `progressPercent` from amount-based
+  financial request bodies so the client never ships contradictory values.
+
+  Manual `progressPercent` remains supported for non-financial goals that
+  lack usable monetary amounts.
 
 ## Atomic create
 
@@ -201,10 +216,20 @@ Vary deadline (today / +60 days / past) and assert string remaining + ceiling mo
 }
 ```
 
+Do **not** send `progressPercent` with the amounts above — the server stores `0`
+(`floor(0 × 100 ÷ 15000000000)`). Conflicting client values are ignored:
+
+| Request amounts | Client `progressPercent` | Stored |
+| --- | --- | --- |
+| target `10000`, current `10000` | `5` | `100` |
+| target `10000`, current `2500` | `80` | `25` |
+| progress `currentAmountMinor: "5000"` (target `10000`) | `99` | `50` |
+
 ## Flutter client
 
 - `MoneyMinor` (`BigInt`) value object — JSON digit strings; legacy local `int` still readable
 - `ApiGoalRepository` implements `GoalRepository`
 - DTO mapping: `GoalApiMapper` (widgets never parse JSON)
+- Financial create/update/progress bodies **omit** `progressPercent` when amounts are present
 - Modes: `--dart-define=GOALS_DATA_SOURCE=fake|local|api`
 - Base URL: `--dart-define=API_BASE_URL=...` (include `/api/v1`)

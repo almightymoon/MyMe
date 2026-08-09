@@ -14,12 +14,10 @@ abstract final class GoalProgressCalculator {
       final currentValue = rawCurrent > target.value
           ? target.value
           : rawCurrent;
-      // Scale by 10_000 (percent * 100) using BigInt division so the full
-      // minor-unit amounts never pass through `double`; only the resulting
-      // small percentage value is converted at the very end.
-      final scaledPercent = (currentValue * BigInt.from(10000)) ~/ target.value;
-      final percent = scaledPercent.toDouble() / 100.0;
-      return percent.clamp(0, 100);
+      // Scale by 100 using BigInt floor division so amounts never pass through
+      // `double`; matches server `calculateFinancialProgressPercent`.
+      final percent = (currentValue * BigInt.from(100)) ~/ target.value;
+      return percent.toDouble().clamp(0, 100);
     }
 
     if (goal.milestones.isNotEmpty) {

@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/auth/presentation/forgot_password_screen.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
+import '../../features/auth/presentation/sign_up_screen.dart';
+import '../../features/body/presentation/body_composition_screen.dart';
 import '../../features/calendar/presentation/add_event_placeholder_screen.dart';
 import '../../features/calendar/presentation/calendar_placeholder_screen.dart';
 import '../../features/coach/presentation/coach_screen.dart';
@@ -19,6 +22,7 @@ import '../../features/habits/presentation/habits_placeholder_screen.dart';
 import '../../features/health/presentation/health_placeholder_screen.dart';
 import '../../features/more/presentation/more_screen.dart';
 import '../../features/plan/presentation/plan_screen.dart';
+import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/shell/presentation/memy_app_shell.dart';
 import '../../features/today/presentation/today_screen.dart';
@@ -41,6 +45,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RoutePaths.signIn,
         name: RouteNames.signIn,
         builder: (context, state) => const SignInScreen(),
+      ),
+      GoRoute(
+        path: RoutePaths.signUp,
+        name: RouteNames.signUp,
+        builder: (context, state) => const SignUpScreen(),
+      ),
+      GoRoute(
+        path: RoutePaths.forgotPassword,
+        name: RouteNames.forgotPassword,
+        builder: (context, state) => const ForgotPasswordScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -180,24 +194,34 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.body,
+        name: RouteNames.body,
+        builder: (context, state) => const BodyCompositionScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
         path: RoutePaths.settings,
         name: RouteNames.settings,
         builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.profile,
+        name: RouteNames.profile,
+        builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
         path: RoutePaths.nutritionComingSoon,
         name: RouteNames.nutritionComingSoon,
-        builder: (context, state) => Scaffold(
-          body: SafeArea(
-            child: ComingSoonView(
-              featureName: 'Nutrition logging',
-              explanation:
-                  'Nutrition logging will be added in a future milestone. '
-                  'This Quick Add option is intentionally available so no action is a dead end.',
-              onBack: () => context.pop(),
-            ),
-          ),
+        builder: (context, state) => const ComingSoonView(
+          featureName: 'Nutrition logging',
+          explanation:
+              'Nutrition logging will be added in a future milestone. '
+              'This Quick Add option is intentionally available so no action is a dead end.',
+          showBottomNav: true,
+          navIndex: 1,
+          fallbackPath: RoutePaths.plan,
         ),
       ),
     ],

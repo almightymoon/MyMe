@@ -6,9 +6,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:memy/core/constants/app_strings.dart';
 import 'package:memy/features/goals/application/providers/goal_providers.dart';
-import 'package:memy/features/goals/data/seed/goals_seed.dart';
 import 'package:memy/features/goals/domain/entities/goal.dart';
 import 'package:memy/features/today/application/providers/today_providers.dart';
+import 'package:memy/features/today/application/providers/today_tasks_provider.dart';
 import 'package:memy/features/today/data/seed/today_seed.dart';
 import 'package:memy/features/today/domain/entities/today_summary.dart';
 import 'package:memy/features/today/presentation/today_screen.dart';
@@ -51,17 +51,43 @@ void main() {
 
     expect(find.byKey(const Key('today_populated')), findsOneWidget);
     expect(find.text(TodaySeed.demoFocus.title), findsOneWidget);
-    expect(find.text(GoalsSeed.featured.name), findsOneWidget);
     expect(find.textContaining('Team Meeting'), findsOneWidget);
-    expect(find.textContaining('PKR 4,250'), findsOneWidget);
+    expect(find.textContaining('Gym Workout'), findsOneWidget);
+    expect(find.text('84%'), findsOneWidget);
+    expect(find.text("You're doing great!"), findsOneWidget);
+    expect(find.byKey(const Key('today_tasks')), findsOneWidget);
+    expect(find.text("Today's Tasks"), findsOneWidget);
+    expect(find.text('2 of 5'), findsOneWidget);
+    expect(find.text('Morning stretch routine'), findsOneWidget);
+    // Home matches HTML: no goals / finance / habits blocks after tasks.
+    expect(find.byKey(const Key('today_goals_card')), findsNothing);
+    expect(find.textContaining('Spent today'), findsNothing);
+    expect(find.text(AppStrings.habitPreview), findsNothing);
+  });
+
+  testWidgets('Today tasks checklist toggles and updates count', (tester) async {
+    await pumpMemyApp(tester);
+    await signInToToday(tester);
+
+    expect(find.byKey(const Key('today_tasks')), findsOneWidget);
+    expect(find.text('2 of 5'), findsOneWidget);
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byKey(const Key('today_tasks'))),
+    );
+    container.read(todayTasksProvider.notifier).toggle('task-literature');
+    await tester.pumpAndSettle();
+    expect(find.text('3 of 5'), findsOneWidget);
+
+    container.read(todayTasksProvider.notifier).toggle('task-stretch');
+    await tester.pumpAndSettle();
+    expect(find.text('2 of 5'), findsOneWidget);
   });
 
   testWidgets('Today shows error and Retry recovers', (tester) async {
     final config = createTestFakeConfig(forceFailure: true);
     await pumpMemyApp(tester, config: config);
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('continue_to_memy')));
-    await tester.pumpAndSettle();
+    await signInToToday(tester);
 
     expect(find.byKey(const Key('today_error')), findsOneWidget);
     expect(find.text(AppStrings.retry), findsOneWidget);

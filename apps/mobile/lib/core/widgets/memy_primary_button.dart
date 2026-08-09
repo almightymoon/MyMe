@@ -19,19 +19,33 @@ class MemyPrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final button = FilledButton(
-      onPressed: onPressed,
-      style: FilledButton.styleFrom(
-        backgroundColor: AppColors.ember,
-        foregroundColor: Colors.white,
-        disabledBackgroundColor: AppColors.canvasDeep,
-        minimumSize: Size(expanded ? double.infinity : 48, AppSpacing.minTouch),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        shape: const RoundedRectangleBorder(
-          borderRadius: AppRadii.controlRadius,
+    final button = DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: AppRadii.pillRadius,
+        boxShadow: onPressed == null ? null : AppColors.orangeGlow,
+      ),
+      child: FilledButton(
+        onPressed: onPressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.ember,
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: AppColors.canvasDeep,
+          disabledForegroundColor: AppColors.faintText,
+          minimumSize: Size(
+            expanded ? double.infinity : 48,
+            AppSpacing.minTouch,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+          elevation: 0,
+          shape: const StadiumBorder(),
+        ),
+        child: Text(
+          label,
+          style: AppTextStyles.labelMedium(
+            color: Colors.white,
+          ).copyWith(fontSize: 15, fontWeight: FontWeight.w600),
         ),
       ),
-      child: Text(label, style: AppTextStyles.labelLarge(color: Colors.white)),
     );
 
     return expanded ? SizedBox(width: double.infinity, child: button) : button;

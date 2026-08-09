@@ -1,5 +1,7 @@
 abstract final class RouteNames {
   static const String signIn = 'signIn';
+  static const String signUp = 'signUp';
+  static const String forgotPassword = 'forgotPassword';
   static const String today = 'today';
   static const String plan = 'plan';
   static const String coach = 'coach';
@@ -18,12 +20,16 @@ abstract final class RouteNames {
   static const String exerciseLibrary = 'exerciseLibrary';
   static const String workoutSession = 'workoutSession';
   static const String wardrobe = 'wardrobe';
+  static const String body = 'body';
   static const String settings = 'settings';
+  static const String profile = 'profile';
   static const String nutritionComingSoon = 'nutritionComingSoon';
 }
 
 abstract final class RoutePaths {
   static const String signIn = '/signin';
+  static const String signUp = '/signup';
+  static const String forgotPassword = '/forgot-password';
   static const String today = '/today';
   static const String plan = '/plan';
   static const String coach = '/coach';
@@ -42,7 +48,9 @@ abstract final class RoutePaths {
   static const String exerciseLibrary = '/exercise/library';
   static const String workoutSession = '/exercise/session';
   static const String wardrobe = '/wardrobe';
+  static const String body = '/body';
   static const String settings = '/settings';
+  static const String profile = '/profile';
   static const String nutritionComingSoon = '/nutrition/coming-soon';
 
   static String goalDetailPath(String goalId) => '/goals/$goalId';

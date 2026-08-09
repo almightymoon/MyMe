@@ -11,6 +11,7 @@ import '../../../core/widgets/empty_feature_card.dart';
 import '../../../core/widgets/inline_error_card.dart';
 import '../../../core/widgets/loading_card_skeleton.dart';
 import '../../../core/widgets/memy_page_header.dart';
+import '../../shell/presentation/memy_bottom_navigation.dart';
 import '../../user/application/providers/user_providers.dart';
 import '../application/providers/coach_providers.dart';
 import '../application/services/coach_conversation_controller.dart';
@@ -46,6 +47,7 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
     final displayName = profileAsync.asData?.value.displayName ?? 'there';
 
     return SafeArea(
+      bottom: false,
       child: Column(
         children: [
           const MemyPageHeader(
@@ -123,11 +125,11 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(
+            padding: EdgeInsets.fromLTRB(
               AppSpacing.page,
               0,
               AppSpacing.page,
-              AppSpacing.md,
+              MemyBottomNavigation.contentBottomInset(context) + 8,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,

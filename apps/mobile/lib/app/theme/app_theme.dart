@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
 import 'app_radii.dart';
@@ -13,7 +12,7 @@ abstract final class AppTheme {
       colorScheme: ColorScheme.light(
         primary: AppColors.ember,
         onPrimary: Colors.white,
-        primaryContainer: AppColors.ember.withValues(alpha: 0.12),
+        primaryContainer: AppColors.orangeSoft,
         onPrimaryContainer: AppColors.emberDark,
         secondary: AppColors.depth,
         onSecondary: Colors.white,
@@ -29,7 +28,7 @@ abstract final class AppTheme {
     );
 
     return base.copyWith(
-      textTheme: GoogleFonts.interTextTheme(base.textTheme).copyWith(
+      textTheme: base.textTheme.copyWith(
         displayLarge: AppTextStyles.displayLarge(),
         displayMedium: AppTextStyles.displayMedium(),
         headlineLarge: AppTextStyles.titleLarge(),
@@ -48,13 +47,23 @@ abstract final class AppTheme {
         backgroundColor: AppColors.canvas,
         foregroundColor: AppColors.primaryText,
         centerTitle: true,
-        titleTextStyle: AppTextStyles.titleMedium(),
+        titleTextStyle: AppTextStyles.titleLarge(),
       ),
       cardTheme: const CardThemeData(
         color: AppColors.surface,
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(borderRadius: AppRadii.cardRadius),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: AppColors.canvasDeep,
+        selectedColor: AppColors.ember,
+        disabledColor: AppColors.canvasDeep,
+        labelStyle: AppTextStyles.labelMedium(),
+        secondaryLabelStyle: AppTextStyles.labelMedium(color: Colors.white),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        shape: const StadiumBorder(),
+        side: BorderSide.none,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -84,9 +93,8 @@ abstract final class AppTheme {
           foregroundColor: Colors.white,
           minimumSize: const Size(48, 52),
           elevation: 0,
-          shape: const RoundedRectangleBorder(
-            borderRadius: AppRadii.controlRadius,
-          ),
+          shadowColor: AppColors.ember.withValues(alpha: 0.42),
+          shape: const StadiumBorder(),
           textStyle: AppTextStyles.labelLarge(color: Colors.white),
         ),
       ),
@@ -95,9 +103,7 @@ abstract final class AppTheme {
           backgroundColor: AppColors.ember,
           foregroundColor: Colors.white,
           minimumSize: const Size(48, 52),
-          shape: const RoundedRectangleBorder(
-            borderRadius: AppRadii.controlRadius,
-          ),
+          shape: const StadiumBorder(),
           textStyle: AppTextStyles.labelLarge(color: Colors.white),
         ),
       ),
@@ -111,7 +117,7 @@ abstract final class AppTheme {
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: AppRadii.sheetRadius,
         ),
         showDragHandle: false,
       ),
@@ -119,7 +125,7 @@ abstract final class AppTheme {
         backgroundColor: AppColors.depth,
         contentTextStyle: AppTextStyles.bodyMedium(color: Colors.white),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: AppRadii.controlRadius),
+        shape: const StadiumBorder(),
       ),
     );
   }

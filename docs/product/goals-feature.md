@@ -54,10 +54,12 @@ Build-time / environment (see `EnvironmentConfig`):
 ## API mode
 
 - `createGoal` sends **one** `POST /goals` including nested milestones (atomic)
+- Financial create/update/progress requests **omit** `progressPercent` when amounts exist; the NestJS server calculates `floor(current×100÷target)` (clamped 0–100)
 - `addMilestone` expects `{ goal, createdMilestone }` and uses the exact created id
 - Successful list/detail responses call `LocalGoalRepository.replaceAll` / `upsert`
 - Network/timeout on **reads** → return previously cached goals
 - Network on **writes** → `AppException.connectionRequired` — no fake offline sync
+- Save is guarded with `isSubmitting` so rapid taps create only one Goal
 
 ## Error handling
 

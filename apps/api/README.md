@@ -42,6 +42,10 @@ npm run start:dev
 - DB: `DECIMAL(30,0)` — supports PKR 150,000,000 as `15000000000` paisa
 - API JSON: **strings only** (never JavaScript `Number` for stored money)
 - Services use `Prisma.Decimal` / `bigint`
+- Financial `progressPercent` is **server-authoritative**:
+  `floor(currentAmountMinor × 100 ÷ targetAmountMinor)`, clamped to 0–100,
+  whenever both amounts exist. Client `progressPercent` is ignored in that case
+  (create / update / record-progress). Manual percent remains for non-financial goals.
 
 ## Development authentication
 
@@ -69,7 +73,7 @@ E2E cleanup is destructive and **requires** a dedicated test database.
 docker exec memy-postgres psql -U memy -d postgres -c 'CREATE DATABASE memy_test;'
 ```
 
-2. Copy env and migrate:
+2. Copy env and run the guarded prepare + suite:
 
 ```bash
 cp .env.test.example .env.test
@@ -77,9 +81,16 @@ npm run test:e2e:prepare
 npm run test:e2e
 ```
 
-The suite loads `.env.test`, asserts `NODE_ENV=test`, and refuses any database whose name does **not** end with `_test`.
+`scripts/prepare-e2e-db.ts` (and the shared `assertSafeE2eDatabase` guard):
 
-Never run E2E against the development `memy` database.
+- requires `NODE_ENV=test` and `DATABASE_URL_TEST`
+- parses the URL and requires the DB name to be `memy_test` or end with `_test`
+- rejects production and rejects equality with `DEV_DATABASE_URL` / development `DATABASE_URL`
+- sets `process.env.DATABASE_URL` to the validated test URL only after those checks
+- prints host + database name with the password redacted
+- never silently falls back to another database
+
+Never run E2E against the development `memy` database. Never commit real `.env.test` files.
 
 ## Scripts
 
@@ -87,18 +98,24 @@ Never run E2E against the development `memy` database.
 | --- | --- |
 | `npm run start:dev` | Watch mode |
 | `npm run build` | Production build |
-| `npm run lint` | ESLint |
-| `npm run format` | Prettier |
+| `npm run format` | Prettier write |
+| `npm run format:check` | Prettier check (CI) |
+| `npm run lint` | ESLint with `--fix` |
+| `npm run lint:check` | ESLint without write (CI) |
 | `npm test` | Unit tests |
-| `npm run test:e2e` | E2E against `memy_test` |
-| `npm run test:e2e:prepare` | Migrate the test database |
+| `npm run test:e2e:prepare` | Guarded migrate deploy for `DATABASE_URL_TEST` |
+| `npm run test:e2e` | Prepare + E2E against `memy_test` |
 | `npm run prisma:validate` | Validate Prisma schema |
 | `npm run prisma:migrate:status` | Migration status |
 | `npm run prisma:seed` | Seed development users/goals |
 
+## CI
+
+`.github/workflows/api-ci.yml` runs format:check, lint:check, unit tests, Prisma validate/generate, build, and guarded E2E against a `memy_test` service container.
+
 ## Environment
 
-See `.env.example` and `.env.test.example`. Never commit real credentials. `.env` and `.env.test` are gitignored.
+See `.env.example` and `.env.test.example`. Never commit real credentials. `.env` and `.env.test` are gitignored; the `*.example` files are allowed.
 
 ## Docs
 

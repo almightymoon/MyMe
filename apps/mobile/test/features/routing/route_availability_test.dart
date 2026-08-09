@@ -30,25 +30,51 @@ void main() {
     await pumpMemyApp(tester);
     await signInToToday(tester);
 
-    final routes = <String, Finder>{
+    final comingSoonRoutes = <String, Finder>{
       RoutePaths.habits: find.text('Habits'),
-      RoutePaths.finance: find.text('Finance'),
-      RoutePaths.calendar: find.text('Calendar'),
-      RoutePaths.health: find.text('Health'),
-      RoutePaths.wardrobe: find.text('Wardrobe'),
-      RoutePaths.settings: find.text('Settings'),
       RoutePaths.nutritionComingSoon: find.text('Nutrition logging'),
+    };
+    final liveModuleRoutes = <String, Finder>{
+      RoutePaths.finance: find.byKey(const Key('finance_overview')),
+      RoutePaths.calendar: find.byKey(const Key('calendar_overview')),
+      RoutePaths.health: find.byKey(const Key('health_overview')),
+      RoutePaths.body: find.byKey(const Key('body_composition')),
+      RoutePaths.wardrobe: find.byKey(const Key('wardrobe_overview')),
+      RoutePaths.settings: find.byKey(const Key('settings_scroll')),
+      RoutePaths.profile: find.byKey(const Key('profile_scroll')),
     };
 
     final router = GoRouter.of(
-      tester.element(find.textContaining('Good day,')),
+      tester.element(find.textContaining('Hi,')),
     );
-    for (final entry in routes.entries) {
+    for (final entry in comingSoonRoutes.entries) {
       router.go(entry.key);
       await tester.pumpAndSettle();
       expect(entry.value, findsWidgets, reason: 'Missing UI for ${entry.key}');
-      expect(tester.takeException(), isNull);
       expect(find.text(AppStrings.comingSoon), findsOneWidget);
+      expect(find.byKey(const Key('coming_soon_back')), findsOneWidget);
+      expect(find.byKey(const Key('nav_today')), findsOneWidget);
+    }
+    for (final entry in liveModuleRoutes.entries) {
+      router.go(entry.key);
+      await tester.pumpAndSettle();
+      expect(entry.value, findsOneWidget, reason: 'Missing UI for ${entry.key}');
+      if (entry.key == RoutePaths.settings ||
+          entry.key == RoutePaths.profile) {
+        expect(
+          find.byKey(
+            Key(entry.key == RoutePaths.settings
+                ? 'settings_back'
+                : 'profile_back'),
+          ),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('nav_today')), findsNothing);
+      } else {
+        expect(find.byKey(const Key('module_back')), findsOneWidget);
+        expect(find.byKey(const Key('nav_today')), findsOneWidget);
+      }
+      expect(tester.takeException(), isNull);
     }
   });
 
@@ -56,7 +82,7 @@ void main() {
     await pumpMemyApp(tester);
     await signInToToday(tester);
     final router = GoRouter.of(
-      tester.element(find.textContaining('Good day,')),
+      tester.element(find.textContaining('Hi,')),
     );
     router.go(RoutePaths.exercise);
     await tester.pump();
@@ -69,7 +95,7 @@ void main() {
     await pumpMemyApp(tester);
     await signInToToday(tester);
     final router = GoRouter.of(
-      tester.element(find.textContaining('Good day,')),
+      tester.element(find.textContaining('Hi,')),
     );
 
     router.go(RoutePaths.goals);

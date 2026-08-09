@@ -79,7 +79,7 @@ void main() {
     await signInToToday(tester);
 
     final router = GoRouter.of(
-      tester.element(find.textContaining('Good day,')),
+      tester.element(find.textContaining('Hi,')),
     );
     router.go(RoutePaths.exercise);
     await tester.pump();
@@ -112,7 +112,7 @@ void main() {
     await pumpMemyApp(tester, seedGoals: false);
     await signInToToday(tester);
     final router = GoRouter.of(
-      tester.element(find.textContaining('Good day,')),
+      tester.element(find.textContaining('Hi,')),
     );
     router.go(RoutePaths.exerciseLibraryPath('yoga'));
     await tester.pump();
@@ -128,7 +128,7 @@ void main() {
     await pumpMemyApp(tester, seedGoals: false);
     await signInToToday(tester);
     final router = GoRouter.of(
-      tester.element(find.textContaining('Good day,')),
+      tester.element(find.textContaining('Hi,')),
     );
     router.go(RoutePaths.exerciseLibrary);
     await tester.pump();
@@ -144,7 +144,7 @@ void main() {
     await pumpMemyApp(tester, seedGoals: false);
     await signInToToday(tester);
     final router = GoRouter.of(
-      tester.element(find.textContaining('Good day,')),
+      tester.element(find.textContaining('Hi,')),
     );
     router.go(RoutePaths.workoutSession);
     await tester.pump();
@@ -192,7 +192,7 @@ void main() {
     await pumpMemyApp(tester, seedGoals: false);
     await signInToToday(tester);
     final router = GoRouter.of(
-      tester.element(find.textContaining('Good day,')),
+      tester.element(find.textContaining('Hi,')),
     );
     router.go('${RoutePaths.exerciseLibrary}?category=unknown');
     await tester.pump();

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_text_styles.dart';
 
+/// Centered page title row matching the prototype `top-row` / `page-title`.
 class MemyPageHeader extends StatelessWidget {
   const MemyPageHeader({
     super.key,
@@ -26,25 +27,42 @@ class MemyPageHeader extends StatelessWidget {
         AppSpacing.page,
         AppSpacing.md,
       ),
-      child: Row(
+      child: Column(
         children: [
-          if (leading != null) ...[
-            leading!,
-            const SizedBox(width: AppSpacing.sm),
-          ],
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          SizedBox(
+            height: 44,
+            child: Row(
               children: [
-                Text(title, style: AppTextStyles.titleLarge()),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 4),
-                  Text(subtitle!, style: AppTextStyles.bodySmall()),
-                ],
+                SizedBox(
+                  width: 48,
+                  child: leading != null
+                      ? Align(alignment: Alignment.centerLeft, child: leading)
+                      : null,
+                ),
+                Expanded(
+                  child: Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.titleLarge(),
+                  ),
+                ),
+                SizedBox(
+                  width: 48,
+                  child: trailing != null
+                      ? Align(alignment: Alignment.centerRight, child: trailing)
+                      : null,
+                ),
               ],
             ),
           ),
-          ?trailing,
+          if (subtitle != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              subtitle!,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.bodySmall(),
+            ),
+          ],
         ],
       ),
     );

@@ -25,55 +25,56 @@ class ExerciseCategoryCard extends StatelessWidget {
       child: Semantics(
         button: true,
         label: '${category.label} category. ${category.subtitle}',
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            key: Key('exercise_category_${category.id}'),
-            onTap: onTap,
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            color: AppColors.surface,
             borderRadius: AppRadii.cardRadius,
-            child: Ink(
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: AppRadii.cardRadius,
-                boxShadow: AppColors.softShadow,
-              ),
+            boxShadow: AppColors.softShadow,
+          ),
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              key: Key('exercise_category_${category.id}'),
+              onTap: onTap,
+              borderRadius: AppRadii.cardRadius,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Expanded(
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        ExerciseArtwork(
-                          category: category,
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(AppRadii.card),
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(AppRadii.card),
+                      ),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          ExerciseArtwork(
+                            category: category,
+                            borderRadius: BorderRadius.zero,
+                            cacheWidth: 420,
                           ),
-                          cacheWidth: 420,
-                        ),
-                        Positioned(
-                          left: AppSpacing.sm,
-                          top: AppSpacing.sm,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.surface.withValues(alpha: 0.92),
-                              borderRadius: BorderRadius.circular(
-                                AppRadii.pill,
+                          Positioned(
+                            left: AppSpacing.sm,
+                            top: AppSpacing.sm,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface.withValues(alpha: 0.92),
+                                borderRadius: AppRadii.pillRadius,
+                              ),
+                              child: Text(
+                                'Decorative art',
+                                style: AppTextStyles.labelSmall(
+                                  color: AppColors.secondaryText,
+                                ),
                               ),
                             ),
-                            child: Text(
-                              'Decorative art',
-                              style: AppTextStyles.labelSmall(
-                                color: AppColors.secondaryText,
-                              ),
-                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                   Padding(

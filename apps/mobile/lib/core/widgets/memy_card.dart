@@ -22,38 +22,30 @@ class MemyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final content = Container(
-      width: double.infinity,
-      margin: margin,
-      padding: padding,
+    final radius = AppRadii.cardRadius;
+
+    // Color + shadow must share one rounded BoxDecoration. Splitting shadow onto
+    // a separate layer (or putting it on Ink inside Material) paints a square
+    // dark bbox that peeks past the rounded white corners.
+    final card = DecoratedBox(
       decoration: BoxDecoration(
         color: color,
-        borderRadius: AppRadii.cardRadius,
+        borderRadius: radius,
         boxShadow: AppColors.softShadow,
       ),
-      child: child,
-    );
-
-    if (onTap == null) return content;
-
-    return Padding(
-      padding: margin,
       child: Material(
-        color: color,
-        borderRadius: AppRadii.cardRadius,
+        type: MaterialType.transparency,
         child: InkWell(
           onTap: onTap,
-          borderRadius: AppRadii.cardRadius,
-          child: Ink(
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: AppRadii.cardRadius,
-              boxShadow: AppColors.softShadow,
-            ),
-            child: Padding(padding: padding, child: child),
-          ),
+          borderRadius: radius,
+          splashColor: onTap == null ? Colors.transparent : null,
+          highlightColor: onTap == null ? Colors.transparent : null,
+          child: Padding(padding: padding, child: child),
         ),
       ),
     );
+
+    if (margin == EdgeInsets.zero) return card;
+    return Padding(padding: margin, child: card);
   }
 }

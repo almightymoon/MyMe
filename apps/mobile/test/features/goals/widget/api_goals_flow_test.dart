@@ -133,10 +133,7 @@ void main() {
         find.byKey(const Key('goal_name_field')),
         'Run marathon',
       );
-      await tester.tap(find.byKey(const Key('goal_deadline_field')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('OK'));
-      await tester.pumpAndSettle();
+      await pickRequiredDeadline(tester);
 
       await tester.tap(find.byKey(const Key('goal_save_button')));
       await tester.pumpAndSettle();

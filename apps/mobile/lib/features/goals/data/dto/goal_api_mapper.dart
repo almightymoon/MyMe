@@ -89,7 +89,12 @@ class GoalApiMapper {
   }
 
   /// Body for POST /goals — includes nested milestones for atomic create.
+  ///
+  /// When financial amounts are present, [progressPercent] is omitted so the
+  /// server calculates authoritative progress.
   static Map<String, dynamic> createGoalBody(Goal goal) {
+    final hasFinancialAmounts =
+        goal.targetAmountMinor != null || goal.currentAmountMinor != null;
     return {
       'name': goal.name,
       'description': goal.description,
@@ -104,7 +109,7 @@ class GoalApiMapper {
         'currentAmountMinor': goal.currentAmountMinor!.toJson(),
       if (goal.currencyCode != null) 'currencyCode': goal.currencyCode,
       'deadline': goal.deadline.toUtc().toIso8601String(),
-      'progressPercent': goal.progressPercent,
+      if (!hasFinancialAmounts) 'progressPercent': goal.progressPercent,
       'notes': goal.notes,
       if (goal.milestones.isNotEmpty)
         'milestones': [
@@ -115,7 +120,12 @@ class GoalApiMapper {
   }
 
   /// Body for PATCH /goals/:id.
+  ///
+  /// Omits [progressPercent] when financial amounts are present so the server
+  /// recalculates progress; sends it for non-financial manual progress.
   static Map<String, dynamic> updateGoalBody(Goal goal) {
+    final hasFinancialAmounts =
+        goal.targetAmountMinor != null || goal.currentAmountMinor != null;
     return {
       'name': goal.name,
       'description': goal.description,
@@ -127,7 +137,7 @@ class GoalApiMapper {
       'currentAmountMinor': goal.currentAmountMinor?.toJson(),
       'currencyCode': goal.currencyCode,
       'deadline': goal.deadline.toUtc().toIso8601String(),
-      'progressPercent': goal.progressPercent,
+      if (!hasFinancialAmounts) 'progressPercent': goal.progressPercent,
       'notes': goal.notes,
     };
   }
@@ -156,11 +166,11 @@ class GoalApiMapper {
     double? progressPercent,
     String? note,
   }) {
-    return {
-      'currentAmountMinor': ?currentAmountMinor?.toJson(),
-      'progressPercent': ?progressPercent,
-      'note': ?note,
-    };
+    // Amount-based progress: send current only; server derives percent.
+    if (currentAmountMinor != null) {
+      return {'currentAmountMinor': currentAmountMinor.toJson(), 'note': ?note};
+    }
+    return {'progressPercent': ?progressPercent, 'note': ?note};
   }
 
   /// Parses `{ goal, createdMilestone }` from POST /milestones.

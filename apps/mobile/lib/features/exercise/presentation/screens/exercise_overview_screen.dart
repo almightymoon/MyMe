@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/router/app_navigation.dart';
 import '../../../../app/router/route_names.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
@@ -8,11 +9,14 @@ import '../../../../app/theme/app_text_styles.dart';
 import '../../../../core/widgets/memy_page_header.dart';
 import '../../../../core/widgets/memy_primary_button.dart';
 import '../../../../core/widgets/section_header.dart';
+import '../../../shell/presentation/memy_bottom_navigation.dart';
+import '../../../shell/presentation/quick_add_sheet.dart';
 import '../../data/exercise_demo_data.dart';
 import '../../domain/entities/exercise_category.dart';
 import '../widgets/exercise_category_card.dart';
 import '../widgets/featured_workout_card.dart';
 import '../widgets/workout_summary_card.dart';
+import '../../../../app/theme/app_radii.dart';
 
 class ExerciseOverviewScreen extends StatelessWidget {
   const ExerciseOverviewScreen({super.key});
@@ -22,12 +26,16 @@ class ExerciseOverviewScreen extends StatelessWidget {
     final summary = ExerciseDemoData.weeklySummary;
     final featured = ExerciseDemoData.featuredWorkout;
     final recent = ExerciseDemoData.recentActivity;
+    final bottomPad = MemyBottomNavigation.contentBottomInset(context);
 
     return Scaffold(
+      backgroundColor: AppColors.canvas,
+      extendBody: true,
       body: SafeArea(
+        bottom: false,
         child: ListView(
           key: const Key('exercise_overview'),
-          padding: const EdgeInsets.only(bottom: AppSpacing.xxxl),
+          padding: EdgeInsets.only(bottom: 8 + bottomPad),
           children: [
             MemyPageHeader(
               title: 'Exercise',
@@ -36,13 +44,8 @@ class ExerciseOverviewScreen extends StatelessWidget {
               leading: IconButton(
                 key: const Key('exercise_back'),
                 tooltip: 'Back',
-                onPressed: () {
-                  if (context.canPop()) {
-                    context.pop();
-                  } else {
-                    context.go(RoutePaths.more);
-                  }
-                },
+                onPressed: () =>
+                    memyBack(context, fallback: RoutePaths.more),
                 icon: const Icon(Icons.arrow_back_rounded),
               ),
             ),
@@ -121,7 +124,7 @@ class ExerciseOverviewScreen extends StatelessWidget {
                           key: Key('recent_${item.id}'),
                           enabled: false,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: AppRadii.controlRadius,
                             side: const BorderSide(color: AppColors.line),
                           ),
                           tileColor: AppColors.surface,
@@ -166,6 +169,11 @@ class ExerciseOverviewScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: MemyBottomNavigation(
+        currentIndex: 3,
+        onDestinationSelected: (index) => memyGoShellTab(context, index),
+        onQuickAddPressed: () => showQuickAddSheet(context),
       ),
     );
   }

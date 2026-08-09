@@ -4,6 +4,7 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_text_styles.dart';
 import 'memy_card.dart';
+import '../../app/theme/app_radii.dart';
 
 class MetricTile extends StatelessWidget {
   const MetricTile({
@@ -35,7 +36,7 @@ class MetricTile extends StatelessWidget {
               height: 44,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: AppRadii.chipRadius,
               ),
               child: Icon(icon, color: color),
             ),

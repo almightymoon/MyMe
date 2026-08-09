@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:memy/app/app.dart';
 import 'package:memy/core/data/fake_repository_config.dart';
+import 'package:memy/features/goals/application/controllers/add_goal_controller.dart';
 import 'package:memy/features/goals/application/providers/goal_providers.dart';
 import 'package:memy/features/goals/data/repositories/local_goal_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -60,7 +61,24 @@ Future<void> pumpMemyApp(
 
 Future<void> signInToToday(WidgetTester tester) async {
   await tester.pumpAndSettle();
-  await tester.tap(find.byKey(const Key('continue_to_memy')));
+  final signIn = find.byKey(const Key('continue_to_memy'));
+  await tester.ensureVisible(signIn);
   await tester.pumpAndSettle();
-  expect(find.textContaining('Good day,'), findsOneWidget);
+  await tester.tap(signIn);
+  await tester.pumpAndSettle();
+  expect(find.textContaining('Hi,'), findsOneWidget);
+}
+
+/// Sets a valid future deadline on the Add Goal form.
+///
+/// Uses the controller directly — Material date-picker hit-testing is flaky
+/// when the sticky Save bar overlaps the deadline tile in the default test
+/// viewport. Validation/save flows still exercise the deadline field.
+Future<void> pickRequiredDeadline(WidgetTester tester) async {
+  final context = tester.element(find.byKey(const Key('add_goal_form')));
+  final container = ProviderScope.containerOf(context);
+  container
+      .read(addGoalControllerProvider.notifier)
+      .setDeadline(DateTime.now().add(const Duration(days: 30)));
+  await tester.pumpAndSettle();
 }

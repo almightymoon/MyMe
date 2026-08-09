@@ -26,7 +26,7 @@ import { GoalForecastService } from './forecast/goal-forecast.service';
 import {
   moneyMinorToApiString,
   parseOptionalMoneyMinorString,
-  progressPercentFromAmounts,
+  calculateFinancialProgressPercent,
 } from './money/money-minor';
 import { GoalBusinessValidator } from './validation/goal-business.validator';
 
@@ -90,9 +90,6 @@ export class GoalsService {
     const normalizedMilestones =
       this.normalizeInitialMilestones(milestonesInput);
 
-    let progressPercent =
-      GoalBusinessValidator.assertProgressPercent(dto.progressPercent) ?? 0;
-
     const target = money.targetAmountMinor ?? null;
     const current =
       money.currentAmountMinor !== undefined
@@ -101,13 +98,14 @@ export class GoalsService {
           ? new Prisma.Decimal(0)
           : null;
 
-    if (
-      dto.progressPercent === undefined &&
-      target != null &&
-      current != null &&
-      target.gt(0)
-    ) {
-      progressPercent = progressPercentFromAmounts(current, target);
+    // Financial progress is always server-calculated when amounts exist.
+    // Client progressPercent is ignored in that case (never stored as conflicting).
+    let progressPercent = 0;
+    if (target != null && current != null && target.gt(0)) {
+      progressPercent = calculateFinancialProgressPercent(current, target);
+    } else {
+      progressPercent =
+        GoalBusinessValidator.assertProgressPercent(dto.progressPercent) ?? 0;
     }
 
     const goal = await this.prisma.$transaction(async (tx) => {
@@ -216,6 +214,7 @@ export class GoalsService {
     if (dto.notes !== undefined) data.notes = dto.notes.trim();
 
     // Prefer server-calculated financial progress when amounts are present.
+    // Client progressPercent never overrides calculated financial progress.
     const nextTarget =
       money.targetAmountMinor !== undefined
         ? money.targetAmountMinor
@@ -226,7 +225,7 @@ export class GoalsService {
         : existing.currentAmountMinor;
 
     if (nextTarget != null && nextCurrent != null && nextTarget.gt(0)) {
-      data.progressPercent = progressPercentFromAmounts(
+      data.progressPercent = calculateFinancialProgressPercent(
         nextCurrent,
         nextTarget,
       );
@@ -304,21 +303,24 @@ export class GoalsService {
       }
     }
 
-    let newPercent =
-      dto.progressPercent !== undefined
-        ? GoalBusinessValidator.assertProgressPercent(dto.progressPercent)!
-        : existing.progressPercent;
+    let newPercent: number;
 
     if (
-      dto.progressPercent === undefined &&
       newAmount != null &&
       existing.targetAmountMinor != null &&
       existing.targetAmountMinor.gt(0)
     ) {
-      newPercent = progressPercentFromAmounts(
+      // Amount-based financial progress — ignore client progressPercent.
+      newPercent = calculateFinancialProgressPercent(
         newAmount,
         existing.targetAmountMinor,
       );
+    } else if (dto.progressPercent !== undefined) {
+      newPercent = GoalBusinessValidator.assertProgressPercent(
+        dto.progressPercent,
+      )!;
+    } else {
+      newPercent = existing.progressPercent;
     }
 
     await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {

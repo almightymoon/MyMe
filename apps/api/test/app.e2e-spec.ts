@@ -24,9 +24,9 @@ describe('Goals API (e2e)', () => {
 
   const e2eDatabaseUrl = assertSafeE2eDatabase({
     nodeEnv: process.env.NODE_ENV,
-    databaseUrl: process.env.DATABASE_URL,
     databaseUrlTest: process.env.DATABASE_URL_TEST,
     developmentDatabaseUrl: process.env.DEV_DATABASE_URL,
+    allowDatabaseUrlFallback: false,
   });
 
   beforeAll(async () => {
@@ -80,9 +80,9 @@ describe('Goals API (e2e)', () => {
   beforeEach(async () => {
     assertSafeE2eDatabase({
       nodeEnv: process.env.NODE_ENV,
-      databaseUrl: process.env.DATABASE_URL,
       databaseUrlTest: process.env.DATABASE_URL_TEST ?? e2eDatabaseUrl,
       developmentDatabaseUrl: process.env.DEV_DATABASE_URL,
+      allowDatabaseUrlFallback: false,
     });
 
     const fixtureUserIds = [DEV_USER_ID, OTHER_USER_ID];
@@ -312,5 +312,59 @@ describe('Goals API (e2e)', () => {
 
   it('rejects unauthenticated requests', async () => {
     await request(app.getHttpServer()).get('/api/v1/goals').expect(401);
+  });
+
+  it('ignores conflicting client progressPercent for financial create and progress', async () => {
+    const reached = await request(app.getHttpServer())
+      .post('/api/v1/goals')
+      .set(auth)
+      .send({
+        name: 'Reached',
+        category: 'financial',
+        targetAmountMinor: '10000',
+        currentAmountMinor: '10000',
+        currencyCode: 'PKR',
+        progressPercent: 5,
+        deadline: futureDeadlineIso(),
+      })
+      .expect(201);
+    expect(reached.body.progressPercent).toBe(100);
+
+    const quarter = await request(app.getHttpServer())
+      .post('/api/v1/goals')
+      .set(auth)
+      .send({
+        name: 'Quarter',
+        category: 'financial',
+        targetAmountMinor: '10000',
+        currentAmountMinor: '2500',
+        currencyCode: 'PKR',
+        progressPercent: 80,
+        deadline: futureDeadlineIso(),
+      })
+      .expect(201);
+    expect(quarter.body.progressPercent).toBe(25);
+
+    const progress = await request(app.getHttpServer())
+      .post(`/api/v1/goals/${quarter.body.id}/progress`)
+      .set(auth)
+      .send({ currentAmountMinor: '5000', progressPercent: 99 })
+      .expect(201);
+    expect(progress.body.progressPercent).toBe(50);
+
+    const today = await request(app.getHttpServer())
+      .get('/api/v1/today')
+      .set(auth)
+      .expect(200);
+    expect(today.body.activeGoalCount).toBeGreaterThanOrEqual(1);
+    expect(today.body.averageGoalProgress).toBeGreaterThan(0);
+    const listed = await request(app.getHttpServer())
+      .get('/api/v1/goals')
+      .set(auth)
+      .expect(200);
+    const stored = (
+      listed.body as Array<{ id: string; progressPercent: number }>
+    ).find((g) => g.id === quarter.body.id);
+    expect(stored?.progressPercent).toBe(50);
   });
 });

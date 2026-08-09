@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../../app/router/app_navigation.dart';
+import '../../app/router/route_names.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../core/constants/app_strings.dart';
+import '../../features/shell/presentation/memy_bottom_navigation.dart';
+import '../../features/shell/presentation/quick_add_sheet.dart';
 
 class ComingSoonView extends StatelessWidget {
   const ComingSoonView({
@@ -11,15 +15,21 @@ class ComingSoonView extends StatelessWidget {
     required this.featureName,
     required this.explanation,
     this.onBack,
+    this.showBottomNav = false,
+    this.navIndex = 1,
+    this.fallbackPath = RoutePaths.today,
   });
 
   final String featureName;
   final String explanation;
   final VoidCallback? onBack;
+  final bool showBottomNav;
+  final int navIndex;
+  final String fallbackPath;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    final content = Padding(
       padding: const EdgeInsets.all(AppSpacing.page),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -27,7 +37,10 @@ class ComingSoonView extends StatelessWidget {
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
-              onPressed: onBack ?? () => Navigator.of(context).maybePop(),
+              key: const Key('coming_soon_back'),
+              onPressed:
+                  onBack ??
+                  () => memyBack(context, fallback: fallbackPath),
               icon: const Icon(Icons.arrow_back_rounded),
               label: const Text(AppStrings.back),
             ),
@@ -58,6 +71,19 @@ class ComingSoonView extends StatelessWidget {
           ),
           const Spacer(flex: 2),
         ],
+      ),
+    );
+
+    if (!showBottomNav) return content;
+
+    return Scaffold(
+      backgroundColor: AppColors.canvas,
+      extendBody: true,
+      body: SafeArea(bottom: false, child: content),
+      bottomNavigationBar: MemyBottomNavigation(
+        currentIndex: navIndex,
+        onDestinationSelected: (index) => memyGoShellTab(context, index),
+        onQuickAddPressed: () => showQuickAddSheet(context),
       ),
     );
   }

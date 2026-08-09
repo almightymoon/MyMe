@@ -113,26 +113,54 @@ Local goals use `MoneyMinor` (`BigInt`); legacy integer SharedPreferences amount
 
 ```bash
 cd apps/mobile
+flutter pub get
 dart format .
+dart format --output=none --set-exit-if-changed .
 flutter analyze
 flutter test
+flutter build apk --debug
 ```
+
+Large financial Goal flow (Quick Add → PKR 150,000,000 + two milestones) is covered in
+`apps/mobile/test/features/goals/widget/large_financial_goal_flow_test.dart`.
 
 **API**
 
 ```bash
 cd apps/api
+npm ci
 npm run format
+npm run format:check
 npm run lint
+npm run lint:check
 npm test
+npx prisma format
+npx prisma validate
+npx prisma generate
+npm run build
 cp -n .env.test.example .env.test
 npm run test:e2e:prepare
 npm run test:e2e
-npm run build
-npx prisma validate
 ```
 
-E2E refuses any database whose name does not end with `_test`.
+`test:e2e:prepare` loads `.env.test`, requires `NODE_ENV=test` and `DATABASE_URL_TEST`,
+rejects any database that is not clearly a test DB (name `memy_test` or ending in `_test`),
+rejects equality with `DEV_DATABASE_URL`, then runs `prisma migrate deploy` against that URL only.
+Real `.env` / `.env.test` files stay gitignored; only `.env.example` and `.env.test.example` are committed.
+
+### 8. CI
+
+GitHub Actions:
+
+- `.github/workflows/mobile-ci.yml` — format, analyze, test, debug APK
+- `.github/workflows/api-ci.yml` — format:check, lint:check, unit, Prisma, build, E2E on `memy_test`
+
+### Financial progress
+
+When a Goal has usable `targetAmountMinor` + `currentAmountMinor`, the **API** stores
+`floor(current × 100 ÷ target)` (clamped 0–100). Clients may send `progressPercent`, but it is ignored.
+Flutter omits it on amount-based financial requests. Monetary JSON remains digit **strings** so values like
+`"15000000000"` never pass through JavaScript `Number`.
 
 Quality notes: [`docs/quality/mobile-interaction-audit.md`](docs/quality/mobile-interaction-audit.md), [`docs/product/goals-api-contract.md`](docs/product/goals-api-contract.md).
 
@@ -140,5 +168,6 @@ Quality notes: [`docs/quality/mobile-interaction-audit.md`](docs/quality/mobile-
 
 - Do **not** delete or rewrite `/app`, root `/index.html`, or `/reference images`.
 - Prefer small, focused PRs; document architecture under `docs/`.
-- Do not commit secrets or `.env` files.
+- Do not commit secrets, `.env`, or `.env.test` files (examples only).
+- Do not commit generated `*.tsbuildinfo` / `dist` / Flutter `build` artifacts.
 - Run format / analyze / tests before submitting.

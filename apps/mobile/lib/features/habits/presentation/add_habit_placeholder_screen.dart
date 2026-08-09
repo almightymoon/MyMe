@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/route_names.dart';
-
 import '../../../../core/widgets/coming_soon_view.dart';
 
 class AddHabitPlaceholderScreen extends StatelessWidget {
@@ -14,14 +12,8 @@ class AddHabitPlaceholderScreen extends StatelessWidget {
       body: SafeArea(
         child: ComingSoonView(
           featureName: 'Add Habit',
-          explanation: 'New habits can be created here in a later milestone.',
-          onBack: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go(RoutePaths.today);
-            }
-          },
+          explanation: 'Habit creation will arrive with the habits feature.',
+          fallbackPath: RoutePaths.habits,
         ),
       ),
     );

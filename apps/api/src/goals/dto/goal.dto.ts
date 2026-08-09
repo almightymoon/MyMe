@@ -109,7 +109,13 @@ export class CreateGoalDto {
   @IsDateString()
   deadline!: string;
 
-  @ApiPropertyOptional({ example: 0, minimum: 0, maximum: 100 })
+  @ApiPropertyOptional({
+    example: 0,
+    minimum: 0,
+    maximum: 100,
+    description:
+      'Manual progress for non-financial goals. Ignored when both targetAmountMinor and currentAmountMinor are present — the server calculates floor(current×100÷target) clamped to 0–100.',
+  })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
@@ -191,7 +197,10 @@ export class UpdateGoalDto {
   @IsDateString()
   deadline?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description:
+      'Manual progress for non-financial goals. Ignored when financial amounts are present — server recalculates from target/current.',
+  })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
@@ -208,7 +217,8 @@ export class UpdateGoalDto {
 
 export class RecordProgressDto {
   @ApiPropertyOptional({
-    description: 'New progress percent 0–100. If omitted with amount, derived.',
+    description:
+      'Manual progress 0–100. Ignored when currentAmountMinor is supplied — server derives floor(current×100÷target) clamped to 0–100.',
   })
   @IsOptional()
   @Type(() => Number)

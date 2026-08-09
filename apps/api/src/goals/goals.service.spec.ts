@@ -401,6 +401,146 @@ describe('GoalsService', () => {
     });
   });
 
+  describe('server-authoritative financial progress', () => {
+    it('create ignores conflicting client progress when amounts exist', async () => {
+      prisma.goal.create.mockImplementation(
+        async ({ data }: { data: any }) => ({
+          ...baseGoal,
+          ...data,
+          id: goalId,
+          milestones: [],
+          targetAmountMinor: data.targetAmountMinor,
+          currentAmountMinor: data.currentAmountMinor,
+          progressPercent: data.progressPercent,
+        }),
+      );
+
+      const result = await service.create(userId, {
+        name: 'Fund',
+        category: 'financial',
+        deadline: futureDeadline.toISOString(),
+        targetAmountMinor: '10000',
+        currentAmountMinor: '10000',
+        currencyCode: 'PKR',
+        progressPercent: 5,
+      });
+
+      expect(prisma.goal.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ progressPercent: 100 }),
+        }),
+      );
+      expect(result.progressPercent).toBe(100);
+    });
+
+    it('create calculates 25 percent for one-quarter completion', async () => {
+      prisma.goal.create.mockImplementation(
+        async ({ data }: { data: any }) => ({
+          ...baseGoal,
+          ...data,
+          id: goalId,
+          milestones: [],
+          targetAmountMinor: data.targetAmountMinor,
+          currentAmountMinor: data.currentAmountMinor,
+          progressPercent: data.progressPercent,
+        }),
+      );
+
+      const result = await service.create(userId, {
+        name: 'Fund',
+        category: 'financial',
+        deadline: futureDeadline.toISOString(),
+        targetAmountMinor: '10000',
+        currentAmountMinor: '2500',
+        currencyCode: 'PKR',
+        progressPercent: 80,
+      });
+
+      expect(result.progressPercent).toBe(25);
+    });
+
+    it('create calculates 0 when current is zero', async () => {
+      prisma.goal.create.mockImplementation(
+        async ({ data }: { data: any }) => ({
+          ...baseGoal,
+          ...data,
+          id: goalId,
+          milestones: [],
+          progressPercent: data.progressPercent,
+        }),
+      );
+
+      const result = await service.create(userId, {
+        name: 'Fund',
+        category: 'financial',
+        deadline: futureDeadline.toISOString(),
+        targetAmountMinor: '10000',
+        currentAmountMinor: '0',
+        currencyCode: 'PKR',
+        progressPercent: 50,
+      });
+
+      expect(result.progressPercent).toBe(0);
+    });
+
+    it('recordProgress ignores conflicting progressPercent when amount supplied', async () => {
+      prisma.goal.findFirst
+        .mockResolvedValueOnce({
+          ...baseGoal,
+          targetAmountMinor: new Prisma.Decimal('10000'),
+          currentAmountMinor: new Prisma.Decimal(0),
+          progressPercent: 0,
+          milestones: [],
+        })
+        .mockResolvedValueOnce({
+          ...baseGoal,
+          targetAmountMinor: new Prisma.Decimal('10000'),
+          currentAmountMinor: new Prisma.Decimal('5000'),
+          progressPercent: 50,
+          milestones: [],
+          progressEntries: [],
+        });
+      prisma.goalProgressEntry.create.mockResolvedValue({});
+      prisma.goal.update.mockResolvedValue({});
+
+      await service.recordProgress(userId, goalId, {
+        currentAmountMinor: '5000',
+        progressPercent: 99,
+      });
+
+      expect(prisma.goalProgressEntry.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ newProgressPercent: 50 }),
+        }),
+      );
+    });
+
+    it('supports non-financial manual progress', async () => {
+      prisma.goal.create.mockImplementation(
+        async ({ data }: { data: any }) => ({
+          ...baseGoal,
+          ...data,
+          id: goalId,
+          category: 'education',
+          targetAmountMinor: null,
+          currentAmountMinor: null,
+          currencyCode: null,
+          milestones: [],
+          progressPercent: data.progressPercent,
+        }),
+      );
+
+      const result = await service.create(userId, {
+        name: 'Read 12 books',
+        category: 'education',
+        deadline: futureDeadline.toISOString(),
+        progressPercent: 40,
+      });
+
+      expect(result.progressPercent).toBe(40);
+    });
+  });
+
   describe('milestone completion', () => {
     it('marks milestone complete', async () => {
       prisma.goal.findFirst.mockResolvedValue({

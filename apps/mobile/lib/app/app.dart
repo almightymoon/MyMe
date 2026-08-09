@@ -15,6 +15,10 @@ class MemyApp extends ConsumerWidget {
       title: 'MeMy',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
+      // Mobile-style: no desktop/web scrollbar gutter on the right edge.
+      scrollBehavior: const MaterialScrollBehavior().copyWith(
+        scrollbars: false,
+      ),
       routerConfig: router,
     );
   }

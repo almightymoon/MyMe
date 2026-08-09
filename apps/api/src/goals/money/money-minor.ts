@@ -131,18 +131,29 @@ export function ceilDivBigInt(numerator: bigint, denominator: bigint): bigint {
   return result > numerator ? numerator : result;
 }
 
-/** Progress percent 0–100 from amounts using integer math (basis points). */
-export function progressPercentFromAmounts(
+/**
+ * Financial progress percent 0–100 from amounts.
+ *
+ * Rule (documented, server-authoritative):
+ *   progressPercent = floor(currentAmountMinor × 100 ÷ targetAmountMinor)
+ * then clamp to [0, 100].
+ *
+ * Uses BigInt only — never IEEE Number for the monetary ratio.
+ * When current ≥ target → 100; when current ≤ 0 → 0.
+ */
+export function calculateFinancialProgressPercent(
   current: Prisma.Decimal,
   target: Prisma.Decimal,
 ): number {
   if (target.lte(0)) return 0;
   if (current.gte(target)) return 100;
   if (current.lte(0)) return 0;
-  // (current * 10000) / target → two decimal places of percent, then / 100
   const currentBi = BigInt(moneyMinorToApiString(current)!);
   const targetBi = BigInt(moneyMinorToApiString(target)!);
-  const scaled = (currentBi * 10000n) / targetBi;
-  const percent = Number(scaled) / 100;
-  return Math.min(100, Math.max(0, percent));
+  const percent = (currentBi * 100n) / targetBi; // floor division
+  const asNumber = Number(percent);
+  return Math.min(100, Math.max(0, asNumber));
 }
+
+/** @deprecated Prefer {@link calculateFinancialProgressPercent}. */
+export const progressPercentFromAmounts = calculateFinancialProgressPercent;

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../app/router/app_navigation.dart';
 import '../../../../app/router/route_names.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_radii.dart';
@@ -54,7 +55,8 @@ class GoalDetailScreen extends ConsumerWidget {
                     title: 'Goal',
                     leading: IconButton(
                       tooltip: 'Back',
-                      onPressed: () => context.pop(),
+                      onPressed: () =>
+                          memyBack(context, fallback: RoutePaths.goals),
                       icon: const Icon(Icons.arrow_back_rounded),
                     ),
                   ),
@@ -74,13 +76,8 @@ class GoalDetailScreen extends ConsumerWidget {
                   leading: IconButton(
                     key: const Key('goal_detail_back'),
                     tooltip: 'Back',
-                    onPressed: () {
-                      if (context.canPop()) {
-                        context.pop();
-                      } else {
-                        context.go(RoutePaths.goals);
-                      }
-                    },
+                    onPressed: () =>
+                        memyBack(context, fallback: RoutePaths.goals),
                     icon: const Icon(Icons.arrow_back_rounded),
                   ),
                   trailing: PopupMenuButton<String>(

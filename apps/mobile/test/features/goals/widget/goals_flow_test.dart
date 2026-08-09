@@ -38,11 +38,7 @@ void main() {
       find.byKey(const Key('goal_name_field')),
       'Run marathon',
     );
-    await tester.tap(find.byKey(const Key('goal_deadline_field')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('OK'));
-    await tester.pumpAndSettle();
-
+    await pickRequiredDeadline(tester);
     await tester.tap(find.byKey(const Key('goal_save_button')));
     await tester.pumpAndSettle();
 
@@ -64,7 +60,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('nav_plan')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('plan_goals_populated')));
+    await tester.tap(find.byKey(const Key('dashboard_module_goals')));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('goals_list')), findsOneWidget);
@@ -107,17 +103,14 @@ void main() {
       find.byKey(const Key('goal_name_field')),
       'Run a 5K',
     );
-    await tester.tap(find.byKey(const Key('goal_deadline_field')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('OK'));
-    await tester.pumpAndSettle();
+    await pickRequiredDeadline(tester);
     await tester.tap(find.byKey(const Key('goal_save_button')));
     await tester.pumpAndSettle();
 
     final router = GoRouter.of(
       tester.element(find.byKey(const Key('goal_detail_scroll'))),
     );
-    router.go(RoutePaths.today);
+    router.go(RoutePaths.goals);
     await tester.pumpAndSettle();
     expect(find.text('Run a 5K'), findsWidgets);
   });
@@ -127,7 +120,7 @@ void main() {
     await signInToToday(tester);
     await tester.tap(find.byKey(const Key('nav_plan')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('plan_goals_populated')));
+    await tester.tap(find.byKey(const Key('dashboard_module_goals')));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const Key('goal_menu_emergency')));

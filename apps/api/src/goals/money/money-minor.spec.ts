@@ -47,12 +47,36 @@ describe('money-minor', () => {
     ).toThrow(BadRequestException);
   });
 
-  it('computes progress without floating money', () => {
+  it('computes progress with floor integer percent', () => {
     const percent = progressPercentFromAmounts(
-      new Prisma.Decimal('7500000000'),
-      new Prisma.Decimal('15000000000'),
+      new Prisma.Decimal('2500'),
+      new Prisma.Decimal('10000'),
     );
-    expect(percent).toBe(50);
+    expect(percent).toBe(25);
+  });
+
+  it('returns 100 when current reaches target', () => {
+    expect(
+      progressPercentFromAmounts(
+        new Prisma.Decimal('10000'),
+        new Prisma.Decimal('10000'),
+      ),
+    ).toBe(100);
+  });
+
+  it('returns 0 when current is zero', () => {
+    expect(
+      progressPercentFromAmounts(
+        new Prisma.Decimal(0),
+        new Prisma.Decimal('10000'),
+      ),
+    ).toBe(0);
+  });
+
+  it('floors uneven ratios', () => {
+    expect(
+      progressPercentFromAmounts(new Prisma.Decimal(1), new Prisma.Decimal(3)),
+    ).toBe(33);
   });
 
   it('ceilDivBigInt rounds up', () => {

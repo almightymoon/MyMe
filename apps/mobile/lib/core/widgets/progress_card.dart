@@ -42,7 +42,7 @@ class ProgressCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: clamped,
               minHeight: 8,
-              backgroundColor: AppColors.canvasDeep,
+              backgroundColor: AppColors.progressTrack,
               color: AppColors.ember,
             ),
           ),

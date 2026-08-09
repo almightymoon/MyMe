@@ -21,7 +21,11 @@ abstract final class TodaySeed {
     return TodaySummary(
       greetingName: UserSeed.demoProfile.displayName,
       focus: demoFocus,
-      schedule: CalendarSeed.demoAgenda.take(2).toList(growable: false),
+      // Home glance matches prototype: Team Meeting + Gym Workout.
+      schedule: [
+        CalendarSeed.demoAgenda[0],
+        CalendarSeed.demoAgenda[2],
+      ],
       goals: const [],
       habits: HabitsSeed.demoHabits.take(2).toList(growable: false),
       finance: FinanceSeed.demoSummary,

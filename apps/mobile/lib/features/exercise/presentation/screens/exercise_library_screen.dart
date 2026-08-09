@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
+import '../../../../app/router/app_navigation.dart';
 import '../../../../app/router/route_names.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
@@ -59,13 +59,8 @@ class ExerciseLibraryScreen extends StatelessWidget {
               leading: IconButton(
                 key: const Key('exercise_library_back'),
                 tooltip: 'Back',
-                onPressed: () {
-                  if (context.canPop()) {
-                    context.pop();
-                  } else {
-                    context.go(RoutePaths.exercise);
-                  }
-                },
+                onPressed: () =>
+                    memyBack(context, fallback: RoutePaths.exercise),
                 icon: const Icon(Icons.arrow_back_rounded),
               ),
             ),

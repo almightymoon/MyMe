@@ -6,6 +6,8 @@
 .env
 .env.*
 !.env.example
+!apps/api/.env.example
+!apps/api/.env.test.example
 *.pem
 *.p12
 *.keystore
@@ -98,3 +100,4 @@ xcuserdata/
 tmp/
 temp/
 .sass-cache/
+*.tsbuildinfo

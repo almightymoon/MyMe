@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_radii.dart';
 import '../../app/theme/app_spacing.dart';
+import '../utils/ambient_motion.dart';
 import 'memy_card.dart';
 
 class LoadingCardSkeleton extends StatefulWidget {
@@ -25,7 +26,12 @@ class _LoadingCardSkeletonState extends State<LoadingCardSkeleton>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1100),
-    )..repeat(reverse: true);
+    );
+    if (ambientMotionEnabled()) {
+      _controller.repeat(reverse: true);
+    } else {
+      _controller.value = 0.5;
+    }
   }
 
   @override

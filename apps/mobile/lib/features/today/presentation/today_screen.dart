@@ -678,14 +678,25 @@ class _TasksSection extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 4),
-          for (var i = 0; i < tasks.length; i++) ...[
-            _TaskRow(
-              task: tasks[i],
-              isLast: i == tasks.length - 1,
-              onToggle: () =>
-                  ref.read(todayTasksProvider.notifier).toggle(tasks[i].id),
-            ),
-          ],
+          if (tasks.isEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(2, 10, 2, 14),
+              child: Text(
+                'No tasks yet — add one from Quick Add.',
+                style: AppTextStyles.bodySmall(color: AppColors.faintText),
+              ),
+            )
+          else
+            for (var i = 0; i < tasks.length; i++) ...[
+              _TaskRow(
+                task: tasks[i],
+                isLast: i == tasks.length - 1,
+                onToggle: () =>
+                    ref.read(todayTasksProvider.notifier).toggle(tasks[i].id),
+                onRemove: () =>
+                    ref.read(todayTasksProvider.notifier).remove(tasks[i].id),
+              ),
+            ],
         ],
       ),
     );
@@ -697,63 +708,98 @@ class _TaskRow extends StatelessWidget {
     required this.task,
     required this.isLast,
     required this.onToggle,
+    required this.onRemove,
   });
 
   final TodayTask task;
   final bool isLast;
   final VoidCallback onToggle;
+  final VoidCallback onRemove;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      key: Key('today_task_${task.id}'),
-      behavior: HitTestBehavior.opaque,
-      onTap: onToggle,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 2),
-        decoration: BoxDecoration(
-          border: isLast
-              ? null
-              : const Border(
-                  bottom: BorderSide(color: Color(0x0D000000), width: 1),
-                ),
+    return Dismissible(
+      key: Key('today_task_dismiss_${task.id}'),
+      direction: DismissDirection.endToStart,
+      onDismissed: (_) => onRemove(),
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 16),
+        color: const Color(0x14FF3B30),
+        child: const Icon(
+          Icons.delete_outline_rounded,
+          color: AppColors.health,
+          size: 22,
         ),
-        child: Row(
-          children: [
-            _TaskCheck(done: task.isDone, taskId: task.id),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    task.title,
-                    style: AppTextStyles.bodyMedium().copyWith(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -0.15,
-                      color: task.isDone
-                          ? AppColors.faintText
-                          : AppColors.primaryText,
-                      decoration: task.isDone
-                          ? TextDecoration.lineThrough
-                          : TextDecoration.none,
-                      decorationThickness: 1,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          key: Key('today_task_${task.id}'),
+          onTap: onToggle,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
+            decoration: BoxDecoration(
+              border: isLast
+                  ? null
+                  : const Border(
+                      bottom: BorderSide(color: Color(0x0D000000), width: 1),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    task.meta,
-                    style: AppTextStyles.bodySmall().copyWith(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.faintText,
-                    ),
-                  ),
-                ],
-              ),
             ),
-          ],
+            child: Row(
+              children: [
+                _TaskCheck(done: task.isDone, taskId: task.id),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        task.title,
+                        style: AppTextStyles.bodyMedium().copyWith(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.15,
+                          color: task.isDone
+                              ? AppColors.faintText
+                              : AppColors.primaryText,
+                          decoration: task.isDone
+                              ? TextDecoration.lineThrough
+                              : TextDecoration.none,
+                          decorationThickness: 1,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        task.meta,
+                        style: AppTextStyles.bodySmall().copyWith(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.faintText,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  key: Key('today_task_remove_${task.id}'),
+                  tooltip: 'Remove task',
+                  onPressed: onRemove,
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
+                  ),
+                  icon: Icon(
+                    Icons.close_rounded,
+                    size: 18,
+                    color: AppColors.navInactive.withValues(alpha: 0.9),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

@@ -24,23 +24,25 @@ class MemyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final radius = AppRadii.cardRadius;
 
-    // Color + shadow must share one rounded BoxDecoration. Splitting shadow onto
-    // a separate layer (or putting it on Ink inside Material) paints a square
-    // dark bbox that peeks past the rounded white corners.
+    // Color + shadow share one rounded decoration. Content is ClipRRect so
+    // nested InkWell highlights cannot paint square corners past the radius.
     final card = DecoratedBox(
       decoration: BoxDecoration(
         color: color,
         borderRadius: radius,
         boxShadow: AppColors.softShadow,
       ),
-      child: Material(
-        type: MaterialType.transparency,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: radius,
-          splashColor: onTap == null ? Colors.transparent : null,
-          highlightColor: onTap == null ? Colors.transparent : null,
-          child: Padding(padding: padding, child: child),
+      child: ClipRRect(
+        borderRadius: radius,
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: radius,
+            splashColor: onTap == null ? Colors.transparent : null,
+            highlightColor: onTap == null ? Colors.transparent : null,
+            child: Padding(padding: padding, child: child),
+          ),
         ),
       ),
     );

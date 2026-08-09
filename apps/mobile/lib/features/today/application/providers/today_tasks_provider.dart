@@ -14,14 +14,28 @@ class TodayTasksNotifier extends StateNotifier<List<TodayTask>> {
     ];
   }
 
+  void add(String title, {String meta = 'Quick Add · Today'}) {
+    final trimmed = title.trim();
+    if (trimmed.isEmpty) return;
+
+    final id = 'task-${DateTime.now().microsecondsSinceEpoch}';
+    state = [
+      ...state,
+      TodayTask(id: id, title: trimmed, meta: meta),
+    ];
+  }
+
+  void remove(String id) {
+    state = [for (final task in state) if (task.id != id) task];
+  }
+
   void resetDemo() {
     state = TodayTasksSeed.demoTasks();
   }
 }
 
+/// Kept alive so Quick Add can append tasks from any shell tab.
 final todayTasksProvider =
-    StateNotifierProvider.autoDispose<TodayTasksNotifier, List<TodayTask>>((
-      ref,
-    ) {
+    StateNotifierProvider<TodayTasksNotifier, List<TodayTask>>((ref) {
       return TodayTasksNotifier();
     });

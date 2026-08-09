@@ -60,6 +60,7 @@ abstract final class AppStrings {
       'No live AI model is contacted.';
 
   static const String addGoal = 'Add Goal';
+  static const String addDailyTask = 'Daily Task';
   static const String addTransaction = 'Add Transaction';
   static const String addEvent = 'Add Event';
   static const String addHabit = 'Add Habit';

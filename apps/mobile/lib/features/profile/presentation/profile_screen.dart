@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/app_navigation.dart';
 import '../../../app/router/route_names.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/widgets/memy_card.dart';
@@ -106,6 +107,7 @@ class ProfileScreen extends ConsumerWidget {
                     label: 'Settings',
                     value: 'Manage',
                     mutedValue: true,
+                    isFirst: true,
                     onTap: () => context.push(RoutePaths.settings),
                   ),
                   const Divider(height: 1, color: AppColors.line),
@@ -128,6 +130,7 @@ class ProfileScreen extends ConsumerWidget {
                     label: 'Sign out',
                     value: 'Log out',
                     valueColor: AppColors.health,
+                    isLast: true,
                     onTap: () => context.go(RoutePaths.signIn),
                   ),
                 ],
@@ -148,6 +151,8 @@ class _ProfileRow extends StatelessWidget {
     required this.onTap,
     this.mutedValue = false,
     this.valueColor,
+    this.isFirst = false,
+    this.isLast = false,
   });
 
   final String keyName;
@@ -156,28 +161,49 @@ class _ProfileRow extends StatelessWidget {
   final VoidCallback onTap;
   final bool mutedValue;
   final Color? valueColor;
+  final bool isFirst;
+  final bool isLast;
+
+  BorderRadius get _inkRadius {
+    if (isFirst && isLast) return AppRadii.cardRadius;
+    if (isFirst) {
+      return const BorderRadius.vertical(top: Radius.circular(AppRadii.card));
+    }
+    if (isLast) {
+      return const BorderRadius.vertical(
+        bottom: Radius.circular(AppRadii.card),
+      );
+    }
+    return BorderRadius.zero;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      key: Key(keyName),
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(label, style: AppTextStyles.bodyMedium()),
-            ),
-            Text(
-              value,
-              style: AppTextStyles.bodyMedium().copyWith(
-                fontWeight: FontWeight.w600,
-                color: valueColor ??
-                    (mutedValue ? AppColors.faintText : AppColors.primaryText),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        key: Key(keyName),
+        onTap: onTap,
+        borderRadius: _inkRadius,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(label, style: AppTextStyles.bodyMedium()),
               ),
-            ),
-          ],
+              Text(
+                value,
+                style: AppTextStyles.bodyMedium().copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: valueColor ??
+                      (mutedValue
+                          ? AppColors.faintText
+                          : AppColors.primaryText),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

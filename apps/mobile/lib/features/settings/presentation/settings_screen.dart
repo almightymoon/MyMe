@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/app_navigation.dart';
 import '../../../app/router/route_names.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/widgets/memy_card.dart';
@@ -47,7 +48,11 @@ class SettingsScreen extends StatelessWidget {
             _Section(
               title: 'Account',
               rows: const [
-                _SetRow(icon: Icons.person_outline_rounded, label: 'Profile Information'),
+                _SetRow(
+                  icon: Icons.person_outline_rounded,
+                  label: 'Profile Information',
+                  isFirst: true,
+                ),
                 _SetRow(icon: Icons.lock_outline_rounded, label: 'Change Password'),
                 _SetRow(icon: Icons.shield_outlined, label: 'Security'),
                 _SetRow(
@@ -65,6 +70,7 @@ class SettingsScreen extends StatelessWidget {
                   icon: Icons.wb_sunny_outlined,
                   label: 'Appearance',
                   value: 'Light',
+                  isFirst: true,
                 ),
                 _SetRow(
                   icon: Icons.straighten_rounded,
@@ -91,7 +97,11 @@ class SettingsScreen extends StatelessWidget {
             _Section(
               title: 'More',
               rows: const [
-                _SetRow(icon: Icons.help_outline_rounded, label: 'Help & Support'),
+                _SetRow(
+                  icon: Icons.help_outline_rounded,
+                  label: 'Help & Support',
+                  isFirst: true,
+                ),
                 _SetRow(
                   icon: Icons.description_outlined,
                   label: 'Terms & Conditions',
@@ -169,51 +179,73 @@ class _SetRow extends StatelessWidget {
     required this.icon,
     required this.label,
     this.value,
+    this.isFirst = false,
     this.isLast = false,
   });
 
   final IconData icon;
   final String label;
   final String? value;
+  final bool isFirst;
   final bool isLast;
+
+  BorderRadius get _inkRadius {
+    if (isFirst && isLast) return AppRadii.cardRadius;
+    if (isFirst) {
+      return const BorderRadius.vertical(top: Radius.circular(AppRadii.card));
+    }
+    if (isLast) {
+      return const BorderRadius.vertical(
+        bottom: Radius.circular(AppRadii.card),
+      );
+    }
+    return BorderRadius.zero;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$label — demo only'),
-            duration: const Duration(milliseconds: 900),
-          ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        decoration: BoxDecoration(
-          border: isLast
-              ? null
-              : const Border(
-                  bottom: BorderSide(color: Color(0x0D000000)),
-                ),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 22, color: AppColors.ember),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(label, style: AppTextStyles.bodyMedium()),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('$label — demo only'),
+              duration: const Duration(milliseconds: 900),
             ),
-            if (value != null)
-              Text(
-                value!,
-                style: AppTextStyles.bodySmall(
-                  color: AppColors.faintText,
-                ).copyWith(fontWeight: FontWeight.w600),
+          );
+        },
+        borderRadius: _inkRadius,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          decoration: BoxDecoration(
+            border: isLast
+                ? null
+                : const Border(
+                    bottom: BorderSide(color: Color(0x0D000000)),
+                  ),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 22, color: AppColors.ember),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(label, style: AppTextStyles.bodyMedium()),
               ),
-            const SizedBox(width: 4),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.navInactive),
-          ],
+              if (value != null)
+                Text(
+                  value!,
+                  style: AppTextStyles.bodySmall(
+                    color: AppColors.faintText,
+                  ).copyWith(fontWeight: FontWeight.w600),
+                ),
+              const SizedBox(width: 4),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.navInactive,
+              ),
+            ],
+          ),
         ),
       ),
     );

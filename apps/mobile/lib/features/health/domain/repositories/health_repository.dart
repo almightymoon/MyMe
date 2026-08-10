@@ -40,7 +40,19 @@ abstract class HealthRepository {
     bool forceRefresh = false,
   });
 
-  /// Forces the next [getDailySummary] call to re-fetch from the platform
-  /// and updates [HealthConnectionConfig.lastRefreshAt].
+  /// Forces the next [getDailySummary] call to re-fetch from the platform,
+  /// re-checks verified permissions on Android, and updates
+  /// [HealthConnectionConfig.lastRefreshAt].
   Future<void> refresh();
+
+  /// Restores connection config from the last-known-good backup (user action).
+  ///
+  /// Never auto-called — only when the user explicitly chooses recovery.
+  Future<HealthConnectionConfig> restoreBackup();
+
+  /// Clears primary and backup connection prefs and resets to disconnected.
+  Future<void> resetConnection();
+
+  /// Whether a valid backup config is available for [restoreBackup].
+  Future<bool> hasBackupAvailable();
 }

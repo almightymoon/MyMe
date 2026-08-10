@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/domain/clock/app_clock.dart';
 import '../../../../core/domain/value_objects/local_date.dart';
 import '../../../../core/integrations/domain/integration_availability.dart';
-import '../../../../core/integrations/domain/integration_connection_status.dart';
 import '../../domain/entities/daily_health_summary.dart';
 import '../../domain/entities/health_connection_config.dart';
 import '../../domain/entities/health_metric_type.dart';
@@ -14,6 +14,7 @@ import '../../domain/entities/health_permission_state.dart';
 import '../../domain/gateways/platform_health_gateway.dart';
 import '../../domain/repositories/health_repository.dart';
 import '../../domain/services/health_aggregation_service.dart';
+import 'health_connection_storage.dart';
 import 'health_repository_support.dart';
 
 /// [HealthRepository] backed by [SystemPlatformHealthGateway] with durable
@@ -32,7 +33,8 @@ class SystemHealthRepository implements HealthRepository {
   }) : _clock = clock ?? const SystemAppClock(),
        _aggregation = aggregation ?? const HealthAggregationService();
 
-  static const String storageKey = 'memy_health_connection_v1';
+  @Deprecated('Use HealthConnectionStorageKeys.primary')
+  static const String storageKey = HealthConnectionStorageKeys.legacy;
 
   final PlatformHealthGateway gateway;
   final SharedPreferences prefs;
@@ -44,40 +46,90 @@ class SystemHealthRepository implements HealthRepository {
       StreamController<HealthConnectionConfig>.broadcast();
   final Map<LocalDate, DailyHealthSummary> _cache = {};
 
-  void dispose() => _connectionController.close();
-
-  HealthConnectionConfig _readConnection() {
-    if (_connection != null) return _connection!;
-    final raw = prefs.getString(storageKey);
-    if (raw == null || raw.isEmpty) {
-      _connection = const HealthConnectionConfig();
-      return _connection!;
-    }
-    try {
-      final decoded = jsonDecode(raw);
-      _connection = HealthConnectionConfig.fromJson(
-        decoded is Map<String, dynamic>
-            ? decoded
-            : decoded is Map
-            ? Map<String, dynamic>.from(decoded)
-            : null,
-      );
-    } catch (_) {
-      // Corrupt prefs: do not silently pretend never-connected. Keep any
-      // last-known in-memory config and flag recoveryNeeded.
-      final previous = _connection;
-      _connection = (previous ?? const HealthConnectionConfig()).copyWith(
-        recoveryNeeded: true,
-        schemaVersion: HealthConnectionConfig.currentSchemaVersion,
-      );
-    }
-    return _connection!;
+  String get _platform {
+    if (Platform.isIOS) return 'ios';
+    if (Platform.isAndroid) return 'android';
+    return 'unknown';
   }
 
+  void dispose() => _connectionController.close();
+
   Future<void> _writeConnection(HealthConnectionConfig config) async {
-    _connection = config.copyWith(recoveryNeeded: false);
-    await prefs.setString(storageKey, jsonEncode(_connection!.toJson()));
+    final payload = config.copyWith(
+      recoveryNeeded: false,
+      backupAvailable: false,
+      schemaVersion: HealthConnectionConfig.currentSchemaVersion,
+    );
+    final json = payload.toJson();
+    if (!isValidHealthConnectionJson(json)) {
+      throw StateError('Invalid Health connection config');
+    }
+
+    final encoded = jsonEncode(json);
+
+    // Migrate legacy key on first successful write.
+    if (prefs.containsKey(HealthConnectionStorageKeys.legacy)) {
+      await prefs.remove(HealthConnectionStorageKeys.legacy);
+    }
+
+    final existingPrimary = prefs.getString(
+      HealthConnectionStorageKeys.primary,
+    );
+    if (existingPrimary != null && existingPrimary.isNotEmpty) {
+      final existing = parseHealthConnectionConfig(
+        existingPrimary,
+        platform: _platform,
+      );
+      if (existing != null) {
+        await prefs.setString(
+          HealthConnectionStorageKeys.backup,
+          existingPrimary,
+        );
+      }
+    }
+
+    await prefs.setString(HealthConnectionStorageKeys.primary, encoded);
+
+    final reread = parseHealthConnectionConfig(encoded, platform: _platform);
+    if (reread == null) {
+      throw StateError('Health connection write validation failed');
+    }
+
+    _connection = reread;
     _connectionController.add(_connection!);
+  }
+
+  HealthConnectionConfig _loadFromPrefs() {
+    var primaryRaw = prefs.getString(HealthConnectionStorageKeys.primary);
+    if (primaryRaw == null || primaryRaw.isEmpty) {
+      primaryRaw = prefs.getString(HealthConnectionStorageKeys.legacy);
+    }
+
+    if (primaryRaw != null && primaryRaw.isNotEmpty) {
+      final parsed = parseHealthConnectionConfig(
+        primaryRaw,
+        platform: _platform,
+      );
+      if (parsed != null) return parsed;
+    }
+
+    final backupRaw = prefs.getString(HealthConnectionStorageKeys.backup);
+    if (backupRaw != null && backupRaw.isNotEmpty) {
+      final backup = parseHealthConnectionConfig(
+        backupRaw,
+        platform: _platform,
+      );
+      if (backup != null) {
+        return backup.copyWith(recoveryNeeded: true, backupAvailable: true);
+      }
+    }
+
+    return const HealthConnectionConfig();
+  }
+
+  HealthConnectionConfig _readConnection() {
+    _connection ??= _loadFromPrefs();
+    return _connection!;
   }
 
   @override
@@ -102,15 +154,15 @@ class SystemHealthRepository implements HealthRepository {
     final nextState = current.permissionState.merging(dispositions);
     await _writeConnection(
       current.copyWith(
-        status: nextState.hasAnyReadable
-            ? IntegrationConnectionStatus.connected
-            : IntegrationConnectionStatus.error,
+        status: connectionStatusFor(nextState),
         permissionState: nextState,
         connectedAt: nextState.hasAnyReadable
             ? (current.connectedAt ?? _clock.now())
             : null,
+        clearConnectedAt: !nextState.hasAnyReadable,
         schemaVersion: HealthConnectionConfig.currentSchemaVersion,
         recoveryNeeded: false,
+        backupAvailable: false,
       ),
     );
     _cache.clear();
@@ -120,7 +172,10 @@ class SystemHealthRepository implements HealthRepository {
   @override
   Future<void> disconnect() async {
     _cache.clear();
-    await _writeConnection(const HealthConnectionConfig());
+    await prefs.remove(HealthConnectionStorageKeys.primary);
+    await prefs.remove(HealthConnectionStorageKeys.backup);
+    _connection = const HealthConnectionConfig();
+    _connectionController.add(_connection!);
   }
 
   @override
@@ -145,8 +200,56 @@ class SystemHealthRepository implements HealthRepository {
 
   @override
   Future<void> refresh() async {
-    _cache.clear();
     final current = _readConnection();
-    await _writeConnection(current.copyWith(lastRefreshAt: _clock.now()));
+    final before = current.permissionState;
+
+    final after = await recheckPermissions(
+      gateway: gateway,
+      current: before,
+      shouldRecheck: shouldRecheckPermissionsOnRefresh(gateway),
+    );
+
+    clearCacheForRevokedGroups(cache: _cache, before: before, after: after);
+    if (!after.hasAnyReadable) {
+      _cache.clear();
+    }
+
+    await _writeConnection(
+      current.copyWith(
+        permissionState: after,
+        status: connectionStatusFor(after),
+        lastRefreshAt: _clock.now(),
+        connectedAt: after.hasAnyReadable ? current.connectedAt : null,
+        clearConnectedAt: !after.hasAnyReadable,
+      ),
+    );
+  }
+
+  @override
+  Future<bool> hasBackupAvailable() async {
+    final backupRaw = prefs.getString(HealthConnectionStorageKeys.backup);
+    if (backupRaw == null || backupRaw.isEmpty) return false;
+    return parseHealthConnectionConfig(backupRaw, platform: _platform) != null;
+  }
+
+  @override
+  Future<HealthConnectionConfig> restoreBackup() async {
+    final backupRaw = prefs.getString(HealthConnectionStorageKeys.backup);
+    if (backupRaw == null || backupRaw.isEmpty) {
+      throw StateError('No Health connection backup available');
+    }
+    final backup = parseHealthConnectionConfig(backupRaw, platform: _platform);
+    if (backup == null) {
+      throw StateError('Health connection backup is corrupt');
+    }
+
+    await _writeConnection(backup);
+    _cache.clear();
+    return _readConnection();
+  }
+
+  @override
+  Future<void> resetConnection() async {
+    await disconnect();
   }
 }

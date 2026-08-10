@@ -2,6 +2,7 @@ import '../../../../core/domain/value_objects/local_date.dart';
 import '../entities/daily_health_summary.dart';
 import '../entities/health_metric_type.dart';
 import '../entities/health_workout.dart';
+import '../entities/health_sample_identity.dart';
 import '../entities/normalized_health_sample.dart';
 
 /// Pure aggregation of raw platform samples into a [DailyHealthSummary].
@@ -10,9 +11,9 @@ import '../entities/normalized_health_sample.dart';
 /// and reduces them to one day's display-ready figures. Never persists
 /// anything; callers decide what (if anything) to cache.
 ///
-/// Totals sum after de-duplication by [NormalizedHealthSample.providerRecordId]
-/// when present. Samples without a stable id are kept (ephemeral) but are
-/// not treated as stable keys for cross-fetch dedupe.
+/// Totals sum after de-duplication by [HealthSampleIdentity] (platform +
+/// metric + provider id) when present. Samples without a stable id are kept
+/// (ephemeral) but are not treated as stable keys for cross-fetch dedupe.
 class HealthAggregationService {
   const HealthAggregationService();
 
@@ -38,6 +39,7 @@ class HealthAggregationService {
     int? stepsOverride,
     double? distanceMetersOverride,
     double? activeEnergyKcalOverride,
+    double? exerciseMinutesOverride,
   }) {
     final deduped = dedupeSamples(samples);
     final daySamples = deduped.where((s) => _attributedTo(s) == date).toList();
@@ -61,7 +63,9 @@ class HealthAggregationService {
         HealthMetricType.restingHeartRate,
       ),
       sleepDuration: _sleepDuration(daySamples),
-      exerciseMinutes: _sum(daySamples, HealthMetricType.exerciseMinutes),
+      exerciseMinutes:
+          exerciseMinutesOverride ??
+          _sum(daySamples, HealthMetricType.exerciseMinutes),
       weightKg: _latest(daySamples, HealthMetricType.weight),
       workouts: dayWorkouts,
       generatedAt: generatedAt,
@@ -90,9 +94,9 @@ class HealthAggregationService {
         }
       }
       if (sample.hasStableProviderRecordId) {
-        final id = sample.providerRecordId!;
-        if (seenIds.contains(id)) continue;
-        seenIds.add(id);
+        final key = HealthSampleIdentity.fromSample(sample).compositeKey;
+        if (seenIds.contains(key)) continue;
+        seenIds.add(key);
       }
       result.add(sample);
     }

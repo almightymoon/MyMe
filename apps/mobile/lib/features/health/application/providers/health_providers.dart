@@ -106,6 +106,12 @@ class HealthConnectionController {
   Future<void> disconnect() => _repository.disconnect();
 
   Future<void> refresh() => _repository.refresh();
+
+  Future<HealthConnectionConfig> restoreBackup() => _repository.restoreBackup();
+
+  Future<void> resetConnection() => _repository.resetConnection();
+
+  Future<bool> hasBackupAvailable() => _repository.hasBackupAvailable();
 }
 
 final healthConnectionControllerProvider = Provider<HealthConnectionController>(

@@ -62,7 +62,7 @@ void main() {
       expect(summary.activeEnergyKcal, 180);
     });
 
-    test('deduplicates by providerRecordId before summing', () {
+    test('deduplicates by composite provider identity before summing', () {
       final start = DateTime(2026, 6, 15, 8);
       final summary = aggregation.summarizeDay(
         date: day,

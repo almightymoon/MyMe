@@ -1,4 +1,5 @@
 import '../../../../core/integrations/domain/integration_availability.dart';
+import '../entities/health_aggregate_result.dart';
 import '../entities/health_metric_type.dart';
 import '../entities/health_permission_state.dart';
 import '../entities/health_workout.dart';
@@ -56,9 +57,7 @@ abstract interface class PlatformHealthGateway {
 
   /// Platform daily step total for `[startUtc, endUtc)` when available.
   ///
-  /// Prefer this over summing raw step samples (which can double-count).
-  /// Returns `null` when the platform has no aggregate or the call fails —
-  /// callers then fall back to raw samples + dedupe.
+  /// Prefer [aggregateSteps] which labels the aggregation strategy.
   Future<int?> readDailyStepTotal({
     required DateTime startUtc,
     required DateTime endUtc,
@@ -72,6 +71,30 @@ abstract interface class PlatformHealthGateway {
 
   /// Platform daily active-energy total when available.
   Future<double?> readDailyActiveEnergyTotal({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  });
+
+  /// Steps aggregate with explicit [HealthAggregateStrategy] labeling.
+  Future<HealthAggregateResult> aggregateSteps({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  });
+
+  /// Distance aggregate — may fall back to raw de-duplicated samples.
+  Future<HealthAggregateResult> aggregateDistance({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  });
+
+  /// Active energy aggregate — may fall back to raw de-duplicated samples.
+  Future<HealthAggregateResult> aggregateActiveEnergy({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  });
+
+  /// Exercise duration aggregate — raw de-duplicated fallback only.
+  Future<HealthAggregateResult> aggregateExerciseDuration({
     required DateTime startUtc,
     required DateTime endUtc,
   });

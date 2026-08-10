@@ -150,6 +150,7 @@ void main() {
       expect(capabilities.cloudSync, isFalse);
       expect(capabilities.debugIntegrationLab, isFalse);
       expect(capabilities.plannedSidebarItems, isFalse);
+      expect(capabilities.exerciseSessions, isFalse);
     });
 
     test('has no demo auth and therefore no sign out', () {

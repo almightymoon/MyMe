@@ -109,15 +109,22 @@ void main() {
       RoutePaths.wardrobe,
       RoutePaths.body,
       RoutePaths.nutritionComingSoon,
+      RoutePaths.workoutSession,
     ]) {
       router.go(path);
       await tester.pumpAndSettle();
       expect(
         router.state.uri.path,
-        RoutePaths.today,
+        path == RoutePaths.workoutSession
+            ? RoutePaths.exercise
+            : RoutePaths.today,
         reason: '$path must be frozen out of production',
       );
     }
+
+    router.go(RoutePaths.notifications);
+    await tester.pumpAndSettle();
+    expect(router.state.uri.path, RoutePaths.settings);
   });
 
   testWidgets('Settings hides planned rows and Log Out', (tester) async {

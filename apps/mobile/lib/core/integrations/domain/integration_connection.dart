@@ -29,8 +29,11 @@ class IntegrationConnection {
   /// without a calendar-selection step (e.g. health).
   final List<String> selectedCalendarIds;
 
-  bool get isConnected => status == IntegrationConnectionStatus.connected;
-  bool get hasError => status == IntegrationConnectionStatus.error;
+  bool get isConnected => status.allowsLiveSync;
+  bool get hasError =>
+      status == IntegrationConnectionStatus.error || status.isDegraded;
+  bool get isStaleCache =>
+      status == IntegrationConnectionStatus.staleCacheAvailable;
 
   factory IntegrationConnection.initial(IntegrationProvider provider) {
     return IntegrationConnection(provider: provider);

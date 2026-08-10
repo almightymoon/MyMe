@@ -68,6 +68,10 @@
 ///
 /// # Development auth user (debug builds only; never sent in release)
 /// --dart-define=DEV_USER_ID=00000000-0000-4000-8000-000000000001
+///
+/// # Support inbox for Help & Support mailto links (optional)
+/// # When empty, contact actions show an in-app message instead of mailto.
+/// --dart-define=SUPPORT_EMAIL=support@example.com
 /// ```
 enum GoalsDataSource { fake, local, api }
 
@@ -126,6 +130,14 @@ class EnvironmentConfig {
     'DEV_USER_ID',
     defaultValue: '00000000-0000-4000-8000-000000000001',
   );
+
+  /// Optional support inbox for Help & Support contact actions.
+  static const String supportEmail = String.fromEnvironment(
+    'SUPPORT_EMAIL',
+    defaultValue: '',
+  );
+
+  static bool get hasSupportEmail => supportEmail.trim().isNotEmpty;
 
   static const Duration connectTimeout = Duration(seconds: 10);
   static const Duration receiveTimeout = Duration(seconds: 20);

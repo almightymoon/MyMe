@@ -146,6 +146,14 @@ class ApiGoalRepository implements GoalRepository {
     });
   }
 
+  /// Clears the local Goals cache only. Never calls the backend.
+  Future<int> clearLocalCacheOnly() async {
+    final before = (await cache.getGoals()).length;
+    await cache.clearAllLocalData();
+    _emit(const []);
+    return before;
+  }
+
   @override
   Future<Goal> archiveGoal(String id) {
     return _write(() async {

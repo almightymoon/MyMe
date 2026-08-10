@@ -13,8 +13,7 @@ abstract final class AppearancePreferences {
       case 'light':
         return ThemeMode.light;
       case 'dark':
-        // Dark theme not fully shipped — treat as system until available.
-        return ThemeMode.system;
+        return ThemeMode.dark;
       case 'system':
       default:
         return ThemeMode.system;

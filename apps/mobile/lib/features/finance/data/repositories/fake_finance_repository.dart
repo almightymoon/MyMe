@@ -125,9 +125,12 @@ class FakeFinanceRepository implements FinanceRepository {
     _emit();
   }
 
-  /// Wipes all in-memory transactions (categories retained).
+  /// Wipes all in-memory transactions and resets categories to the seed catalog.
   Future<void> clearAllLocalData() async {
     _transactions.clear();
+    _categories
+      ..clear()
+      ..addAll(FinanceSeed.demoCategories());
     _emit();
   }
 

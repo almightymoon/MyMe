@@ -38,6 +38,22 @@ Back behavior: placeholder / feature routes use `context.pop()` when possible, o
 | `/settings/connections` | Settings | `ConnectedAppsScreen` | Live — Calendar + Health + planned | Pop |
 | `/settings/connections/diagnostics` | Connected Apps | `IntegrationDiagnosticsScreen` | Live — redacted ops metadata | Pop |
 | `/settings/connections/lab` | Connected Apps (debug) | `IntegrationLabScreen` | Debug only | Pop |
+| `/privacy` | Drawer / Settings | `PrivacyDataCenterScreen` | Live — data inventory | Pop |
+| `/privacy/export` | Privacy | `DataExportScreen` | Live — local JSON export | Pop |
+| `/privacy/delete` | Privacy | `DataDeletionScreen` | Live — scoped wipe | Pop |
+| `/privacy/ai` | Privacy | `AiDataUseScreen` | Live — AI boundaries | Pop |
+| `/security` | Drawer / Settings | `SecurityScreen` | Live — demo-auth truthful | Pop |
+| `/support` | Drawer / Settings | `HelpSupportScreen` | Live — offline FAQ | Pop |
+| `/support/article/:id` | Help search | Article detail | Live | Pop |
+| `/support/contact` | Help | Contact form | Live — mailto/share | Pop |
+| `/support/report` | Help | Report problem | Live — redacted | Pop |
+| `/support/feature` | Help | Feature request | Live — share | Pop |
+| `/legal` | Drawer / Settings | `LegalCenterScreen` | Live — draft docs | Pop |
+| `/legal/:documentType` | Legal | Markdown viewer | Live — draft status | Pop |
+| `/about` | Drawer / Settings | `AboutMeMyScreen` | Live — PackageInfo | Pop |
+| `/about/whats-new` | About | What’s New | Live — changelog | Pop |
+| `/settings/notifications` | Drawer / Settings | Notifications | Planned (honest) | Pop |
+| `/settings/accessibility` | Drawer / Settings | Appearance | Live — theme System/Light | Pop |
 | `/exercise` | More → Exercise | `ExercisePlaceholderScreen` | Explicit Coming Soon placeholder | Pop → More (or Today) |
 | `/wardrobe` | More → Wardrobe | `WardrobePlaceholderScreen` | Explicit Coming Soon placeholder | Pop → More (or Today) |
 | `/settings` | More → Settings | `SettingsScreen` | Explicit Coming Soon placeholder | Pop → More (or Today) |

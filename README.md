@@ -29,7 +29,7 @@ The HTML application is the design prototype. Do not convert it line-for-line in
 | Area | Status |
 |------|--------|
 | Web prototype (`/app`) | Approved visual reference — keep intact |
-| Flutter mobile (`/apps/mobile`) | Goals · Finance · Habits · **Device Calendar sync** · **read-only HealthKit/Health Connect** · Today/Plan composition · Connected Apps |
+| Flutter mobile (`/apps/mobile`) | Goals · Finance · Habits · **Device Calendar sync** · **read-only HealthKit/Health Connect** · Today/Plan composition · Connected Apps · **Privacy & Data / Support / Legal / About** |
 | NestJS API (`/apps/api`) | Goals / milestones / progress / today summary · Nest validates `DATABASE_URL` only (Compose `POSTGRES_*` are infrastructure) |
 | Cloud calendar OAuth / vendor wearables / AI | Deferred — see `docs/product/integration-roadmap.md` |
 | Production auth | Not in this milestone |

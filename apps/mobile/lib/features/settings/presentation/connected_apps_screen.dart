@@ -9,6 +9,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
+import '../../../core/config/release_capabilities.dart';
 import '../../../core/integrations/application/providers/integration_providers.dart';
 import '../../../core/integrations/domain/integration_connection_status.dart';
 import '../../../core/widgets/memy_card.dart';
@@ -31,6 +32,7 @@ class ConnectedAppsScreen extends ConsumerWidget {
         IntegrationConnectionStatus.notConnected;
     final recoveryCount =
         ref.watch(calendarRecoveryCasesProvider).valueOrNull?.length ?? 0;
+    final capabilities = ref.watch(releaseCapabilitiesProvider);
 
     return Scaffold(
       key: const Key('connected_apps'),
@@ -108,7 +110,7 @@ class ConnectedAppsScreen extends ConsumerWidget {
                     onTap: () =>
                         context.push(RoutePaths.integrationDiagnostics),
                   ),
-                  if (kDebugMode) ...[
+                  if (kDebugMode && capabilities.debugIntegrationLab) ...[
                     const SizedBox(height: AppSpacing.sm),
                     ListTile(
                       key: const Key('connected_apps_lab'),

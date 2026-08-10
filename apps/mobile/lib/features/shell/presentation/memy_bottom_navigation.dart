@@ -20,11 +20,17 @@ class MemyBottomNavigation extends StatelessWidget {
     required this.currentIndex,
     required this.onDestinationSelected,
     required this.onQuickAddPressed,
+    this.showCoach = true,
   });
 
+  /// Shell branch index (0 Today, 1 Plan, 2 Coach, 3 More). Indices stay
+  /// stable when [showCoach] is false so the shell keeps all four branches.
   final int currentIndex;
   final ValueChanged<int> onDestinationSelected;
   final VoidCallback onQuickAddPressed;
+
+  /// Coach is hidden in production; the More item still targets branch 3.
+  final bool showCoach;
 
   /// How far the FAB rises above the bar (prototype `translateY(-22px)`).
   static const double fabRise = 22;
@@ -66,9 +72,7 @@ class MemyBottomNavigation extends StatelessWidget {
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: AppColors.surface.withValues(alpha: 0.96),
-                    border: Border(
-                      top: BorderSide(color: AppColors.line),
-                    ),
+                    border: Border(top: BorderSide(color: AppColors.line)),
                   ),
                 ),
               ),
@@ -115,16 +119,17 @@ class MemyBottomNavigation extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Expanded(
-                    child: _NavItem(
-                      key: const Key('nav_coach'),
-                      icon: Icons.chat_bubble_outline_rounded,
-                      selectedIcon: Icons.chat_bubble_rounded,
-                      label: AppStrings.coach,
-                      selected: currentIndex == 2,
-                      onTap: () => onDestinationSelected(2),
+                  if (showCoach)
+                    Expanded(
+                      child: _NavItem(
+                        key: const Key('nav_coach'),
+                        icon: Icons.chat_bubble_outline_rounded,
+                        selectedIcon: Icons.chat_bubble_rounded,
+                        label: AppStrings.coach,
+                        selected: currentIndex == 2,
+                        onTap: () => onDestinationSelected(2),
+                      ),
                     ),
-                  ),
                   Expanded(
                     child: _NavItem(
                       key: const Key('nav_more'),

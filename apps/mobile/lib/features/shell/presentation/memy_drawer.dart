@@ -11,6 +11,7 @@ import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/application/providers/app_info_providers.dart';
+import '../../../core/config/release_capabilities.dart';
 import '../../trust/domain/entities/sidebar_destination.dart';
 import '../../user/application/providers/user_providers.dart';
 import 'sidebar/sidebar_account_header.dart';
@@ -26,12 +27,13 @@ class MemyDrawer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final capabilities = ref.watch(releaseCapabilitiesProvider);
     final profile = ref.watch(userProfileProvider).asData?.value;
     final name = profile?.fullName ?? 'Friend';
     final profileEmail = profile?.email?.trim();
     final emailLabel = (profileEmail != null && profileEmail.isNotEmpty)
         ? profileEmail
-        : 'Demo account';
+        : (capabilities.demoAuth ? 'Demo account' : 'On this device');
     final version = ref.watch(appVersionProvider).asData?.value ?? '1.0.0';
     final width = math.min(300.0, MediaQuery.sizeOf(context).width * 0.82);
     final currentPath = GoRouterState.of(context).uri.path;
@@ -107,8 +109,9 @@ class MemyDrawer extends ConsumerWidget {
                       ])
                         SidebarSection(
                           sectionId: sectionId,
-                          destinations: SidebarDestinations.forSection(
+                          destinations: SidebarDestinations.visibleForSection(
                             sectionId,
+                            capabilities,
                           ),
                           isActive: (destination) =>
                               _isActive(destination, currentPath),
@@ -122,7 +125,9 @@ class MemyDrawer extends ConsumerWidget {
               Divider(height: 16, color: AppColors.line),
               SidebarFooter(
                 versionLabel: version,
-                onLogout: () => _confirmLogout(context),
+                onLogout: capabilities.showSignOut
+                    ? () => _confirmLogout(context)
+                    : null,
               ),
             ],
           ),

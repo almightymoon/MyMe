@@ -15,7 +15,10 @@ class SidebarFooter extends StatelessWidget {
   });
 
   final String versionLabel;
-  final VoidCallback onLogout;
+
+  /// Null hides the control entirely — builds without demo auth have no
+  /// session to end.
+  final VoidCallback? onLogout;
 
   @override
   Widget build(BuildContext context) {
@@ -33,40 +36,43 @@ class SidebarFooter extends StatelessWidget {
             ),
           ),
         ),
-        Material(
-          color: AppColors.dangerSoft,
-          borderRadius: AppRadii.pillRadius,
-          child: InkWell(
-            key: const Key('drawer_logout'),
+        if (onLogout != null)
+          Material(
+            color: AppColors.dangerSoft,
             borderRadius: AppRadii.pillRadius,
-            onTap: onLogout,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: AppSpacing.minTouch),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 13),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.logout_rounded,
-                      size: 18,
-                      color: Color(0xFFE5484D),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Log Out',
-                      style: AppTextStyles.titleMedium().copyWith(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFFE5484D),
+            child: InkWell(
+              key: const Key('drawer_logout'),
+              borderRadius: AppRadii.pillRadius,
+              onTap: onLogout,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  minHeight: AppSpacing.minTouch,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.logout_rounded,
+                        size: 18,
+                        color: Color(0xFFE5484D),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      Text(
+                        'Log Out',
+                        style: AppTextStyles.titleMedium().copyWith(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFFE5484D),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
       ],
     );
   }

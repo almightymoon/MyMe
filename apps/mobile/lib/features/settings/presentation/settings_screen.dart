@@ -8,7 +8,9 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
+import '../../../core/config/release_capabilities.dart';
 import '../../../core/widgets/memy_card.dart';
+import '../../onboarding/application/onboarding_providers.dart';
 import '../../trust/application/providers/trust_providers.dart';
 import '../../trust/domain/entities/trust_document.dart';
 
@@ -18,6 +20,7 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final version = ref.watch(appVersionLabelProvider);
+    final capabilities = ref.watch(releaseCapabilitiesProvider);
     final themeMode = ref.watch(themeModePreferenceProvider);
     final appearanceValue = switch (themeMode) {
       ThemeMode.light => 'Light',
@@ -64,11 +67,12 @@ class SettingsScreen extends ConsumerWidget {
                   isFirst: true,
                   routePath: RoutePaths.profile,
                 ),
-                _SetRow(
-                  icon: Icons.lock_outline_rounded,
-                  label: 'Change Password',
-                  onTap: () => _showPasswordUnavailable(context),
-                ),
+                if (capabilities.demoAuth)
+                  _SetRow(
+                    icon: Icons.lock_outline_rounded,
+                    label: 'Change Password',
+                    onTap: () => _showPasswordUnavailable(context),
+                  ),
                 const _SetRow(
                   icon: Icons.shield_outlined,
                   label: 'Security',
@@ -94,25 +98,28 @@ class SettingsScreen extends ConsumerWidget {
                   isFirst: true,
                   routePath: RoutePaths.appearance,
                 ),
-                const _SetRow(
-                  icon: Icons.straighten_rounded,
-                  label: 'Units',
-                  value: 'Metric',
-                  onTapMessage:
-                      'Units preference is planned for a later build.',
-                ),
-                const _SetRow(
-                  icon: Icons.language_rounded,
-                  label: 'Language',
-                  value: 'English',
-                  onTapMessage:
-                      'Language selection is planned for a later build.',
-                ),
-                const _SetRow(
-                  icon: Icons.notifications_none_rounded,
-                  label: 'Notifications',
-                  routePath: RoutePaths.notifications,
-                ),
+                if (capabilities.plannedSidebarItems) ...[
+                  const _SetRow(
+                    icon: Icons.straighten_rounded,
+                    label: 'Units',
+                    value: 'Metric',
+                    onTapMessage:
+                        'Units preference is planned for a later build.',
+                  ),
+                  const _SetRow(
+                    icon: Icons.language_rounded,
+                    label: 'Language',
+                    value: 'English',
+                    onTapMessage:
+                        'Language selection is planned for a later build.',
+                  ),
+                ],
+                if (capabilities.notifications)
+                  const _SetRow(
+                    icon: Icons.notifications_none_rounded,
+                    label: 'Notifications',
+                    routePath: RoutePaths.notifications,
+                  ),
                 const _SetRow(
                   icon: Icons.privacy_tip_outlined,
                   label: 'Privacy',
@@ -153,32 +160,81 @@ class SettingsScreen extends ConsumerWidget {
                     loading: () => '…',
                     error: (_, _) => '',
                   ),
-                  isLast: true,
                   routePath: RoutePaths.about,
+                ),
+                _SetRow(
+                  key: const Key('settings_reset_onboarding'),
+                  icon: Icons.restart_alt_rounded,
+                  label: 'Reset onboarding',
+                  isLast: true,
+                  onTap: () => _confirmResetOnboarding(context, ref),
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.lg),
-            MemyCard(
-              key: const Key('settings_logout'),
-              onTap: () => context.go(RoutePaths.signIn),
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 18),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.logout_rounded, color: AppColors.health),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Log Out',
-                    style: AppTextStyles.titleMedium(
-                      color: AppColors.health,
-                    ).copyWith(fontSize: 15),
-                  ),
-                ],
+            if (capabilities.showSignOut) ...[
+              const SizedBox(height: AppSpacing.lg),
+              MemyCard(
+                key: const Key('settings_logout'),
+                onTap: () => context.go(RoutePaths.signIn),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 18,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.logout_rounded, color: AppColors.health),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Log Out',
+                      style: AppTextStyles.titleMedium(
+                        color: AppColors.health,
+                      ).copyWith(fontSize: 15),
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ],
           ],
         ),
+      ),
+    );
+  }
+
+  Future<void> _confirmResetOnboarding(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        key: const Key('settings_reset_onboarding_dialog'),
+        title: const Text('Reset onboarding?'),
+        content: const Text(
+          'Setup will run again the next time you open MeMy. Your goals, '
+          'transactions, habits and preferences are not deleted.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            key: const Key('settings_reset_onboarding_confirm'),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Reset'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    await ref.read(onboardingCompletionProvider.notifier).reset();
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text('Onboarding will run again on next launch.'),
+        duration: Duration(milliseconds: 1600),
       ),
     );
   }
@@ -310,10 +366,7 @@ class _SetRow extends StatelessWidget {
                   ).copyWith(fontWeight: FontWeight.w600),
                 ),
               const SizedBox(width: 4),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.navInactive,
-              ),
+              Icon(Icons.chevron_right_rounded, color: AppColors.navInactive),
             ],
           ),
         ),

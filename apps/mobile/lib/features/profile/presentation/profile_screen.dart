@@ -8,9 +8,13 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
+import '../../../core/config/release_capabilities.dart';
 import '../../../core/widgets/memy_card.dart';
 import '../../../core/widgets/memy_module_scaffold.dart';
+import '../../onboarding/application/onboarding_providers.dart';
+import '../../onboarding/data/onboarding_preferences.dart';
 import '../../user/application/providers/user_providers.dart';
+import '../../../core/application/providers/core_providers.dart';
 
 /// Profile screen matching prototype `data-screen="profile"`.
 class ProfileScreen extends ConsumerWidget {
@@ -18,8 +22,16 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final capabilities = ref.watch(releaseCapabilitiesProvider);
     final profile = ref.watch(userProfileProvider).asData?.value;
-    final name = profile?.fullName ?? 'Emma Chen';
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final displayName =
+        OnboardingPreferences.readDisplayName(prefs) ??
+        profile?.fullName ??
+        'MeMy';
+    final subtitle = OnboardingPreferences.readDisplayName(prefs) != null
+        ? 'On this device · ${OnboardingPreferences.readBaseCurrency(prefs)}'
+        : 'Local profile on this device';
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
@@ -84,10 +96,10 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Text(name, style: AppTextStyles.titleLarge()),
+                  Text(displayName, style: AppTextStyles.titleLarge()),
                   const SizedBox(height: 4),
                   Text(
-                    'emma@memy.app · Life Score 84',
+                    subtitle,
                     style: AppTextStyles.bodySmall().copyWith(
                       color: AppColors.faintText,
                     ),
@@ -112,25 +124,39 @@ class ProfileScreen extends ConsumerWidget {
                   _ProfileRow(
                     keyName: 'profile_row_goals',
                     label: 'Goals',
-                    value: '4 active',
+                    value: 'Open',
+                    mutedValue: true,
                     onTap: () => context.push(RoutePaths.goals),
                   ),
                   Divider(height: 1, color: AppColors.line),
                   _ProfileRow(
                     keyName: 'profile_row_finance',
                     label: 'Finance',
-                    value: 'PKR 245,000',
+                    value: 'Open',
+                    mutedValue: true,
                     onTap: () => context.push(RoutePaths.finance),
                   ),
-                  Divider(height: 1, color: AppColors.line),
-                  _ProfileRow(
-                    keyName: 'profile_row_signout',
-                    label: 'Sign out',
-                    value: 'Log out',
-                    valueColor: AppColors.health,
-                    isLast: true,
-                    onTap: () => context.go(RoutePaths.signIn),
-                  ),
+                  if (capabilities.showSignOut) ...[
+                    Divider(height: 1, color: AppColors.line),
+                    _ProfileRow(
+                      keyName: 'profile_row_signout',
+                      label: 'Sign out',
+                      value: 'Demo session',
+                      valueColor: AppColors.health,
+                      isLast: true,
+                      onTap: () => context.go(RoutePaths.signIn),
+                    ),
+                  ] else ...[
+                    Divider(height: 1, color: AppColors.line),
+                    _ProfileRow(
+                      keyName: 'profile_row_reset_onboarding',
+                      label: 'Reset onboarding',
+                      value: 'Keeps your data',
+                      mutedValue: true,
+                      isLast: true,
+                      onTap: () => _confirmResetOnboarding(context, ref),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -138,6 +164,39 @@ class ProfileScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmResetOnboarding(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        key: const Key('profile_reset_onboarding_dialog'),
+        title: const Text('Reset onboarding?'),
+        content: const Text(
+          'Setup will run again the next time you open MeMy. Your goals, '
+          'transactions, habits and preferences are not deleted. '
+          'Use Privacy & Data if you want to delete local data.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            key: const Key('profile_reset_onboarding_confirm'),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Reset'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    await ref.read(onboardingCompletionProvider.notifier).reset();
+    if (!context.mounted) return;
+    context.go(RoutePaths.onboarding);
   }
 }
 

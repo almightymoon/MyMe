@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/router/route_names.dart';
+import '../../../../core/config/release_capabilities.dart';
+import '../../../../core/constants/app_strings.dart';
 import '../../../trust/domain/entities/sidebar_destination.dart';
 
 /// Canonical MeMy sidebar destinations (trust/support IA).
@@ -37,13 +39,14 @@ abstract final class SidebarDestinations {
     ),
     SidebarDestination(
       id: 'coach',
-      label: 'AI Coach',
+      label: AppStrings.coachPreview,
       icon: Icons.shield_outlined,
       shellTabIndex: 2,
       routePath: RoutePaths.coach,
       section: SidebarSectionId.primary,
-      availability: SidebarAvailability.available,
-      semanticLabel: 'AI Coach',
+      availability: SidebarAvailability.demo,
+      badgeLabel: 'Preview',
+      semanticLabel: 'Coach Preview, local demo',
       keyName: 'drawer_coach',
     ),
   ];
@@ -72,8 +75,7 @@ abstract final class SidebarDestinations {
     SidebarDestination(
       id: 'habits',
       label: 'Habits',
-      icon: Icons.repeat_rounded,
-      routePath: RoutePaths.habits,
+      icon: Icons.local_fire_department_rounded,
       section: SidebarSectionId.lifeAreas,
       availability: SidebarAvailability.available,
       semanticLabel: 'Habits',
@@ -235,6 +237,37 @@ abstract final class SidebarDestinations {
       SidebarSectionId.lifeAreas => lifeAreas,
       SidebarSectionId.connections => connections,
       SidebarSectionId.trustHelp => trustHelp,
+    };
+  }
+
+  /// Section contents filtered down to what this build is allowed to ship.
+  ///
+  /// Production drops Coach Preview, Wardrobe, Body and every "Planned" row,
+  /// leaving Today/Plan, the six live life areas, Connected Apps, Appearance,
+  /// Settings and the trust/help group.
+  static List<SidebarDestination> visibleForSection(
+    SidebarSectionId section,
+    ReleaseCapabilities capabilities,
+  ) {
+    return [
+      for (final destination in forSection(section))
+        if (_isVisible(destination, capabilities)) destination,
+    ];
+  }
+
+  static bool _isVisible(
+    SidebarDestination destination,
+    ReleaseCapabilities capabilities,
+  ) {
+    if (destination.isPlanned && !capabilities.plannedSidebarItems) {
+      return false;
+    }
+    return switch (destination.id) {
+      'coach' => capabilities.coachPreview,
+      'wardrobe' => capabilities.wardrobe,
+      'body' => capabilities.body,
+      'notifications' => capabilities.notifications,
+      _ => true,
     };
   }
 

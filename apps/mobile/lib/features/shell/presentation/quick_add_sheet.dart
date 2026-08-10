@@ -8,6 +8,7 @@ import '../../../app/router/route_names.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_text_styles.dart';
+import '../../../core/config/release_capabilities.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../today/application/providers/today_tasks_provider.dart';
 
@@ -120,6 +121,8 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
   }
 
   Widget _buildMenu() {
+    final showMeal = ref.watch(releaseCapabilitiesProvider).nutritionQuickAdd;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -172,21 +175,23 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
         ),
         _QuickAddRow(
           key: const Key('quick_add_habit'),
-          icon: Icons.repeat_rounded,
+          icon: Icons.local_fire_department_rounded,
           accent: AppColors.habits,
           title: 'Habit',
           subtitle: 'Build a daily streak',
           onTap: () => _go('quick_add_habit'),
+          isLast: !showMeal,
         ),
-        _QuickAddRow(
-          key: const Key('quick_add_meal'),
-          icon: Icons.restaurant_outlined,
-          accent: AppColors.health,
-          title: 'Meal',
-          subtitle: 'Log food & calories',
-          onTap: () => _go('quick_add_meal'),
-          isLast: true,
-        ),
+        if (showMeal)
+          _QuickAddRow(
+            key: const Key('quick_add_meal'),
+            icon: Icons.restaurant_outlined,
+            accent: AppColors.health,
+            title: 'Meal',
+            subtitle: 'Log food & calories',
+            onTap: () => _go('quick_add_meal'),
+            isLast: true,
+          ),
       ],
     );
   }

@@ -1,9 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/application/providers/core_providers.dart';
 import '../../../../core/config/environment_config.dart';
-import '../../../../core/domain/clock/app_clock.dart';
 import '../../../../core/domain/value_objects/local_date.dart';
-import '../../../goals/application/providers/goal_providers.dart';
 import '../../data/repositories/fake_habit_repository.dart';
 import '../../data/repositories/local_habit_repository.dart';
 import '../../domain/entities/habit.dart';
@@ -14,7 +13,8 @@ import '../../domain/repositories/habit_repository.dart';
 import '../../domain/services/habit_progress_service.dart';
 import '../../domain/services/habit_schedule_service.dart';
 
-final appClockProvider = Provider<AppClock>((ref) => const SystemAppClock());
+export '../../../../core/application/providers/core_providers.dart'
+    show appClockProvider, sharedPreferencesProvider, uuidProvider;
 
 final habitScheduleServiceProvider = Provider<HabitScheduleService>(
   (ref) => const HabitScheduleService(),

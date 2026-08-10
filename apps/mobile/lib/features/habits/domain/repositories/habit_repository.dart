@@ -1,6 +1,7 @@
 import '../../../../core/domain/value_objects/local_date.dart';
 import '../entities/habit.dart';
 import '../entities/habit_check_in.dart';
+import '../entities/habit_history.dart';
 import '../entities/habit_progress.dart';
 
 abstract class HabitRepository {
@@ -14,6 +15,12 @@ abstract class HabitRepository {
   Future<Habit> archiveHabit(String id);
   Future<Habit> restoreHabit(String id);
   Future<void> deleteHabit(String id);
+
+  /// Effective-dated schedule/target history for [habitId], oldest first.
+  Future<List<HabitScheduleRevision>> getScheduleRevisions(String habitId);
+
+  /// Pause/active/archive status history for [habitId], oldest first.
+  Future<List<HabitStatusPeriod>> getStatusPeriods(String habitId);
 
   Stream<List<HabitCheckIn>> watchCheckIns();
   Future<List<HabitCheckIn>> getCheckInsForHabit(String habitId);

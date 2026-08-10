@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/domain/value_objects/local_date.dart';
 import '../../../../core/errors/app_exception.dart';
-import '../../../goals/application/providers/goal_providers.dart';
 import '../../domain/entities/habit.dart';
 import '../../domain/entities/habit_enums.dart';
 import '../providers/habit_providers.dart';

@@ -8,6 +8,7 @@ import '../../../../core/domain/value_objects/local_date.dart';
 import '../../domain/entities/habit.dart';
 import '../../domain/entities/habit_check_in.dart';
 import '../../domain/entities/habit_enums.dart';
+import '../../domain/entities/habit_history.dart';
 import '../../domain/entities/habit_progress.dart';
 import '../../domain/repositories/habit_repository.dart';
 import '../../domain/services/habit_progress_service.dart';
@@ -16,14 +17,23 @@ import '../seed/habits_seed.dart';
 
 /// Local JSON persistence for Habits (SharedPreferences).
 ///
-/// Schema:
+/// Schema (v2):
 /// ```json
 /// {
-///   "schemaVersion": 1,
+///   "schemaVersion": 2,
 ///   "habits": [ /* Habit.toJson() */ ],
-///   "checkIns": [ /* HabitCheckIn.toJson() */ ]
+///   "checkIns": [ /* HabitCheckIn.toJson() */ ],
+///   "scheduleRevisions": [ /* HabitScheduleRevision.toJson() */ ],
+///   "statusPeriods": [ /* HabitStatusPeriod.toJson() */ ]
 /// }
 /// ```
+///
+/// v1 → v2 migration: any Habit found without schedule-revision or
+/// status-period history (i.e. every Habit persisted before history
+/// tracking existed) is backfilled with one initial [HabitScheduleRevision]
+/// and one open [HabitStatusPeriod] synthesized from its *current* fields,
+/// effective from its `startDate`. This runs once per load and re-persists
+/// immediately so it only happens the first time a v1 document is opened.
 ///
 /// Flag `memy_habits_initialized_v1` ensures demo seed runs only once.
 /// Deleting all Habits does not reseed.
@@ -40,7 +50,7 @@ class LocalHabitRepository implements HabitRepository {
            progressService ??
            HabitProgressService(scheduleService: const HabitScheduleService());
 
-  static const int schemaVersion = 1;
+  static const int schemaVersion = 2;
   static const String storageKey = 'memy_habits_v1';
   static const String initializedKey = 'memy_habits_initialized_v1';
 
@@ -58,6 +68,8 @@ class LocalHabitRepository implements HabitRepository {
 
   List<Habit> _habits = const [];
   List<HabitCheckIn> _checkIns = const [];
+  List<HabitScheduleRevision> _scheduleRevisions = const [];
+  List<HabitStatusPeriod> _statusPeriods = const [];
 
   void dispose() {
     _habitController.close();
@@ -81,11 +93,15 @@ class LocalHabitRepository implements HabitRepository {
         seedCheckInsBuilder?.call(today, now) ??
             HabitsSeed.demoCheckIns(today: today, now: now),
       );
+      _ensureHistoryForAllHabits();
       await _persist();
       await prefs.setBool(initializedKey, true);
       return;
     }
     _readFromDisk();
+    if (_ensureHistoryForAllHabits()) {
+      await _persist();
+    }
   }
 
   void _readFromDisk() {
@@ -93,6 +109,8 @@ class LocalHabitRepository implements HabitRepository {
     if (raw == null || raw.isEmpty) {
       _habits = const [];
       _checkIns = const [];
+      _scheduleRevisions = const [];
+      _statusPeriods = const [];
       return;
     }
     try {
@@ -100,13 +118,18 @@ class LocalHabitRepository implements HabitRepository {
       if (decoded is! Map) {
         _habits = const [];
         _checkIns = const [];
+        _scheduleRevisions = const [];
+        _statusPeriods = const [];
         return;
       }
       final map = Map<String, dynamic>.from(decoded);
       final version = (map['schemaVersion'] as num?)?.toInt() ?? 0;
-      if (version != schemaVersion && version != 0) {
+      if (version > schemaVersion) {
+        // Unknown future format — be safe rather than misinterpret it.
         _habits = const [];
         _checkIns = const [];
+        _scheduleRevisions = const [];
+        _statusPeriods = const [];
         return;
       }
 
@@ -146,13 +169,96 @@ class LocalHabitRepository implements HabitRepository {
         }
       }
 
+      final revisions = <HabitScheduleRevision>[];
+      final revisionList = map['scheduleRevisions'];
+      if (revisionList is List) {
+        for (final item in revisionList) {
+          final parsed = item is Map<String, dynamic>
+              ? HabitScheduleRevision.tryFromJson(item)
+              : item is Map
+              ? HabitScheduleRevision.tryFromJson(
+                  Map<String, dynamic>.from(item),
+                )
+              : null;
+          if (parsed != null) revisions.add(parsed);
+        }
+      }
+
+      final periods = <HabitStatusPeriod>[];
+      final periodList = map['statusPeriods'];
+      if (periodList is List) {
+        for (final item in periodList) {
+          final parsed = item is Map<String, dynamic>
+              ? HabitStatusPeriod.tryFromJson(item)
+              : item is Map
+              ? HabitStatusPeriod.tryFromJson(Map<String, dynamic>.from(item))
+              : null;
+          if (parsed != null) periods.add(parsed);
+        }
+      }
+
       _habits = List<Habit>.unmodifiable(habits);
       _checkIns = List<HabitCheckIn>.unmodifiable(byKey.values.toList());
+      _scheduleRevisions = List<HabitScheduleRevision>.unmodifiable(revisions);
+      _statusPeriods = List<HabitStatusPeriod>.unmodifiable(periods);
     } catch (_) {
       // Malformed blob → empty-safe; do not wipe initialized flag.
       _habits = const [];
       _checkIns = const [];
+      _scheduleRevisions = const [];
+      _statusPeriods = const [];
     }
+  }
+
+  /// Backfills an initial [HabitScheduleRevision] / open [HabitStatusPeriod]
+  /// for any Habit that has none (v1 data, or any other gap). Returns true
+  /// when it added anything so the caller knows to re-persist.
+  bool _ensureHistoryForAllHabits() {
+    final revisionHabitIds = _scheduleRevisions.map((r) => r.habitId).toSet();
+    final periodHabitIds = _statusPeriods.map((p) => p.habitId).toSet();
+    final newRevisions = <HabitScheduleRevision>[];
+    final newPeriods = <HabitStatusPeriod>[];
+    for (final habit in _habits) {
+      if (!revisionHabitIds.contains(habit.id)) {
+        newRevisions.add(_initialRevisionFor(habit));
+      }
+      if (!periodHabitIds.contains(habit.id)) {
+        newPeriods.add(_initialPeriodFor(habit));
+      }
+    }
+    if (newRevisions.isEmpty && newPeriods.isEmpty) return false;
+    if (newRevisions.isNotEmpty) {
+      _scheduleRevisions = [..._scheduleRevisions, ...newRevisions];
+    }
+    if (newPeriods.isNotEmpty) {
+      _statusPeriods = [..._statusPeriods, ...newPeriods];
+    }
+    return true;
+  }
+
+  HabitScheduleRevision _initialRevisionFor(Habit habit) {
+    return HabitScheduleRevision(
+      id: _newId(),
+      habitId: habit.id,
+      effectiveFrom: habit.startDate,
+      goalType: habit.goalType,
+      targetValue: habit.targetValue,
+      unitLabel: habit.unitLabel,
+      frequencyType: habit.frequencyType,
+      selectedWeekdays: habit.selectedWeekdays,
+      timesPerWeek: habit.timesPerWeek,
+      createdAt: habit.createdAt,
+    );
+  }
+
+  HabitStatusPeriod _initialPeriodFor(Habit habit) {
+    return HabitStatusPeriod(
+      id: _newId(),
+      habitId: habit.id,
+      status: habit.status,
+      effectiveFrom: habit.startDate,
+      createdAt: habit.createdAt,
+    );
   }
 
   Future<void> _persist() async {
@@ -160,6 +266,8 @@ class LocalHabitRepository implements HabitRepository {
       'schemaVersion': schemaVersion,
       'habits': _habits.map((h) => h.toJson()).toList(),
       'checkIns': _checkIns.map((c) => c.toJson()).toList(),
+      'scheduleRevisions': _scheduleRevisions.map((r) => r.toJson()).toList(),
+      'statusPeriods': _statusPeriods.map((p) => p.toJson()).toList(),
     });
     await prefs.setString(storageKey, payload);
     _habitController.add(List.unmodifiable(_habits));
@@ -170,6 +278,89 @@ class LocalHabitRepository implements HabitRepository {
 
   String _newId() =>
       idGenerator?.call() ?? 'habit_${_clock.now().microsecondsSinceEpoch}';
+
+  bool _scheduleFieldsEqual(Habit a, Habit b) {
+    if (a.goalType != b.goalType) return false;
+    if (a.targetValue != b.targetValue) return false;
+    if (a.unitLabel != b.unitLabel) return false;
+    if (a.frequencyType != b.frequencyType) return false;
+    if (a.timesPerWeek != b.timesPerWeek) return false;
+    if (a.selectedWeekdays.length != b.selectedWeekdays.length) return false;
+    for (var i = 0; i < a.selectedWeekdays.length; i++) {
+      if (a.selectedWeekdays[i] != b.selectedWeekdays[i]) return false;
+    }
+    return true;
+  }
+
+  /// Appends a new revision effective today when [updated]'s schedule/target
+  /// differs from [previous]. Historical dates keep resolving against prior
+  /// revisions — this never rewrites the past.
+  void _appendRevisionIfScheduleChanged(Habit previous, Habit updated) {
+    if (_scheduleFieldsEqual(previous, updated)) return;
+    _scheduleRevisions = [
+      ..._scheduleRevisions,
+      HabitScheduleRevision(
+        id: _newId(),
+        habitId: updated.id,
+        effectiveFrom: _today,
+        goalType: updated.goalType,
+        targetValue: updated.targetValue,
+        unitLabel: updated.unitLabel,
+        frequencyType: updated.frequencyType,
+        selectedWeekdays: updated.selectedWeekdays,
+        timesPerWeek: updated.timesPerWeek,
+        createdAt: _clock.now(),
+      ),
+    ];
+  }
+
+  /// Closes the open status period (if any) and opens a new one effective
+  /// today. No-op when [habitId]'s open period already has [newStatus].
+  void _transitionStatusPeriod(String habitId, HabitStatus newStatus) {
+    final today = _today;
+    final openIndex = _statusPeriods.indexWhere(
+      (p) => p.habitId == habitId && p.effectiveUntil == null,
+    );
+    final next = [..._statusPeriods];
+    if (openIndex >= 0) {
+      final open = next[openIndex];
+      if (open.status == newStatus) return;
+      next[openIndex] = HabitStatusPeriod(
+        id: open.id,
+        habitId: open.habitId,
+        status: open.status,
+        effectiveFrom: open.effectiveFrom,
+        effectiveUntil: today.addDays(-1),
+        createdAt: open.createdAt,
+      );
+    }
+    next.add(
+      HabitStatusPeriod(
+        id: _newId(),
+        habitId: habitId,
+        status: newStatus,
+        effectiveFrom: today,
+        createdAt: _clock.now(),
+      ),
+    );
+    _statusPeriods = next;
+  }
+
+  Map<String, List<HabitScheduleRevision>> get _revisionsByHabitId {
+    final map = <String, List<HabitScheduleRevision>>{};
+    for (final r in _scheduleRevisions) {
+      (map[r.habitId] ??= <HabitScheduleRevision>[]).add(r);
+    }
+    return map;
+  }
+
+  Map<String, List<HabitStatusPeriod>> get _statusPeriodsByHabitId {
+    final map = <String, List<HabitStatusPeriod>>{};
+    for (final p in _statusPeriods) {
+      (map[p.habitId] ??= <HabitStatusPeriod>[]).add(p);
+    }
+    return map;
+  }
 
   @override
   Stream<List<Habit>> watchHabits() async* {
@@ -205,6 +396,8 @@ class LocalHabitRepository implements HabitRepository {
     await ensureInitialized();
     final withId = habit.id.isEmpty ? habit.copyWith(id: _newId()) : habit;
     _habits = [..._habits, withId];
+    _scheduleRevisions = [..._scheduleRevisions, _initialRevisionFor(withId)];
+    _statusPeriods = [..._statusPeriods, _initialPeriodFor(withId)];
     await _persist();
     return withId;
   }
@@ -214,9 +407,14 @@ class LocalHabitRepository implements HabitRepository {
     await ensureInitialized();
     final idx = _habits.indexWhere((h) => h.id == habit.id);
     if (idx < 0) throw StateError('Habit not found: ${habit.id}');
+    final previous = _habits[idx];
     final next = [..._habits];
     next[idx] = habit;
     _habits = next;
+    _appendRevisionIfScheduleChanged(previous, habit);
+    if (previous.status != habit.status) {
+      _transitionStatusPeriod(habit.id, habit.status);
+    }
     await _persist();
     return habit;
   }
@@ -251,6 +449,10 @@ class LocalHabitRepository implements HabitRepository {
     await ensureInitialized();
     _habits = _habits.where((h) => h.id != id).toList();
     _checkIns = _checkIns.where((c) => c.habitId != id).toList();
+    _scheduleRevisions = _scheduleRevisions
+        .where((r) => r.habitId != id)
+        .toList();
+    _statusPeriods = _statusPeriods.where((p) => p.habitId != id).toList();
     await _persist();
   }
 
@@ -276,6 +478,24 @@ class LocalHabitRepository implements HabitRepository {
   }
 
   @override
+  Future<List<HabitScheduleRevision>> getScheduleRevisions(
+    String habitId,
+  ) async {
+    await ensureInitialized();
+    return _scheduleRevisions
+        .where((r) => r.habitId == habitId)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<List<HabitStatusPeriod>> getStatusPeriods(String habitId) async {
+    await ensureInitialized();
+    return _statusPeriods
+        .where((p) => p.habitId == habitId)
+        .toList(growable: false);
+  }
+
+  @override
   Future<HabitCheckIn> upsertCheckIn(HabitCheckInDraft draft) async {
     await ensureInitialized();
     final today = _today;
@@ -284,8 +504,22 @@ class LocalHabitRepository implements HabitRepository {
     }
     final habit = await getHabit(draft.habitId);
     if (habit == null) throw StateError('Habit not found: ${draft.habitId}');
-    final value = normalizedCheckInValue(habit, draft.value);
-    final completed = isHabitValueCompleted(habit, value);
+
+    // Resolve goal/target as of the check-in's date (not the habit's current
+    // fields) so a later schedule/target edit never rewrites the completion
+    // outcome of a backfilled past check-in.
+    final revisions = _revisionsByHabitId[habit.id] ?? const [];
+    final fields = _progress.scheduleService.fieldsOn(
+      habit,
+      revisions,
+      draft.localDate,
+    );
+    final value = normalizeValueFor(fields.goalType, draft.value);
+    final completed = isValueCompletedFor(
+      fields.goalType,
+      fields.targetValue,
+      value,
+    );
     final now = _clock.now();
     final existingIndex = _checkIns.indexWhere(
       (c) => c.habitId == draft.habitId && c.localDate == draft.localDate,
@@ -338,21 +572,37 @@ class LocalHabitRepository implements HabitRepository {
   Future<List<HabitTodayItem>> getTodayItems(LocalDate date) async {
     await ensureInitialized();
     return _progress
-        .overview(habits: _habits, checkIns: _checkIns, date: date)
+        .overview(
+          habits: _habits,
+          checkIns: _checkIns,
+          date: date,
+          revisionsByHabitId: _revisionsByHabitId,
+          statusPeriodsByHabitId: _statusPeriodsByHabitId,
+        )
         .items;
   }
 
   @override
   Future<HabitsOverviewSummary> getOverview(LocalDate date) async {
     await ensureInitialized();
-    return _progress.overview(habits: _habits, checkIns: _checkIns, date: date);
+    return _progress.overview(
+      habits: _habits,
+      checkIns: _checkIns,
+      date: date,
+      revisionsByHabitId: _revisionsByHabitId,
+      statusPeriodsByHabitId: _statusPeriodsByHabitId,
+    );
   }
 
   @override
   Future<void> refresh() async {
     await ensureInitialized();
     _readFromDisk();
-    _habitController.add(List.unmodifiable(_habits));
-    _checkInController.add(List.unmodifiable(_checkIns));
+    if (_ensureHistoryForAllHabits()) {
+      await _persist();
+    } else {
+      _habitController.add(List.unmodifiable(_habits));
+      _checkInController.add(List.unmodifiable(_checkIns));
+    }
   }
 }

@@ -2,6 +2,7 @@ import '../../../../core/domain/value_objects/local_date.dart';
 import '../entities/habit.dart';
 import '../entities/habit_check_in.dart';
 import '../entities/habit_enums.dart';
+import '../entities/habit_history.dart';
 import '../entities/habit_progress.dart';
 import 'habit_schedule_service.dart';
 
@@ -12,12 +13,21 @@ import 'habit_schedule_service.dart';
 /// - An incomplete **current** day does not break the streak until the day ends.
 /// - Times-per-week: consecutive successful **calendar weeks** (Monday start).
 ///   An incomplete current week does not break the streak until the week ends.
+///
+/// History awareness: every method accepts optional [revisions] /
+/// [statusPeriods] (default `const []`), forwarded to [HabitScheduleService]
+/// so scheduling/target resolution is effective-dated. Completion itself is
+/// never recomputed from history — each [HabitCheckIn.isCompleted] flag is
+/// fixed at write time against the schedule/target applicable on that
+/// check-in's date, so later edits cannot rewrite past outcomes.
 class HabitProgressService {
   HabitProgressService({
     HabitScheduleService scheduleService = const HabitScheduleService(),
   }) : _schedule = scheduleService;
 
   final HabitScheduleService _schedule;
+
+  HabitScheduleService get scheduleService => _schedule;
 
   HabitCheckIn? checkInForDate(
     List<HabitCheckIn> checkIns,
@@ -44,20 +54,30 @@ class HabitProgressService {
     required List<HabitCheckIn> checkIns,
     required LocalDate date,
     required LocalDate today,
+    List<HabitScheduleRevision> revisions = const [],
+    List<HabitStatusPeriod> statusPeriods = const [],
   }) {
-    final scheduled = _schedule.isScheduledOn(habit, date);
+    final scheduled = _schedule.isScheduledOn(
+      habit,
+      date,
+      revisions: revisions,
+      statusPeriods: statusPeriods,
+    );
     final value = valueOn(habit, checkIns, date);
+    final targetValue = _schedule.fieldsOn(habit, revisions, date).targetValue;
     final streak = streakSummary(
       habit: habit,
       checkIns: checkIns,
       today: today,
+      revisions: revisions,
+      statusPeriods: statusPeriods,
     );
     return HabitTodayItem(
       habit: habit,
       date: date,
       isScheduled: scheduled,
       value: value,
-      targetValue: habit.targetValue,
+      targetValue: targetValue,
       isCompleted: isCompletedOn(habit, checkIns, date),
       currentStreak: streak.currentStreak,
     );
@@ -67,6 +87,8 @@ class HabitProgressService {
     required Habit habit,
     required List<HabitCheckIn> checkIns,
     required LocalDate anyDayInWeek,
+    List<HabitScheduleRevision> revisions = const [],
+    List<HabitStatusPeriod> statusPeriods = const [],
   }) {
     final weekStart = anyDayInWeek.startOfWeek();
     final weekEnd = weekStart.addDays(6);
@@ -74,13 +96,21 @@ class HabitProgressService {
       habit,
       weekStart,
       weekEnd,
+      revisions: revisions,
+      statusPeriods: statusPeriods,
     );
 
+    final fields = _schedule.fieldsOn(habit, revisions, anyDayInWeek);
     int scheduledCount;
     int completedCount;
 
-    if (habit.frequencyType == HabitFrequencyType.timesPerWeek) {
-      scheduledCount = _schedule.scheduledCountInWeek(habit, anyDayInWeek);
+    if (fields.frequencyType == HabitFrequencyType.timesPerWeek) {
+      scheduledCount = _schedule.scheduledCountInWeek(
+        habit,
+        anyDayInWeek,
+        revisions: revisions,
+        statusPeriods: statusPeriods,
+      );
       completedCount = scheduledDates
           .where((d) => isCompletedOn(habit, checkIns, d))
           .length;
@@ -111,17 +141,34 @@ class HabitProgressService {
     required Habit habit,
     required List<HabitCheckIn> checkIns,
     required LocalDate today,
+    List<HabitScheduleRevision> revisions = const [],
+    List<HabitStatusPeriod> statusPeriods = const [],
   }) {
-    if (habit.frequencyType == HabitFrequencyType.timesPerWeek) {
-      return _weekStreak(habit: habit, checkIns: checkIns, today: today);
+    final fields = _schedule.fieldsOn(habit, revisions, today);
+    if (fields.frequencyType == HabitFrequencyType.timesPerWeek) {
+      return _weekStreak(
+        habit: habit,
+        checkIns: checkIns,
+        today: today,
+        revisions: revisions,
+        statusPeriods: statusPeriods,
+      );
     }
-    return _occurrenceStreak(habit: habit, checkIns: checkIns, today: today);
+    return _occurrenceStreak(
+      habit: habit,
+      checkIns: checkIns,
+      today: today,
+      revisions: revisions,
+      statusPeriods: statusPeriods,
+    );
   }
 
   HabitStreakSummary _occurrenceStreak({
     required Habit habit,
     required List<HabitCheckIn> checkIns,
     required LocalDate today,
+    required List<HabitScheduleRevision> revisions,
+    required List<HabitStatusPeriod> statusPeriods,
   }) {
     final start = habit.startDate;
     if (today.isBefore(start)) {
@@ -133,7 +180,15 @@ class HabitProgressService {
     }
 
     // Build chronological list of scheduled dates from start through today.
-    final dates = _schedule.scheduledDatesInRange(habit, start, today);
+    // Paused/archived periods covering a date exclude it here too, so a
+    // pause mid-streak correctly breaks/excludes those days from the run.
+    final dates = _schedule.scheduledDatesInRange(
+      habit,
+      start,
+      today,
+      revisions: revisions,
+      statusPeriods: statusPeriods,
+    );
     if (dates.isEmpty) {
       return const HabitStreakSummary(
         currentStreak: 0,
@@ -185,6 +240,8 @@ class HabitProgressService {
     required Habit habit,
     required List<HabitCheckIn> checkIns,
     required LocalDate today,
+    required List<HabitScheduleRevision> revisions,
+    required List<HabitStatusPeriod> statusPeriods,
   }) {
     final startWeek = habit.startDate.startOfWeek();
     final currentWeek = today.startOfWeek();
@@ -208,8 +265,11 @@ class HabitProgressService {
         habit: habit,
         checkIns: checkIns,
         anyDayInWeek: weekStart,
+        revisions: revisions,
+        statusPeriods: statusPeriods,
       );
-      final needed = habit.timesPerWeek ?? 1;
+      final needed =
+          _schedule.fieldsOn(habit, revisions, weekStart).timesPerWeek ?? 1;
       return summary.completedCount >= needed;
     }
 
@@ -252,6 +312,8 @@ class HabitProgressService {
     required Habit habit,
     required List<HabitCheckIn> checkIns,
     required LocalDate today,
+    List<HabitScheduleRevision> revisions = const [],
+    List<HabitStatusPeriod> statusPeriods = const [],
   }) {
     return HabitProgressSummary(
       habit: habit,
@@ -260,12 +322,22 @@ class HabitProgressService {
         checkIns: checkIns,
         date: today,
         today: today,
+        revisions: revisions,
+        statusPeriods: statusPeriods,
       ),
-      streak: streakSummary(habit: habit, checkIns: checkIns, today: today),
+      streak: streakSummary(
+        habit: habit,
+        checkIns: checkIns,
+        today: today,
+        revisions: revisions,
+        statusPeriods: statusPeriods,
+      ),
       week: weeklySummary(
         habit: habit,
         checkIns: checkIns,
         anyDayInWeek: today,
+        revisions: revisions,
+        statusPeriods: statusPeriods,
       ),
     );
   }
@@ -274,13 +346,36 @@ class HabitProgressService {
     required List<Habit> habits,
     required List<HabitCheckIn> checkIns,
     required LocalDate date,
+    Map<String, List<HabitScheduleRevision>> revisionsByHabitId = const {},
+    Map<String, List<HabitStatusPeriod>> statusPeriodsByHabitId = const {},
   }) {
-    final active = habits.where((h) => h.status == HabitStatus.active).toList();
+    // Status effective on [date] (not necessarily the Habit's current
+    // status) so browsing a past date still reflects who was active then.
+    final active = habits.where((h) {
+      final periods = statusPeriodsByHabitId[h.id] ?? const [];
+      return _schedule.statusOn(h, periods, date) == HabitStatus.active;
+    }).toList();
     final items = <HabitTodayItem>[];
     for (final habit in active) {
-      if (!_schedule.isScheduledOn(habit, date)) continue;
+      final revisions = revisionsByHabitId[habit.id] ?? const [];
+      final periods = statusPeriodsByHabitId[habit.id] ?? const [];
+      if (!_schedule.isScheduledOn(
+        habit,
+        date,
+        revisions: revisions,
+        statusPeriods: periods,
+      )) {
+        continue;
+      }
       items.add(
-        todayItem(habit: habit, checkIns: checkIns, date: date, today: date),
+        todayItem(
+          habit: habit,
+          checkIns: checkIns,
+          date: date,
+          today: date,
+          revisions: revisions,
+          statusPeriods: periods,
+        ),
       );
     }
 
@@ -290,10 +385,14 @@ class HabitProgressService {
     var weekScheduled = 0;
     var weekCompleted = 0;
     for (final habit in active) {
+      final revisions = revisionsByHabitId[habit.id] ?? const [];
+      final periods = statusPeriodsByHabitId[habit.id] ?? const [];
       final streak = streakSummary(
         habit: habit,
         checkIns: checkIns,
         today: date,
+        revisions: revisions,
+        statusPeriods: periods,
       );
       if (streak.currentStreak > bestStreak) {
         bestStreak = streak.currentStreak;
@@ -302,6 +401,8 @@ class HabitProgressService {
         habit: habit,
         checkIns: checkIns,
         anyDayInWeek: date,
+        revisions: revisions,
+        statusPeriods: periods,
       );
       weekScheduled += week.scheduledCount;
       weekCompleted += week.completedCount;

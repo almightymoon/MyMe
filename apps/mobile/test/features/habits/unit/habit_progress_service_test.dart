@@ -98,7 +98,7 @@ void main() {
 
   group('daily occurrence streak', () {
     final h = habit(startDate: LocalDate(2026, 8, 5));
-    const today = LocalDate(2026, 8, 9); // Tue–Sat scheduled Aug 5–9
+    final today = LocalDate(2026, 8, 9); // Tue–Sat scheduled Aug 5–9
 
     test('no check-ins yields zero streak', () {
       final streak = progress.streakSummary(
@@ -169,7 +169,7 @@ void main() {
         checkIn(habitId: h.id, date: LocalDate(2026, 8, 5), value: 1),
         checkIn(habitId: h.id, date: LocalDate(2026, 8, 7), value: 1),
       ];
-      const today = LocalDate(2026, 8, 9);
+      final today = LocalDate(2026, 8, 9);
       final streak = progress.streakSummary(
         habit: h,
         checkIns: checkIns,
@@ -190,7 +190,7 @@ void main() {
         checkIn(habitId: h.id, date: LocalDate(2026, 8, 5), value: 1),
         checkIn(habitId: h.id, date: LocalDate(2026, 8, 6), value: 1),
       ];
-      const today = LocalDate(2026, 8, 9);
+      final today = LocalDate(2026, 8, 9);
       final streak = progress.streakSummary(
         habit: h,
         checkIns: checkIns,
@@ -216,7 +216,7 @@ void main() {
         checkIn(habitId: h.id, date: LocalDate(2026, 7, 28), value: 1),
         checkIn(habitId: h.id, date: LocalDate(2026, 7, 30), value: 1),
       ];
-      const today = LocalDate(2026, 8, 9);
+      final today = LocalDate(2026, 8, 9);
       final streak = progress.streakSummary(
         habit: h,
         checkIns: checkIns,
@@ -233,7 +233,7 @@ void main() {
         // current week Aug 3–9: only one completion so far
         checkIn(habitId: h.id, date: LocalDate(2026, 8, 4), value: 1),
       ];
-      const today = LocalDate(2026, 8, 9);
+      final today = LocalDate(2026, 8, 9);
       final streak = progress.streakSummary(
         habit: h,
         checkIns: checkIns,

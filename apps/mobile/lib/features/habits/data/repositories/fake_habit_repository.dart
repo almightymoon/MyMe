@@ -5,6 +5,7 @@ import '../../../../core/domain/value_objects/local_date.dart';
 import '../../domain/entities/habit.dart';
 import '../../domain/entities/habit_check_in.dart';
 import '../../domain/entities/habit_enums.dart';
+import '../../domain/entities/habit_history.dart';
 import '../../domain/entities/habit_progress.dart';
 import '../../domain/repositories/habit_repository.dart';
 import '../../domain/services/habit_progress_service.dart';
@@ -245,5 +246,48 @@ class FakeHabitRepository implements HabitRepository {
   Future<void> refresh() async {
     await _guard();
     _emit();
+  }
+
+  /// The Fake repository has no real history store — it synthesizes a
+  /// single revision from the Habit's current fields on each call so
+  /// callers depending on [HabitRepository]'s history API keep working in
+  /// demo mode without persisting anything extra.
+  @override
+  Future<List<HabitScheduleRevision>> getScheduleRevisions(
+    String habitId,
+  ) async {
+    await _guard();
+    final habit = await getHabit(habitId);
+    if (habit == null) return const [];
+    return [
+      HabitScheduleRevision(
+        id: 'fake_revision_$habitId',
+        habitId: habitId,
+        effectiveFrom: habit.startDate,
+        goalType: habit.goalType,
+        targetValue: habit.targetValue,
+        unitLabel: habit.unitLabel,
+        frequencyType: habit.frequencyType,
+        selectedWeekdays: habit.selectedWeekdays,
+        timesPerWeek: habit.timesPerWeek,
+        createdAt: habit.createdAt,
+      ),
+    ];
+  }
+
+  @override
+  Future<List<HabitStatusPeriod>> getStatusPeriods(String habitId) async {
+    await _guard();
+    final habit = await getHabit(habitId);
+    if (habit == null) return const [];
+    return [
+      HabitStatusPeriod(
+        id: 'fake_period_$habitId',
+        habitId: habitId,
+        status: habit.status,
+        effectiveFrom: habit.startDate,
+        createdAt: habit.createdAt,
+      ),
+    ];
   }
 }

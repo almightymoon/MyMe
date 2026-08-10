@@ -102,17 +102,30 @@ class HabitCheckInDraft {
   final String? note;
 }
 
-bool isHabitValueCompleted(Habit habit, int value) {
+/// History-aware completion check — accepts the goal type/target applicable
+/// on the check-in's date (from an effective-dated [HabitScheduleRevision])
+/// rather than the Habit's current fields, so later schedule edits never
+/// rewrite the completion outcome of past check-ins.
+bool isValueCompletedFor(HabitGoalType goalType, int targetValue, int value) {
   if (value < 0) return false;
-  return value >= habit.targetValue;
+  return value >= targetValue;
 }
 
-int normalizedCheckInValue(Habit habit, int value) {
+/// History-aware normalization — see [isValueCompletedFor].
+int normalizeValueFor(HabitGoalType goalType, int value) {
   if (value < 0) {
     throw ArgumentError.value(value, 'value', 'must be non-negative');
   }
-  if (habit.goalType == HabitGoalType.binary) {
+  if (goalType == HabitGoalType.binary) {
     return value >= 1 ? 1 : 0;
   }
   return value;
+}
+
+bool isHabitValueCompleted(Habit habit, int value) {
+  return isValueCompletedFor(habit.goalType, habit.targetValue, value);
+}
+
+int normalizedCheckInValue(Habit habit, int value) {
+  return normalizeValueFor(habit.goalType, value);
 }

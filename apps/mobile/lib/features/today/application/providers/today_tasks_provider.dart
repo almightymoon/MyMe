@@ -1,11 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/config/environment_config.dart';
 import '../../data/seed/today_tasks_seed.dart';
 import '../../domain/entities/today_task.dart';
 
 class TodayTasksNotifier extends StateNotifier<List<TodayTask>> {
   TodayTasksNotifier({List<TodayTask>? initial})
-    : super(initial ?? TodayTasksSeed.demoTasks());
+    : super(
+        initial ??
+            (EnvironmentConfig.shouldSeedDemoContent
+                ? TodayTasksSeed.demoTasks()
+                : const []),
+      );
 
   void toggle(String id) {
     state = [
@@ -30,7 +36,9 @@ class TodayTasksNotifier extends StateNotifier<List<TodayTask>> {
   }
 
   void resetDemo() {
-    state = TodayTasksSeed.demoTasks();
+    state = EnvironmentConfig.shouldSeedDemoContent
+        ? TodayTasksSeed.demoTasks()
+        : const [];
   }
 }
 

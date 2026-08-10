@@ -6,10 +6,10 @@ import '../../../app/router/route_names.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
+import '../../../core/config/release_capabilities.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/errors/app_exception.dart';
 import '../../../core/widgets/inline_error_card.dart';
-import '../../../core/widgets/life_score_ring.dart';
 import '../../../core/widgets/loading_card_skeleton.dart';
 import '../../../core/widgets/memy_card.dart';
 import '../../../core/widgets/memy_chrome.dart';
@@ -24,6 +24,8 @@ class MoreScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(userProfileProvider);
+    final capabilities = ref.watch(releaseCapabilitiesProvider);
+    final modules = _visibleModuleItems(capabilities);
 
     return SafeArea(
       bottom: false,
@@ -70,30 +72,25 @@ class MoreScreen extends ConsumerWidget {
             MemyCard(
               key: const Key('insights_life_trend'),
               padding: const EdgeInsets.fromLTRB(20, 20, 18, 18),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Life Score trend', style: AppTextStyles.kicker()),
-                        const SizedBox(height: 4),
-                        Text(
-                          '+6%',
-                          style: AppTextStyles.mono(
-                            fontSize: 32,
-                          ).copyWith(fontWeight: FontWeight.w700),
-                        ),
-                        Text(
-                          'vs last week',
-                          style: AppTextStyles.bodySmall(
-                            color: AppColors.faintText,
-                          ),
-                        ),
-                      ],
-                    ),
+                  Text(
+                    AppStrings.insightsPlaceholderTitle,
+                    style: AppTextStyles.kicker(),
                   ),
-                  const LifeScoreRing(score: 84, size: 84),
+                  const SizedBox(height: 8),
+                  Text(
+                    AppStrings.insightsPlaceholderMessage,
+                    style: AppTextStyles.bodySmall(
+                      color: AppColors.secondaryText,
+                    ).copyWith(height: 1.4),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    AppStrings.samplePreviewCaption,
+                    style: AppTextStyles.labelSmall(color: AppColors.faintText),
+                  ),
                 ],
               ),
             ),
@@ -109,17 +106,17 @@ class MoreScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Saved',
+                          'Finance',
                           style: AppTextStyles.bodySmall(
                             color: AppColors.faintText,
                           ),
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'PKR 12K',
+                          'Open ledger',
                           style: AppTextStyles.titleLarge(
                             color: AppColors.finance,
-                          ).copyWith(fontSize: 22),
+                          ).copyWith(fontSize: 18),
                         ),
                       ],
                     ),
@@ -135,16 +132,16 @@ class MoreScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Goals on track',
+                          'Goals',
                           style: AppTextStyles.bodySmall(
                             color: AppColors.faintText,
                           ),
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          '3 / 4',
+                          'Review progress',
                           style: AppTextStyles.titleLarge().copyWith(
-                            fontSize: 22,
+                            fontSize: 18,
                           ),
                         ),
                       ],
@@ -179,7 +176,8 @@ class MoreScreen extends ConsumerWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Weekend spending is up 32%. Try a no-spend Saturday to stay on your emergency fund goal.',
+                      'Track Goals, Habits, and Finance on this device — '
+                      'Insights stays local and does not contact a cloud AI.',
                       style: AppTextStyles.bodySmall().copyWith(
                         fontWeight: FontWeight.w500,
                         height: 1.4,
@@ -207,10 +205,13 @@ class MoreScreen extends ConsumerWidget {
                 message: userFacingErrorMessage(error),
                 onRetry: () => ref.invalidate(userProfileProvider),
               ),
-              data: (profile) => _ProfileCard(profile: profile),
+              data: (profile) => _ProfileCard(
+                profile: profile,
+                showDemoBadge: capabilities.demoAuth,
+              ),
             ),
             const SizedBox(height: AppSpacing.sm),
-            for (final item in _moduleItems)
+            for (final item in modules)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: MemyCard(
@@ -233,9 +234,18 @@ class MoreScreen extends ConsumerWidget {
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Text(
-                          item.title,
-                          style: AppTextStyles.titleSmall(),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(item.title, style: AppTextStyles.titleSmall()),
+                            if (item.subtitle != null)
+                              Text(
+                                item.subtitle!,
+                                style: AppTextStyles.bodySmall(
+                                  color: AppColors.faintText,
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                       const Icon(Icons.chevron_right_rounded),
@@ -248,6 +258,28 @@ class MoreScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Modules linked from Insights, minus anything this build cannot ship.
+List<_MoreItem> _visibleModuleItems(ReleaseCapabilities capabilities) {
+  return [
+    for (final item in _moduleItems)
+      if (switch (item.keyName) {
+        'more_body' => capabilities.body,
+        'more_wardrobe' => capabilities.wardrobe,
+        _ => true,
+      })
+        item,
+    if (capabilities.coachPreview)
+      const _MoreItem(
+        keyName: 'more_coach_preview',
+        title: AppStrings.coachPreview,
+        subtitle: 'Local scripted demo — no live AI',
+        icon: Icons.chat_bubble_outline_rounded,
+        color: AppColors.ember,
+        path: RoutePaths.coach,
+      ),
+  ];
 }
 
 const _moduleItems = <_MoreItem>[
@@ -296,9 +328,10 @@ const _moduleItems = <_MoreItem>[
 ];
 
 class _ProfileCard extends StatelessWidget {
-  const _ProfileCard({required this.profile});
+  const _ProfileCard({required this.profile, required this.showDemoBadge});
 
   final UserProfile profile;
+  final bool showDemoBadge;
 
   @override
   Widget build(BuildContext context) {
@@ -336,8 +369,10 @@ class _ProfileCard extends StatelessWidget {
                   profile.tagline ?? AppStrings.demoContentLabel,
                   style: AppTextStyles.bodySmall(),
                 ),
-                const SizedBox(height: 4),
-                Text(AppStrings.demoMode, style: AppTextStyles.kicker()),
+                if (showDemoBadge) ...[
+                  const SizedBox(height: 4),
+                  Text(AppStrings.demoMode, style: AppTextStyles.kicker()),
+                ],
               ],
             ),
           ),
@@ -354,10 +389,12 @@ class _MoreItem {
     required this.icon,
     required this.color,
     required this.path,
+    this.subtitle,
   });
 
   final String keyName;
   final String title;
+  final String? subtitle;
   final IconData icon;
   final Color color;
   final String path;

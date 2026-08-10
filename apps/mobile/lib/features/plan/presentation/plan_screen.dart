@@ -53,7 +53,7 @@ class PlanScreen extends ConsumerWidget {
       _DashModule(
         keyName: 'dashboard_module_habits',
         title: 'Habits',
-        imageAsset: 'assets/images/modules/mod-goals.png',
+        imageAsset: 'assets/images/modules/mod-habits.png',
         path: RoutePaths.habits,
         builder: (context) => _HabitsModuleCopy(
           activeCount: habitsOverview?.activeCount ?? 0,

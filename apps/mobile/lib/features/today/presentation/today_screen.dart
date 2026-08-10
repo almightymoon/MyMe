@@ -7,6 +7,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
+import '../../../core/config/release_capabilities.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/domain/services/money_format.dart';
 import '../../../core/errors/app_exception.dart';
@@ -209,27 +210,36 @@ class _TodayLoadingBody extends StatelessWidget {
   }
 }
 
-class _TodayPopulatedBody extends StatelessWidget {
+class _TodayPopulatedBody extends ConsumerWidget {
   const _TodayPopulatedBody({super.key, required this.summary});
 
   final TodaySummary summary;
 
-  /// Prototype home uses a fixed Life Score of 84.
+  /// Prototype home uses a fixed Life Score of 84 (non-production only).
   static const int demoLifeScore = 84;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final capabilities = ref.watch(releaseCapabilitiesProvider);
+    final showDemoFigures = !capabilities.isProduction;
+
     return Column(
       children: [
-        const _LifeScoreCard(score: demoLifeScore),
+        if (showDemoFigures)
+          const _LifeScoreCard(score: demoLifeScore)
+        else
+          const _TodayBuildDayCard(),
         const SizedBox(height: 12),
-        if (summary.focus != null) ...[
+        if (showDemoFigures && summary.focus != null) ...[
           _FocusSection(focus: summary.focus!),
           const SizedBox(height: 12),
         ],
         const _ShortcutRow(),
         const SizedBox(height: 12),
-        _GlanceSection(items: summary.schedule),
+        _GlanceSection(
+          items: summary.schedule,
+          showWeather: capabilities.weather,
+        ),
         const SizedBox(height: 12),
         const _TasksSection(),
         if (summary.goals.isNotEmpty) ...[
@@ -247,6 +257,42 @@ class _TodayPopulatedBody extends StatelessWidget {
         const SizedBox(height: 12),
         const _TodayHealthCard(),
       ],
+    );
+  }
+}
+
+/// Honest production stand-in — no fabricated Life Score.
+class _TodayBuildDayCard extends StatelessWidget {
+  const _TodayBuildDayCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return MemyCard(
+      key: const Key('today_build_day'),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            AppStrings.buildYourDayTitle,
+            style: AppTextStyles.bodyMedium().copyWith(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppColors.faintText,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            AppStrings.buildYourDayMessage,
+            style: AppTextStyles.titleMedium().copyWith(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.3,
+              height: 1.35,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -274,6 +320,11 @@ class _LifeScoreCard extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                     color: AppColors.faintText,
                   ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  AppStrings.samplePreviewCaption,
+                  style: AppTextStyles.kicker(),
                 ),
                 const SizedBox(height: 4),
                 Text.rich(
@@ -680,11 +731,7 @@ class _TodayHealthCard extends ConsumerWidget {
         onTap: () => context.push(RoutePaths.healthConnect),
         child: Row(
           children: [
-            Icon(
-              Icons.favorite_rounded,
-              color: AppColors.ember,
-              size: 20,
-            ),
+            Icon(Icons.favorite_rounded, color: AppColors.ember, size: 20),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -692,11 +739,7 @@ class _TodayHealthCard extends ConsumerWidget {
                 style: AppTextStyles.bodySmall(color: AppColors.secondaryText),
               ),
             ),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 18,
-              color: AppColors.ember,
-            ),
+            Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.ember),
           ],
         ),
       );
@@ -972,9 +1015,10 @@ class _FocusSection extends StatelessWidget {
 }
 
 class _GlanceSection extends StatelessWidget {
-  const _GlanceSection({required this.items});
+  const _GlanceSection({required this.items, this.showWeather = false});
 
   final List<ScheduleItem> items;
+  final bool showWeather;
 
   static const _eventBlue = Color(0xFF2F80ED);
 
@@ -1006,48 +1050,60 @@ class _GlanceSection extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppStrings.weather,
-                      style: AppTextStyles.bodySmall().copyWith(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.faintText,
+              if (showWeather) ...[
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        AppStrings.weather,
+                        style: AppTextStyles.bodySmall().copyWith(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.faintText,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '22°C',
-                      style: AppTextStyles.displayMedium().copyWith(
-                        fontSize: 34,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -1,
-                        height: 1.1,
+                      const SizedBox(height: 2),
+                      Text(
+                        AppStrings.samplePreviewCaption,
+                        style: AppTextStyles.kicker(),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Cloudy',
-                      style: AppTextStyles.bodyMedium(
-                        color: AppColors.faintText,
-                      ).copyWith(fontSize: 14, fontWeight: FontWeight.w500),
-                    ),
-                  ],
+                      const SizedBox(height: 6),
+                      Text(
+                        '22°C',
+                        style: AppTextStyles.displayMedium().copyWith(
+                          fontSize: 34,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -1,
+                          height: 1.1,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Cloudy',
+                        style: AppTextStyles.bodyMedium(
+                          color: AppColors.faintText,
+                        ).copyWith(fontSize: 14, fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
+                const SizedBox(width: 16),
+              ],
               Flexible(
+                fit: showWeather ? FlexFit.loose : FlexFit.tight,
                 child: events.isEmpty
                     ? Text(
                         AppStrings.sectionEmptyMessage,
                         style: AppTextStyles.bodySmall(),
-                        textAlign: TextAlign.end,
+                        textAlign: showWeather
+                            ? TextAlign.end
+                            : TextAlign.start,
                       )
                     : Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                        crossAxisAlignment: showWeather
+                            ? CrossAxisAlignment.end
+                            : CrossAxisAlignment.start,
                         children: [
                           for (var i = 0; i < events.length; i++) ...[
                             if (i > 0) const SizedBox(height: 14),

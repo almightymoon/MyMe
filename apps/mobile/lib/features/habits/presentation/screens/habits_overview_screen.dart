@@ -96,7 +96,7 @@ class HabitsOverviewScreen extends ConsumerWidget {
                         message: filter == HabitsListFilter.active
                             ? 'No active habits yet. Tap + to create one.'
                             : 'No ${filter.name} habits.',
-                        icon: Icons.loop_rounded,
+                        icon: Icons.local_fire_department_rounded,
                         actionLabel: filter == HabitsListFilter.active
                             ? 'Add habit'
                             : null,
@@ -197,7 +197,7 @@ class _OverviewSummaryCard extends StatelessWidget {
               borderRadius: AppRadii.controlRadius,
             ),
             child: Icon(
-              Icons.loop_rounded,
+              Icons.local_fire_department_rounded,
               color: AppColors.habits,
               size: 28,
             ),

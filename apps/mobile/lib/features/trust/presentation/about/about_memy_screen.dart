@@ -102,7 +102,9 @@ class WhatsNewScreen extends ConsumerWidget {
       fallbackPath: RoutePaths.about,
       child: changelog.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Text('Could not load changelog: $e'),
+        error: (_, _) => const Text(
+          "Couldn't load the changelog right now. Please try again later.",
+        ),
         data: (entries) {
           if (entries.isEmpty) {
             return const Text('No changelog entries yet.');

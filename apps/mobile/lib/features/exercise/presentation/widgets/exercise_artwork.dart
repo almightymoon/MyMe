@@ -83,11 +83,7 @@ class _FallbackArt extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.fitness_center_rounded,
-            color: AppColors.ember,
-            size: 36,
-          ),
+          Icon(Icons.fitness_center_rounded, color: AppColors.ember, size: 36),
           const SizedBox(height: 8),
           Text(
             category.label,

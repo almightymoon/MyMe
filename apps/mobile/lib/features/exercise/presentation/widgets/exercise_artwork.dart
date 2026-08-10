@@ -73,7 +73,7 @@ class _FallbackArt extends StatelessWidget {
       width: width,
       height: height,
       alignment: Alignment.center,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -83,7 +83,7 @@ class _FallbackArt extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
+          Icon(
             Icons.fitness_center_rounded,
             color: AppColors.ember,
             size: 36,

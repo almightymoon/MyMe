@@ -246,7 +246,7 @@ class _AuthBackButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFFECECEE),
+      color: AppColors.hairline,
       shape: const CircleBorder(),
       child: InkWell(
         customBorder: const CircleBorder(),

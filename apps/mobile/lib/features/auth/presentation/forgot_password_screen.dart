@@ -63,7 +63,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       Row(
                         children: [
                           Material(
-                            color: const Color(0xFFECECEE),
+                            color: AppColors.hairline,
                             shape: const CircleBorder(),
                             child: InkWell(
                               key: const Key('forgot_back'),
@@ -101,7 +101,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             borderRadius: AppRadii.cardRadius,
                             boxShadow: AppColors.softShadow,
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.lock_outline_rounded,
                             color: AppColors.ember,
                             size: 30,

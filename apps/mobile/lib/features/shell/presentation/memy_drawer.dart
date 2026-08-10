@@ -39,7 +39,7 @@ class MemyDrawer extends ConsumerWidget {
     return Drawer(
       key: const Key('memy_drawer'),
       width: width,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: AppRadii.drawerEndRadius,
       ),
@@ -71,7 +71,7 @@ class MemyDrawer extends ConsumerWidget {
                         splashColor: AppColors.ember.withValues(alpha: 0.08),
                         highlightColor: AppColors.ember.withValues(alpha: 0.04),
                         onTap: () => Navigator.of(context).pop(),
-                        child: const Center(
+                        child: Center(
                           child: Icon(
                             Icons.close_rounded,
                             size: 22,
@@ -119,7 +119,7 @@ class MemyDrawer extends ConsumerWidget {
                   ),
                 ),
               ),
-              const Divider(height: 16, color: AppColors.line),
+              Divider(height: 16, color: AppColors.line),
               SidebarFooter(
                 versionLabel: version,
                 onLogout: () => _confirmLogout(context),

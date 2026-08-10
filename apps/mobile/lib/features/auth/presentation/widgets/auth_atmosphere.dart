@@ -10,13 +10,16 @@ class AuthAtmosphere extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return DecoratedBox(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFFFFF9F5), Color(0xFFFAFAFA), Color(0xFFF5F5F7)],
-          stops: [0.0, 0.42, 1.0],
+          colors: isDark
+              ? const [Color(0xFF141218), Color(0xFF0E0E10), Color(0xFF0E0E10)]
+              : const [Color(0xFFFFF9F5), Color(0xFFFAFAFA), Color(0xFFF5F5F7)],
+          stops: const [0.0, 0.42, 1.0],
         ),
       ),
       child: Stack(
@@ -28,7 +31,7 @@ class AuthAtmosphere extends StatelessWidget {
               size: 180,
               colors: [
                 const Color(0x8CFFB478),
-                AppColors.ember.withValues(alpha: 0.12),
+                AppColors.ember.withValues(alpha: isDark ? 0.22 : 0.12),
                 Colors.transparent,
               ],
             ),
@@ -45,7 +48,7 @@ class AuthAtmosphere extends StatelessWidget {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      AppColors.ember.withValues(alpha: 0.12),
+                      AppColors.ember.withValues(alpha: isDark ? 0.18 : 0.12),
                       Colors.transparent,
                     ],
                   ),
@@ -59,7 +62,7 @@ class AuthAtmosphere extends StatelessWidget {
             child: _Orb(
               size: 140,
               colors: [
-                AppColors.ember.withValues(alpha: 0.18),
+                AppColors.ember.withValues(alpha: isDark ? 0.24 : 0.18),
                 Colors.transparent,
               ],
             ),

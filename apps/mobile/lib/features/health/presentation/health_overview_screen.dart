@@ -24,13 +24,13 @@ import 'widgets/health_metric_tile.dart';
 class HealthOverviewScreen extends ConsumerWidget {
   const HealthOverviewScreen({super.key});
 
-  static const _peachWash = BoxDecoration(
+  static BoxDecoration get _peachWash => BoxDecoration(
     color: AppColors.canvas,
     gradient: RadialGradient(
-      center: Alignment(0.55, -0.15),
+      center: const Alignment(0.55, -0.15),
       radius: 0.95,
-      colors: [Color(0x18FFAA82), AppColors.canvas],
-      stops: [0.0, 0.62],
+      colors: [AppColors.orangeSoft.withValues(alpha: 0.55), AppColors.canvas],
+      stops: const [0.0, 0.62],
     ),
   );
 

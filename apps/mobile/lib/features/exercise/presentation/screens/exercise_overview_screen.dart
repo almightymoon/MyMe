@@ -131,7 +131,7 @@ class ExerciseOverviewScreen extends StatelessWidget {
                           enabled: false,
                           shape: RoundedRectangleBorder(
                             borderRadius: AppRadii.controlRadius,
-                            side: const BorderSide(color: AppColors.line),
+                            side: BorderSide(color: AppColors.line),
                           ),
                           tileColor: AppColors.surface,
                           leading: CircleAvatar(
@@ -162,7 +162,7 @@ class ExerciseOverviewScreen extends StatelessWidget {
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(AppSpacing.minTouch),
                       foregroundColor: AppColors.primaryText,
-                      side: const BorderSide(color: AppColors.line),
+                      side: BorderSide(color: AppColors.line),
                     ),
                     onPressed: () => context.push(RoutePaths.exerciseLibrary),
                     child: Text(

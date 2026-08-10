@@ -94,7 +94,7 @@ class CalendarOverviewScreen extends ConsumerWidget {
                 key: const Key('calendar_next_month'),
                 tooltip: 'Next month',
                 onPressed: controller.nextMonth,
-                icon: const Icon(
+                icon: Icon(
                   Icons.chevron_right_rounded,
                   color: AppColors.faintText,
                 ),
@@ -325,7 +325,7 @@ class _ConflictBanner extends StatelessWidget {
       onTap: () => context.push(RoutePaths.calendarConflicts),
       child: Row(
         children: [
-          const Icon(Icons.warning_amber_rounded, color: AppColors.health),
+          Icon(Icons.warning_amber_rounded, color: AppColors.health),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
@@ -335,7 +335,7 @@ class _ConflictBanner extends StatelessWidget {
               style: AppTextStyles.bodySmall(),
             ),
           ),
-          const Icon(Icons.chevron_right_rounded, color: AppColors.faintText),
+          Icon(Icons.chevron_right_rounded, color: AppColors.faintText),
         ],
       ),
     );
@@ -355,7 +355,7 @@ class _RecoveryBanner extends StatelessWidget {
       onTap: () => context.push(RoutePaths.calendarRecovery),
       child: Row(
         children: [
-          const Icon(Icons.healing_rounded, color: AppColors.health),
+          Icon(Icons.healing_rounded, color: AppColors.health),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
@@ -365,7 +365,7 @@ class _RecoveryBanner extends StatelessWidget {
               style: AppTextStyles.bodySmall(),
             ),
           ),
-          const Icon(Icons.chevron_right_rounded, color: AppColors.faintText),
+          Icon(Icons.chevron_right_rounded, color: AppColors.faintText),
         ],
       ),
     );

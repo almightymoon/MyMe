@@ -350,7 +350,7 @@ class _TodayGoalsCard extends StatelessWidget {
                 ).copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(width: 2),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
                 size: 18,
                 color: AppColors.ember,
@@ -415,7 +415,7 @@ class _TodayGoalRow extends StatelessWidget {
           child: LinearProgressIndicator(
             value: progress,
             minHeight: 6,
-            backgroundColor: const Color(0xFFECECEE),
+            backgroundColor: AppColors.hairline,
             color: AppColors.ember,
           ),
         ),
@@ -680,7 +680,7 @@ class _TodayHealthCard extends ConsumerWidget {
         onTap: () => context.push(RoutePaths.healthConnect),
         child: Row(
           children: [
-            const Icon(
+            Icon(
               Icons.favorite_rounded,
               color: AppColors.ember,
               size: 20,
@@ -692,7 +692,7 @@ class _TodayHealthCard extends ConsumerWidget {
                 style: AppTextStyles.bodySmall(color: AppColors.secondaryText),
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
               size: 18,
               color: AppColors.ember,
@@ -765,7 +765,7 @@ class _TodayHealthCardShell extends StatelessWidget {
                 ),
               ),
               if (onTap != null)
-                const Icon(
+                Icon(
                   Icons.chevron_right_rounded,
                   size: 18,
                   color: AppColors.faintText,
@@ -860,7 +860,7 @@ class _ShortcutRow extends StatelessWidget {
           if (i > 0) const SizedBox(width: 10),
           Expanded(
             child: DecoratedBox(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.surface,
                 borderRadius: AppRadii.panelRadius,
                 boxShadow: AppColors.softShadow,
@@ -977,7 +977,11 @@ class _GlanceSection extends StatelessWidget {
   final List<ScheduleItem> items;
 
   static const _eventBlue = Color(0xFF2F80ED);
-  static const _eventBlueSoft = Color(0xFFEAF1FC);
+
+  static Color eventBlueSoft(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return dark ? const Color(0xFF1A2740) : const Color(0xFFEAF1FC);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1095,7 +1099,7 @@ class _GlanceEventRow extends StatelessWidget {
           height: 36,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: _GlanceSection._eventBlueSoft,
+            color: _GlanceSection.eventBlueSoft(context),
             borderRadius: AppRadii.thumbRadius,
           ),
           child: Icon(icon, size: 17, color: _GlanceSection._eventBlue),
@@ -1228,7 +1232,7 @@ class _TaskRow extends StatelessWidget {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 16),
         color: const Color(0x14FF3B30),
-        child: const Icon(
+        child: Icon(
           Icons.delete_outline_rounded,
           color: AppColors.health,
           size: 22,
@@ -1325,7 +1329,7 @@ class _TaskCheck extends StatelessWidget {
         shape: BoxShape.circle,
         color: done ? AppColors.ember : AppColors.surface,
         border: Border.all(
-          color: done ? AppColors.ember : const Color(0xFFD1D1D6),
+          color: done ? AppColors.ember : AppColors.navInactive,
           width: 1.5,
         ),
       ),

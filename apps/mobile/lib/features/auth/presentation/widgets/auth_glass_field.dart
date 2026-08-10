@@ -31,18 +31,21 @@ class AuthGlassField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xC7FFFFFF),
+        color: isDark ? AppColors.surface : AppColors.glass,
         borderRadius: BorderRadius.circular(AppRadii.control),
-        border: Border.all(color: const Color(0xF2FFFFFF)),
+        border: Border.all(
+          color: isDark ? AppColors.line : const Color(0xF2FFFFFF),
+        ),
         boxShadow: AppColors.softShadow,
       ),
       child: Row(
         children: [
-          Icon(prefixIcon, size: 18, color: const Color(0xFFA1A1A6)),
+          Icon(prefixIcon, size: 18, color: AppColors.navInactive),
           const SizedBox(width: 12),
           Expanded(
             child: TextField(

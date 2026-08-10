@@ -45,7 +45,7 @@ class ComingSoonView extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          const Icon(
+          Icon(
             Icons.hourglass_empty_rounded,
             size: 56,
             color: AppColors.ember,

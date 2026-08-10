@@ -16,9 +16,6 @@ class AppearanceAccessibilityScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModePreferenceProvider);
     final reduceMotion = ref.watch(reduceMotionPreferenceProvider);
-    final selected = themeMode == ThemeMode.light
-        ? ThemeMode.light
-        : ThemeMode.system;
 
     return TrustScreenScaffold(
       key: const Key('appearance_accessibility'),
@@ -47,8 +44,13 @@ class AppearanceAccessibilityScreen extends ConsumerWidget {
                       label: Text('Light'),
                       icon: Icon(Icons.wb_sunny_outlined),
                     ),
+                    ButtonSegment(
+                      value: ThemeMode.dark,
+                      label: Text('Dark'),
+                      icon: Icon(Icons.dark_mode_outlined),
+                    ),
                   ],
-                  selected: {selected},
+                  selected: {themeMode},
                   onSelectionChanged: (values) {
                     final mode = values.first;
                     ref
@@ -58,7 +60,7 @@ class AppearanceAccessibilityScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  'Dark theme is planned and not fully available yet.',
+                  'Applies across every screen, including sheets and the side menu.',
                   style: AppTextStyles.bodySmall(
                     color: AppColors.secondaryText,
                   ),

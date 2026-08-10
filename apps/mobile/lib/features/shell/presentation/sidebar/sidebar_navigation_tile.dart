@@ -78,10 +78,10 @@ class SidebarNavigationTile extends StatelessWidget {
                       ),
                     ),
                   ],
-                  const Icon(
+                  Icon(
                     Icons.chevron_right_rounded,
                     size: 14,
-                    color: Color(0xFFC7C7CC),
+                    color: AppColors.navInactive,
                   ),
                 ],
               ),

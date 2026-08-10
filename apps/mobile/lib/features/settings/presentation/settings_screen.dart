@@ -19,7 +19,11 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final version = ref.watch(appVersionLabelProvider);
     final themeMode = ref.watch(themeModePreferenceProvider);
-    final appearanceValue = themeMode == ThemeMode.light ? 'Light' : 'System';
+    final appearanceValue = switch (themeMode) {
+      ThemeMode.light => 'Light',
+      ThemeMode.dark => 'Dark',
+      ThemeMode.system => 'System',
+    };
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
@@ -162,7 +166,7 @@ class SettingsScreen extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.logout_rounded, color: AppColors.health),
+                  Icon(Icons.logout_rounded, color: AppColors.health),
                   const SizedBox(width: 8),
                   Text(
                     'Log Out',
@@ -306,7 +310,7 @@ class _SetRow extends StatelessWidget {
                   ).copyWith(fontWeight: FontWeight.w600),
                 ),
               const SizedBox(width: 4),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
                 color: AppColors.navInactive,
               ),

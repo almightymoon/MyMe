@@ -11,24 +11,25 @@ class MemyCard extends StatelessWidget {
     this.onTap,
     this.padding = const EdgeInsets.all(AppSpacing.lg),
     this.margin = EdgeInsets.zero,
-    this.color = AppColors.surface,
+    this.color,
   });
 
   final Widget child;
   final VoidCallback? onTap;
   final EdgeInsetsGeometry padding;
   final EdgeInsetsGeometry margin;
-  final Color color;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
     final radius = AppRadii.cardRadius;
+    final cardColor = color ?? AppColors.surface;
 
     // Color + shadow share one rounded decoration. Content is ClipRRect so
     // nested InkWell highlights cannot paint square corners past the radius.
     final card = DecoratedBox(
       decoration: BoxDecoration(
-        color: color,
+        color: cardColor,
         borderRadius: radius,
         boxShadow: AppColors.softShadow,
       ),

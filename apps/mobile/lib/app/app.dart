@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/trust/application/providers/trust_providers.dart';
 import 'router/app_router.dart';
+import 'theme/app_colors.dart';
 import 'theme/app_theme.dart';
 
 class MemyApp extends ConsumerWidget {
@@ -17,10 +19,16 @@ class MemyApp extends ConsumerWidget {
       title: 'MeMy',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
-      themeMode: themeMode == ThemeMode.light
-          ? ThemeMode.light
-          : ThemeMode.system,
-      // Mobile-style: no desktop/web scrollbar gutter on the right edge.
+      darkTheme: AppTheme.dark(),
+      themeMode: themeMode,
+      builder: (context, child) {
+        AppColors.bindFromContext(context);
+        final brightness = Theme.of(context).brightness;
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: AppTheme.systemOverlayFor(brightness),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       scrollBehavior: const MaterialScrollBehavior().copyWith(
         scrollbars: false,
       ),

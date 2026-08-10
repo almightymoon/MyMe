@@ -66,7 +66,7 @@ class MemyBottomNavigation extends StatelessWidget {
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: AppColors.surface.withValues(alpha: 0.96),
-                    border: const Border(
+                    border: Border(
                       top: BorderSide(color: AppColors.line),
                     ),
                   ),

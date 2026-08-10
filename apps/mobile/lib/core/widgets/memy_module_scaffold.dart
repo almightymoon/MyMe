@@ -150,7 +150,7 @@ class MemyModuleScaffold extends StatelessWidget {
       extendBody: showBottomNav,
       endDrawer: showBottomNav ? MemyDrawer(activeShellIndex: navIndex) : null,
       body: DecoratedBox(
-        decoration: decoration ?? const BoxDecoration(color: AppColors.canvas),
+        decoration: decoration ?? BoxDecoration(color: AppColors.canvas),
         child: SafeArea(
           bottom: !showBottomNav,
           child: fillBody

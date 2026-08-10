@@ -29,7 +29,7 @@ class PlannedFinanceFeatureCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.schedule_rounded, color: AppColors.faintText),
+              Icon(Icons.schedule_rounded, color: AppColors.faintText),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(

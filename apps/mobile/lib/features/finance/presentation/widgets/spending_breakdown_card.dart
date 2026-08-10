@@ -165,7 +165,7 @@ class _DonutPainter extends CustomPainter {
       (sum, item) => sum + item.percentageBasisPoints,
     );
     if (totalPoints <= 0) {
-      paint.color = const Color(0xFFE5E7EB);
+      paint.color = AppColors.progressTrack;
       canvas.drawArc(rect, 0, 2 * math.pi, false, paint);
     } else {
       for (final item in items) {

@@ -103,4 +103,54 @@ void main() {
       expect(tester.takeException(), isNull);
     }
   });
+
+  testWidgets('Appearance Dark applies across primary tabs and sheets', (
+    tester,
+  ) async {
+    await pumpMemyApp(tester);
+    await signInToToday(tester);
+
+    await tester.tap(find.byKey(const Key('nav_more')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('more_settings')));
+    await tester.tap(find.byKey(const Key('more_settings')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Appearance'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('appearance_accessibility')), findsOneWidget);
+
+    await tester.tap(find.text('Dark'));
+    await tester.pumpAndSettle();
+
+    final appearanceContext = tester.element(
+      find.byKey(const Key('appearance_accessibility')),
+    );
+    expect(Theme.of(appearanceContext).brightness, Brightness.dark);
+
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('settings_back')));
+    await tester.tap(find.byKey(const Key('settings_back')));
+    await tester.pumpAndSettle();
+
+    for (final key in [
+      const Key('nav_today'),
+      const Key('nav_plan'),
+      const Key('nav_coach'),
+      const Key('nav_more'),
+    ]) {
+      await tester.tap(find.byKey(key));
+      await tester.pumpAndSettle();
+      final ctx = tester.element(find.byKey(key));
+      expect(Theme.of(ctx).brightness, Brightness.dark);
+      expect(tester.takeException(), isNull);
+    }
+
+    await tester.tap(find.byKey(const Key('nav_quick_add')));
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.quickAdd), findsWidgets);
+    final sheetCtx = tester.element(find.text(AppStrings.quickAdd).first);
+    expect(Theme.of(sheetCtx).brightness, Brightness.dark);
+  });
 }

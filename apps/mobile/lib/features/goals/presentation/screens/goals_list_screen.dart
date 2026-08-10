@@ -108,7 +108,7 @@ class GoalsListScreen extends ConsumerWidget {
                         color: AppColors.orangeSoft,
                         borderRadius: AppRadii.controlRadius,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.flag_rounded,
                         color: AppColors.ember,
                         size: 28,

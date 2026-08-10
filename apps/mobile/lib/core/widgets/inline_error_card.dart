@@ -37,7 +37,7 @@ class InlineErrorCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           Row(
             children: [
-              const Icon(Icons.error_outline_rounded, color: AppColors.ember),
+              Icon(Icons.error_outline_rounded, color: AppColors.ember),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(

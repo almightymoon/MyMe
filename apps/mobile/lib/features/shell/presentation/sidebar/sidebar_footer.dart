@@ -34,7 +34,7 @@ class SidebarFooter extends StatelessWidget {
           ),
         ),
         Material(
-          color: const Color(0xFFFFECEC),
+          color: AppColors.dangerSoft,
           borderRadius: AppRadii.pillRadius,
           child: InkWell(
             key: const Key('drawer_logout'),

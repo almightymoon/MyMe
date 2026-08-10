@@ -219,7 +219,7 @@ class _PromptWrap extends StatelessWidget {
             label: Text(prompt.prompt),
             onPressed: () => onSelected(prompt),
             backgroundColor: AppColors.surface,
-            side: const BorderSide(color: AppColors.line),
+            side: BorderSide(color: AppColors.line),
             labelStyle: AppTextStyles.bodySmall(color: AppColors.primaryText),
           ),
       ],

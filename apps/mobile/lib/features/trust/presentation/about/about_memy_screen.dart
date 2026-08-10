@@ -57,15 +57,12 @@ class AboutMemyScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Row(
               children: [
-                const Icon(Icons.new_releases_outlined, color: AppColors.ember),
+                Icon(Icons.new_releases_outlined, color: AppColors.ember),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text("What's new", style: AppTextStyles.titleSmall()),
                 ),
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.navInactive,
-                ),
+                Icon(Icons.chevron_right_rounded, color: AppColors.navInactive),
               ],
             ),
           ),
@@ -75,7 +72,7 @@ class AboutMemyScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Row(
               children: [
-                const Icon(Icons.gavel_outlined, color: AppColors.ember),
+                Icon(Icons.gavel_outlined, color: AppColors.ember),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -83,10 +80,7 @@ class AboutMemyScreen extends ConsumerWidget {
                     style: AppTextStyles.titleSmall(),
                   ),
                 ),
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.navInactive,
-                ),
+                Icon(Icons.chevron_right_rounded, color: AppColors.navInactive),
               ],
             ),
           ),

@@ -43,7 +43,7 @@ class TransactionListTile extends StatelessWidget {
             height: 40,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: isIncome ? AppColors.orangeSoft : const Color(0xFFF3F4F6),
+              color: isIncome ? AppColors.orangeSoft : AppColors.well,
               shape: BoxShape.circle,
             ),
             child: Icon(

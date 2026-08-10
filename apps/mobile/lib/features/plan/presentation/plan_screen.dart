@@ -266,7 +266,7 @@ class _ModuleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppRadii.cardRadius,
         boxShadow: AppColors.softShadow,

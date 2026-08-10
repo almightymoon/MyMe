@@ -26,7 +26,7 @@ class ExerciseCategoryCard extends StatelessWidget {
         button: true,
         label: '${category.label} category. ${category.subtitle}',
         child: DecoratedBox(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: AppRadii.cardRadius,
             boxShadow: AppColors.softShadow,

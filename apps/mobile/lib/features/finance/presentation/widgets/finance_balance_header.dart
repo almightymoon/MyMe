@@ -76,7 +76,7 @@ class FinanceBalanceHeader extends StatelessWidget {
                     ).copyWith(fontWeight: FontWeight.w500, fontSize: 12),
                   ),
                   const SizedBox(width: 4),
-                  const Icon(
+                  Icon(
                     Icons.keyboard_arrow_down_rounded,
                     size: 16,
                     color: AppColors.secondaryText,

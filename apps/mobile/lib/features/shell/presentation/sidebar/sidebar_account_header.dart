@@ -55,7 +55,7 @@ class SidebarAccountHeader extends StatelessWidget {
             Container(
               width: 52,
               height: 52,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: AppColors.orangeSoft,
                 boxShadow: [
@@ -97,7 +97,7 @@ class SidebarAccountHeader extends StatelessWidget {
                     onPressed: onViewProfile,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.secondaryText,
-                      side: const BorderSide(color: AppColors.line),
+                      side: BorderSide(color: AppColors.line),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 6,

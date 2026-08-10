@@ -14,7 +14,7 @@ class MemyMenuButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFFECECEE),
+      color: AppColors.hairline,
       shape: const CircleBorder(),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -22,7 +22,7 @@ class MemyMenuButton extends StatelessWidget {
         splashColor: AppColors.ember.withValues(alpha: 0.10),
         highlightColor: AppColors.ember.withValues(alpha: 0.06),
         onTap: onPressed ?? () => openMemyDrawer(context),
-        child: const SizedBox(
+        child: SizedBox(
           width: 40,
           height: 40,
           child: Icon(

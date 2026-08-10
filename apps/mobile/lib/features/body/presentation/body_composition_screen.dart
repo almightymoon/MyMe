@@ -183,7 +183,7 @@ class _BodyCompositionScreenState extends State<BodyCompositionScreen> {
                       side: BorderSide(
                         color: _exFilter == tag
                             ? AppColors.ember.withValues(alpha: 0.35)
-                            : const Color(0xFFE5E5EA),
+                            : AppColors.hairline,
                       ),
                       backgroundColor: AppColors.surface,
                       showCheckmark: false,
@@ -265,7 +265,7 @@ class _BodyHero extends StatelessWidget {
                   height: 60,
                   decoration: BoxDecoration(
                     borderRadius: AppRadii.chipRadius,
-                    color: const Color(0xFFFFE8D9),
+                    color: AppColors.orangeSoft,
                     image: const DecorationImage(
                       image: AssetImage('assets/images/branding/avatar.png'),
                       fit: BoxFit.cover,
@@ -320,7 +320,7 @@ class _BodyHero extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.canvasDeep,
               borderRadius: AppRadii.chipRadius,
-              border: Border.all(color: const Color(0xFFE8E8ED)),
+              border: Border.all(color: AppColors.hairline),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -439,7 +439,7 @@ class _MetricsGrid extends ConsumerWidget {
     const gap = 10.0;
     return Column(
       children: [
-        const Row(
+        Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
@@ -450,7 +450,7 @@ class _MetricsGrid extends ConsumerWidget {
                 statusColor: AppColors.finance,
               ),
             ),
-            SizedBox(width: gap),
+            const SizedBox(width: gap),
             Expanded(
               child: _MetricTile(
                 label: 'Height',
@@ -578,7 +578,7 @@ class _MuscleBalanceCard extends StatelessWidget {
                 width: 108,
                 height: 190,
                 fit: BoxFit.contain,
-                errorBuilder: (_, _, _) => const Icon(
+                errorBuilder: (_, _, _) => Icon(
                   Icons.accessibility_new_rounded,
                   size: 72,
                   color: AppColors.ember,
@@ -645,11 +645,11 @@ class _MuscleBarRow extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  const ColoredBox(color: AppColors.progressTrack),
+                  ColoredBox(color: AppColors.progressTrack),
                   FractionallySizedBox(
                     alignment: Alignment.centerLeft,
                     widthFactor: (stat.pct / 100).clamp(0.0, 1.0),
-                    child: const ColoredBox(color: AppColors.ember),
+                    child: ColoredBox(color: AppColors.ember),
                   ),
                 ],
               ),
@@ -686,7 +686,7 @@ class _AiPlanCard extends StatelessWidget {
                 height: 110,
                 color: AppColors.orangeSoft,
                 alignment: Alignment.center,
-                child: const Icon(Icons.fitness_center, color: AppColors.ember),
+                child: Icon(Icons.fitness_center, color: AppColors.ember),
               ),
             ),
           ),
@@ -718,7 +718,7 @@ class _AiPlanCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: AppColors.canvasDeep,
                           borderRadius: AppRadii.pillRadius,
-                          border: Border.all(color: const Color(0xFFE8E8ED)),
+                          border: Border.all(color: AppColors.hairline),
                         ),
                         child: Text(
                           tag,
@@ -773,7 +773,7 @@ class _TodayMoveCard extends StatelessWidget {
               border: Border.all(
                 color: selected
                     ? AppColors.ember.withValues(alpha: 0.4)
-                    : const Color(0xFFE8E8ED),
+                    : AppColors.hairline,
               ),
             ),
             child: Column(
@@ -843,7 +843,7 @@ class _ExerciseRow extends StatelessWidget {
               color: AppColors.orangeSoft,
               borderRadius: AppRadii.thumbRadius,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.directions_run_rounded,
               color: AppColors.ember,
               size: 22,

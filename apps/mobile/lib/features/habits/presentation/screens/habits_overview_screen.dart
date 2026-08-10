@@ -196,7 +196,7 @@ class _OverviewSummaryCard extends StatelessWidget {
               color: AppColors.orangeSoft,
               borderRadius: AppRadii.controlRadius,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.loop_rounded,
               color: AppColors.habits,
               size: 28,

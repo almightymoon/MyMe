@@ -10,14 +10,15 @@ class ExerciseDifficultyBadge extends StatelessWidget {
 
   final ExerciseDifficulty difficulty;
 
-  Color get _background {
+  Color _background(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
     switch (difficulty) {
       case ExerciseDifficulty.beginner:
-        return const Color(0xFFE8F6EF);
+        return dark ? const Color(0xFF163528) : const Color(0xFFE8F6EF);
       case ExerciseDifficulty.intermediate:
-        return const Color(0xFFFFF1DF);
+        return dark ? const Color(0xFF3A2A14) : const Color(0xFFFFF1DF);
       case ExerciseDifficulty.advanced:
-        return const Color(0xFFFFE8E2);
+        return dark ? const Color(0xFF3A1E18) : const Color(0xFFFFE8E2);
     }
   }
 
@@ -39,7 +40,7 @@ class ExerciseDifficultyBadge extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: _background,
+          color: _background(context),
           borderRadius: BorderRadius.circular(AppRadii.pill),
         ),
         child: Text(

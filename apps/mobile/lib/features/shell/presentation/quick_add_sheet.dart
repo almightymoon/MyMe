@@ -84,23 +84,12 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
     return Padding(
       padding: EdgeInsets.fromLTRB(10, 0, 10, 10 + bottom + keyboard),
       child: DecoratedBox(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           borderRadius: sheetRadius,
-          boxShadow: [
-            BoxShadow(
-              color: Color(0x2E14100C),
-              blurRadius: 48,
-              offset: Offset(0, 18),
-            ),
-            BoxShadow(
-              color: Color(0x14FF6A1A),
-              blurRadius: 8,
-              offset: Offset(0, 2),
-            ),
-          ],
+          boxShadow: AppColors.liftShadow,
         ),
         child: Material(
-          color: const Color(0xF0FFFFFF),
+          color: AppColors.surface,
           borderRadius: sheetRadius,
           clipBehavior: Clip.antiAlias,
           child: Padding(
@@ -123,7 +112,7 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
         width: 36,
         height: 4,
         decoration: BoxDecoration(
-          color: const Color(0xFFE4E4E8),
+          color: AppColors.sheetHandle,
           borderRadius: BorderRadius.circular(AppRadii.pill),
         ),
       ),
@@ -323,8 +312,8 @@ class _QuickAddRow extends StatelessWidget {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        Colors.white.withValues(alpha: 0.95),
-                        accent.withValues(alpha: 0.14),
+                        AppColors.surface,
+                        accent.withValues(alpha: 0.18),
                       ],
                     ),
                     border: Border.all(color: accent.withValues(alpha: 0.16)),
@@ -354,10 +343,7 @@ class _QuickAddRow extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  color: Color(0xFFC7C7CC),
-                ),
+                Icon(Icons.chevron_right_rounded, color: AppColors.navInactive),
               ],
             ),
           ),

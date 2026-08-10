@@ -28,7 +28,7 @@ class _LifeScoreRingPainter extends CustomPainter {
 
   final double progress;
 
-  static const Color _track = Color(0xFFFFE4D1);
+  static Color get _track => AppColors.orangeSoft;
 
   @override
   void paint(Canvas canvas, Size size) {

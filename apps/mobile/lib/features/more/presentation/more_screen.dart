@@ -290,7 +290,7 @@ const _moduleItems = <_MoreItem>[
     keyName: 'more_settings',
     title: 'Settings',
     icon: Icons.settings_outlined,
-    color: AppColors.depth,
+    color: Color(0xFF8E8E93),
     path: RoutePaths.settings,
   ),
 ];

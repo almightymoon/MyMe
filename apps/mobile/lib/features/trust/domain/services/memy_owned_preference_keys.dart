@@ -2,6 +2,7 @@ import '../../../finance/data/repositories/local_finance_repository.dart';
 import '../../../goals/data/repositories/local_goal_repository.dart';
 import '../../../habits/data/repositories/local_habit_repository.dart';
 import '../../../health/data/repositories/health_connection_storage.dart';
+import '../../../onboarding/data/onboarding_preferences.dart';
 import '../../presentation/appearance/appearance_preferences.dart';
 
 /// Audited SharedPreferences keys owned by MeMy feature modules.
@@ -36,6 +37,16 @@ abstract final class MemyOwnedPreferenceKeys {
     HealthConnectionStorageKeys.legacy,
   };
 
+  /// Local first-run setup: the completion flag plus display/format choices.
+  static const Set<String> onboarding = {
+    OnboardingPreferences.completeKey,
+    OnboardingPreferences.displayNameKey,
+    OnboardingPreferences.baseCurrencyKey,
+    OnboardingPreferences.unitsKey,
+    OnboardingPreferences.weekStartKey,
+    OnboardingPreferences.timezoneKey,
+  };
+
   /// All MeMy-owned keys known to this milestone.
   static Set<String> get all => {
     ...appearance,
@@ -43,8 +54,15 @@ abstract final class MemyOwnedPreferenceKeys {
     ...finance,
     ...habits,
     ...healthConnection,
+    ...onboarding,
   };
 
   /// Keys safe to remove during a preferences-only wipe.
-  static Set<String> get preferencesWipeTargets => appearance;
+  ///
+  /// Onboarding is included so a wipe genuinely returns the device to a first
+  /// launch — setup runs again instead of dropping into a blank Today.
+  static Set<String> get preferencesWipeTargets => {
+    ...appearance,
+    ...onboarding,
+  };
 }

@@ -37,6 +37,8 @@ import '../../features/health/presentation/health_overview_screen.dart';
 import '../../features/health/presentation/health_permission_selection_screen.dart';
 import '../../features/health/presentation/health_workouts_screen.dart';
 import '../../features/more/presentation/more_screen.dart';
+import '../../features/onboarding/application/onboarding_providers.dart';
+import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/plan/presentation/plan_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/settings/presentation/connected_apps_screen.dart';
@@ -57,6 +59,7 @@ import '../../features/trust/presentation/privacy/privacy_data_center_screen.dar
 import '../../features/trust/presentation/security/security_screen.dart';
 import '../../features/trust/presentation/support/help_support_screen.dart';
 import '../../features/wardrobe/presentation/wardrobe_placeholder_screen.dart';
+import '../../core/config/release_capabilities.dart';
 import '../../core/widgets/coming_soon_view.dart';
 import 'route_names.dart';
 
@@ -66,11 +69,73 @@ final _planNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'plan');
 final _coachNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'coach');
 final _moreNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'more');
 
+/// Demo-auth entry points. Unreachable when [ReleaseCapabilities.demoAuth] is
+/// false — the screens stay in the codebase for internal builds only.
+const _demoAuthPaths = {
+  RoutePaths.signIn,
+  RoutePaths.signUp,
+  RoutePaths.forgotPassword,
+};
+
+/// Reachable mid-onboarding: the optional Calendar/Health steps push into the
+/// real connection flows, and the privacy copy links out to the trust centre.
+const _onboardingEscapes = {
+  RoutePaths.calendarConnect,
+  RoutePaths.calendarSelection,
+  RoutePaths.healthConnect,
+  RoutePaths.healthPermissions,
+  RoutePaths.privacy,
+  RoutePaths.legal,
+};
+
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final capabilities = ref.watch(releaseCapabilitiesProvider);
+  final demoAuth = capabilities.demoAuth;
+
+  // Read (not watch): the router must not rebuild mid-flow. Redirects call
+  // this on every navigation, so completion changes are still picked up.
+  bool onboardingComplete() => ref.read(onboardingCompletionProvider);
+
+  String postOnboardingHome() =>
+      onboardingComplete() ? RoutePaths.today : RoutePaths.onboarding;
+
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: RoutePaths.signIn,
+    initialLocation: demoAuth ? RoutePaths.signIn : postOnboardingHome(),
+    redirect: (context, state) {
+      final path = state.uri.path;
+
+      if (!demoAuth && _demoAuthPaths.contains(path)) {
+        return postOnboardingHome();
+      }
+      if (!capabilities.coachPreview && path == RoutePaths.coach) {
+        return RoutePaths.today;
+      }
+      if (!capabilities.wardrobe && path == RoutePaths.wardrobe) {
+        return RoutePaths.today;
+      }
+      if (!capabilities.body && path == RoutePaths.body) {
+        return RoutePaths.today;
+      }
+      if (!capabilities.nutritionQuickAdd &&
+          path == RoutePaths.nutritionComingSoon) {
+        return RoutePaths.today;
+      }
+      if (demoAuth || onboardingComplete()) return null;
+      if (path == RoutePaths.onboarding) return null;
+      if (_onboardingEscapes.any(
+        (escape) => path == escape || path.startsWith('$escape/'),
+      )) {
+        return null;
+      }
+      return RoutePaths.onboarding;
+    },
     routes: [
+      GoRoute(
+        path: RoutePaths.onboarding,
+        name: RouteNames.onboarding,
+        builder: (context, state) => const OnboardingScreen(),
+      ),
       GoRoute(
         path: RoutePaths.signIn,
         name: RouteNames.signIn,
@@ -347,7 +412,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: RouteNames.integrationDiagnostics,
         builder: (context, state) => const IntegrationDiagnosticsScreen(),
       ),
-      if (kDebugMode)
+      if (kDebugMode && capabilities.debugIntegrationLab)
         GoRoute(
           parentNavigatorKey: _rootNavigatorKey,
           path: RoutePaths.integrationLab,

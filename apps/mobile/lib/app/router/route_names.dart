@@ -1,4 +1,5 @@
 abstract final class RouteNames {
+  static const String onboarding = 'onboarding';
   static const String signIn = 'signIn';
   static const String signUp = 'signUp';
   static const String forgotPassword = 'forgotPassword';
@@ -60,6 +61,7 @@ abstract final class RouteNames {
 }
 
 abstract final class RoutePaths {
+  static const String onboarding = '/onboarding';
   static const String signIn = '/signin';
   static const String signUp = '/signup';
   static const String forgotPassword = '/forgot-password';

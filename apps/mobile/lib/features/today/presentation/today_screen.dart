@@ -37,7 +37,8 @@ import '../domain/entities/today_summary.dart';
 import '../domain/entities/today_task.dart';
 
 /// Home screen aligned to prototype `data-screen="home"`:
-/// greeting → Life Score → Focus → shortcuts → Glance → Today's Tasks.
+/// greeting → Life Score → Focus → shortcuts → Glance → Today's Tasks,
+/// then live module cards (Goals / Finance / Habits / Health).
 class TodayScreen extends ConsumerWidget {
   const TodayScreen({super.key});
 
@@ -228,23 +229,23 @@ class _TodayPopulatedBody extends StatelessWidget {
         ],
         const _ShortcutRow(),
         const SizedBox(height: 12),
-        if (summary.goals.isNotEmpty) ...[
-          _TodayGoalsCard(goals: summary.goals),
-          const SizedBox(height: 12),
-        ],
-        if (summary.finance != null) ...[
-          _TodayFinanceCard(summary: summary.finance!),
-          const SizedBox(height: 12),
-        ],
-        if (summary.habits.isNotEmpty) ...[
-          _TodayHabitsCard(items: summary.habits),
-          const SizedBox(height: 12),
-        ],
-        const _TodayHealthCard(),
-        const SizedBox(height: 12),
         _GlanceSection(items: summary.schedule),
         const SizedBox(height: 12),
         const _TasksSection(),
+        if (summary.goals.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          _TodayGoalsCard(goals: summary.goals),
+        ],
+        if (summary.finance != null) ...[
+          const SizedBox(height: 12),
+          _TodayFinanceCard(summary: summary.finance!),
+        ],
+        if (summary.habits.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          _TodayHabitsCard(items: summary.habits),
+        ],
+        const SizedBox(height: 12),
+        const _TodayHealthCard(),
       ],
     );
   }

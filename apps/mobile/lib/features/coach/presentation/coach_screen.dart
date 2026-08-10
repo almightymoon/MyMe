@@ -16,6 +16,7 @@ import '../../user/application/providers/user_providers.dart';
 import '../application/providers/coach_providers.dart';
 import '../application/services/coach_conversation_controller.dart';
 import '../domain/entities/coach_suggestion.dart';
+import 'widgets/ai_coach_sphere.dart';
 
 class CoachScreen extends ConsumerStatefulWidget {
   const CoachScreen({super.key});
@@ -92,7 +93,7 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
               children: [
                 const SizedBox(height: AppSpacing.md),
-                const Center(child: _CoachSpherePlaceholder()),
+                const Center(child: AiCoachSphere(size: 160)),
                 const SizedBox(height: AppSpacing.xl),
                 Text(
                   'Hi, $displayName',
@@ -282,35 +283,6 @@ class _ConversationList extends StatelessWidget {
           ),
         ],
       ],
-    );
-  }
-}
-
-class _CoachSpherePlaceholder extends StatelessWidget {
-  const _CoachSpherePlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 168,
-      height: 168,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: const RadialGradient(
-          colors: [Color(0xFFFFB347), AppColors.ember, AppColors.depth],
-          stops: [0.0, 0.45, 1.0],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.ember.withValues(alpha: 0.35),
-            blurRadius: 36,
-            offset: const Offset(0, 16),
-          ),
-        ],
-      ),
-      child: const Center(
-        child: Icon(Icons.auto_awesome, color: Colors.white, size: 42),
-      ),
     );
   }
 }

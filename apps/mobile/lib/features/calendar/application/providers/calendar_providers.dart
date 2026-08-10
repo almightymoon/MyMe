@@ -14,6 +14,7 @@ import '../../domain/entities/calendar_sync_conflict.dart';
 import '../../domain/entities/memy_calendar_event.dart';
 import '../../domain/gateways/device_calendar_gateway.dart';
 import '../../domain/repositories/calendar_repository.dart';
+import '../services/calendar_integration_bootstrap_service.dart';
 import '../services/calendar_sync_service.dart';
 
 /// Override in tests to force `fake`/`system` without dart-defines.
@@ -70,6 +71,21 @@ final calendarSyncServiceProvider = Provider<CalendarSyncService>((ref) {
     clock: ref.watch(appClockProvider),
     idGenerator: () => ref.read(uuidProvider).v4(),
   );
+});
+
+final calendarIntegrationBootstrapProvider =
+    Provider<CalendarIntegrationBootstrapService>((ref) {
+      return CalendarIntegrationBootstrapService(
+        gateway: ref.watch(deviceCalendarGatewayProvider),
+        repository: ref.watch(calendarRepositoryProvider),
+        syncService: ref.watch(calendarSyncServiceProvider),
+        registry: ref.watch(integrationConnectionRegistryProvider.notifier),
+      );
+    });
+
+/// Runs once per app process after providers are ready.
+final calendarBootstrapProvider = FutureProvider<void>((ref) async {
+  await ref.watch(calendarIntegrationBootstrapProvider).bootstrap();
 });
 
 final calendarConfigProvider = FutureProvider.autoDispose<CalendarConfig>((

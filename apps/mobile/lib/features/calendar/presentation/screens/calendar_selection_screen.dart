@@ -11,11 +11,12 @@ import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/memy_card.dart';
 import '../../../../core/widgets/memy_page_header.dart';
 import '../../../../core/widgets/memy_primary_button.dart';
+import '../../../../core/widgets/section_header.dart';
 import '../../application/providers/calendar_providers.dart';
 import '../../domain/entities/device_calendar_descriptor.dart';
 
-/// Step 2 of the connect flow — pick which device calendars to sync, then
-/// runs the initial import (past 30 / future 365 days).
+/// Step 2 of the connect flow — pick readable calendars (multi) and a single
+/// writable destination, optionally creating a dedicated MeMy calendar.
 class CalendarSelectionScreen extends ConsumerStatefulWidget {
   const CalendarSelectionScreen({super.key, required this.calendars});
 
@@ -28,24 +29,78 @@ class CalendarSelectionScreen extends ConsumerStatefulWidget {
 
 class _CalendarSelectionScreenState
     extends ConsumerState<CalendarSelectionScreen> {
-  final Set<String> _selected = {};
+  final Set<String> _readable = {};
+  String? _writableId;
+  var _calendars = <DeviceCalendarDescriptor>[];
   var _saving = false;
+  var _creating = false;
+  var _supportsCreation = false;
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    _selected.addAll(
-      widget.calendars.where((c) => c.isDefault).map((c) => c.id),
-    );
-    if (_selected.isEmpty && widget.calendars.isNotEmpty) {
-      _selected.add(widget.calendars.first.id);
+    _calendars = List.of(widget.calendars);
+    _readable.addAll(_calendars.where((c) => c.isDefault).map((c) => c.id));
+    if (_readable.isEmpty && _calendars.isNotEmpty) {
+      _readable.add(_calendars.first.id);
+    }
+    final writableCandidates = _calendars
+        .where((c) => !c.isReadOnly)
+        .toList(growable: false);
+    if (writableCandidates.isNotEmpty) {
+      final preferred = writableCandidates.firstWhere(
+        (c) => _readable.contains(c.id),
+        orElse: () => writableCandidates.first,
+      );
+      _writableId = preferred.id;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadCreationSupport());
+  }
+
+  Future<void> _loadCreationSupport() async {
+    final supported = await ref
+        .read(deviceCalendarGatewayProvider)
+        .supportsCalendarCreation();
+    if (!mounted) return;
+    setState(() => _supportsCreation = supported);
+  }
+
+  Future<void> _createMeMyCalendar() async {
+    setState(() {
+      _creating = true;
+      _error = null;
+    });
+    try {
+      final created = await ref
+          .read(deviceCalendarGatewayProvider)
+          .createCalendar(name: 'MeMy');
+      if (!mounted) return;
+      setState(() {
+        _calendars = [..._calendars, created];
+        _readable.add(created.id);
+        _writableId = created.id;
+        _creating = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _error = userFacingErrorMessage(error);
+        _creating = false;
+      });
     }
   }
 
   Future<void> _confirm() async {
-    if (_selected.isEmpty) {
-      setState(() => _error = 'Choose at least one calendar to sync.');
+    if (_readable.isEmpty) {
+      setState(() => _error = 'Choose at least one calendar to read.');
+      return;
+    }
+    if (_writableId == null) {
+      setState(
+        () => _error =
+            'Choose a writable calendar for events you create in MeMy.',
+      );
       return;
     }
     setState(() {
@@ -54,7 +109,15 @@ class _CalendarSelectionScreenState
     });
     try {
       final service = ref.read(calendarSyncServiceProvider);
-      await service.confirmCalendarSelection(_selected.toList());
+      final dedicatedMatch = _calendars.where(
+        (c) => c.id == _writableId && c.name == 'MeMy',
+      );
+      final dedicated = dedicatedMatch.isEmpty ? null : dedicatedMatch.first.id;
+      await service.confirmCalendarSelection(
+        readableIds: _readable.toList(),
+        writableId: _writableId,
+        dedicatedId: dedicated,
+      );
       await service.performInitialSync();
       if (!mounted) return;
       context.go(RoutePaths.calendar);
@@ -77,7 +140,7 @@ class _CalendarSelectionScreenState
           children: [
             MemyPageHeader(
               title: 'Choose Calendars',
-              subtitle: 'Pick which calendars to sync with MeMy',
+              subtitle: 'Pick calendars to read and where MeMy writes',
               leading: IconButton(
                 key: const Key('calendar_selection_back'),
                 tooltip: 'Back',
@@ -95,38 +158,101 @@ class _CalendarSelectionScreenState
                   120,
                 ),
                 children: [
-                  for (final calendar in widget.calendars)
+                  const SectionHeader(title: 'Read from'),
+                  Text(
+                    'Imported events stay read-only in MeMy.',
+                    style: AppTextStyles.bodySmall(color: AppColors.faintText),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  for (final calendar in _calendars)
                     MemyCard(
                       key: Key('calendar_option_${calendar.id}'),
                       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
                       padding: EdgeInsets.zero,
                       child: CheckboxListTile(
-                        value: _selected.contains(calendar.id),
+                        value: _readable.contains(calendar.id),
                         title: Text(
                           calendar.name,
                           style: AppTextStyles.titleMedium().copyWith(
                             fontSize: 15,
                           ),
                         ),
-                        subtitle: calendar.accountName == null
-                            ? null
-                            : Text(
-                                calendar.accountName!,
-                                style: AppTextStyles.bodySmall(
-                                  color: AppColors.faintText,
-                                ),
-                              ),
+                        subtitle: Text(
+                          [
+                            if (calendar.accountName != null)
+                              calendar.accountName!,
+                            if (calendar.isReadOnly) 'Read-only',
+                          ].join(' · '),
+                          style: AppTextStyles.bodySmall(
+                            color: AppColors.faintText,
+                          ),
+                        ),
                         onChanged: (checked) {
                           setState(() {
                             if (checked ?? false) {
-                              _selected.add(calendar.id);
+                              _readable.add(calendar.id);
                             } else {
-                              _selected.remove(calendar.id);
+                              _readable.remove(calendar.id);
                             }
                           });
                         },
                       ),
                     ),
+                  const SizedBox(height: AppSpacing.md),
+                  const SectionHeader(title: 'Write to'),
+                  Text(
+                    'MeMy-created events sync to this calendar only.',
+                    style: AppTextStyles.bodySmall(color: AppColors.faintText),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  RadioGroup<String>(
+                    groupValue: _writableId,
+                    onChanged: (value) => setState(() => _writableId = value),
+                    child: Column(
+                      children: [
+                        for (final calendar in _calendars)
+                          MemyCard(
+                            key: Key('calendar_writable_${calendar.id}'),
+                            margin: const EdgeInsets.only(
+                              bottom: AppSpacing.sm,
+                            ),
+                            padding: EdgeInsets.zero,
+                            child: RadioListTile<String>(
+                              value: calendar.id,
+                              enabled: !calendar.isReadOnly,
+                              title: Text(
+                                calendar.name,
+                                style: AppTextStyles.titleMedium().copyWith(
+                                  fontSize: 15,
+                                  color: calendar.isReadOnly
+                                      ? AppColors.faintText
+                                      : null,
+                                ),
+                              ),
+                              subtitle: calendar.isReadOnly
+                                  ? Text(
+                                      'Read-only — cannot write',
+                                      style: AppTextStyles.bodySmall(
+                                        color: AppColors.faintText,
+                                      ),
+                                    )
+                                  : null,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  if (_supportsCreation) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    OutlinedButton.icon(
+                      key: const Key('calendar_create_memy'),
+                      onPressed: _creating ? null : _createMeMyCalendar,
+                      icon: const Icon(Icons.add_rounded),
+                      label: Text(
+                        _creating ? 'Creating…' : 'Create MeMy calendar',
+                      ),
+                    ),
+                  ],
                   if (_error != null) ...[
                     const SizedBox(height: AppSpacing.sm),
                     Text(

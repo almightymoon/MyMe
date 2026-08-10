@@ -1,11 +1,12 @@
 import '../entities/calendar_config.dart';
 import '../entities/calendar_event_link.dart';
 import '../entities/calendar_sync_conflict.dart';
+import '../entities/calendar_sync_operation.dart';
 import '../entities/conflict_resolution.dart';
 import '../entities/memy_calendar_event.dart';
 
 /// Persistence boundary for calendar events, their external-sync links,
-/// unresolved conflicts, and calendar-integration config.
+/// unresolved conflicts, push outbox rows, and calendar-integration config.
 ///
 /// Implementations: [FakeCalendarRepository] (in-memory, tests/`fake` mode)
 /// and [LocalCalendarRepository] (Drift/SQLite, `system` mode).
@@ -13,11 +14,13 @@ abstract class CalendarRepository {
   Stream<List<MemyCalendarEvent>> watchEventsInRange({
     required DateTime startUtc,
     required DateTime endUtc,
+    bool includeHidden = false,
   });
 
   Future<List<MemyCalendarEvent>> getEventsInRange({
     required DateTime startUtc,
     required DateTime endUtc,
+    bool includeHidden = false,
   });
 
   Future<MemyCalendarEvent?> getEvent(String id);
@@ -34,6 +37,10 @@ abstract class CalendarRepository {
   /// one still linked to an external calendar so the next push can remove
   /// it there too.
   Future<void> deleteEvent(String id);
+
+  /// Copies an imported external event into a new MeMy-owned local event
+  /// (no external link). Does not mutate the source.
+  Future<MemyCalendarEvent> copyExternalAsLocal(MemyCalendarEvent event);
 
   Future<CalendarEventLink?> getLinkForEvent(String memyEventId);
 
@@ -52,6 +59,9 @@ abstract class CalendarRepository {
     String externalCalendarId,
   );
 
+  /// All event links (diagnostics / presence counts). Never log link content.
+  Future<List<CalendarEventLink>> getAllLinks();
+
   Stream<List<CalendarSyncConflict>> watchConflicts();
 
   Future<List<CalendarSyncConflict>> getConflicts();
@@ -68,6 +78,23 @@ abstract class CalendarRepository {
   Future<CalendarConfig> getConfig();
 
   Future<void> saveConfig(CalendarConfig config);
+
+  // ---------------------------------------------------------------- outbox
+
+  Future<CalendarSyncOperation> saveSyncOperation(CalendarSyncOperation op);
+
+  Future<CalendarSyncOperation?> getSyncOperation(String id);
+
+  Future<List<CalendarSyncOperation>> getInFlightOperations();
+
+  Future<List<CalendarSyncOperation>> getPendingOperations();
+
+  /// All outbox rows for one MeMy event (any state), newest-first optional.
+  Future<List<CalendarSyncOperation>> getSyncOperationsForEvent(
+    String memyEventId,
+  );
+
+  Future<CalendarSyncOperation> updateSyncOperation(CalendarSyncOperation op);
 
   /// Re-reads persisted state and re-emits every watch stream (used after
   /// out-of-band writes, e.g. a sync pass done outside this instance).

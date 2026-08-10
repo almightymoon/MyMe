@@ -16,4 +16,11 @@ enum CalendarEventSyncStatus {
   /// Local and external versions diverged since the last sync — see
   /// [CalendarSyncConflict] for both snapshots.
   conflict,
+
+  /// External event is confirmed missing; local row retained as a tombstone
+  /// or recoverable MeMy-owned event (never auto-hard-deleted).
+  externallyMissing,
+
+  /// Imported external event hidden from MeMy after confirmed deletion.
+  hidden,
 }

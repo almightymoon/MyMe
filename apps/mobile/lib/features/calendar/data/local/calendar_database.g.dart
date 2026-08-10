@@ -158,6 +158,42 @@ class $CalendarEventsTable extends CalendarEvents
         requiredDuringInsert: false,
         defaultValue: const Constant('[]'),
       );
+  static const VerificationMeta _recurrenceRuleMeta = const VerificationMeta(
+    'recurrenceRule',
+  );
+  @override
+  late final GeneratedColumn<String> recurrenceRule = GeneratedColumn<String>(
+    'recurrence_rule',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isRecurringInstanceMeta =
+      const VerificationMeta('isRecurringInstance');
+  @override
+  late final GeneratedColumn<bool> isRecurringInstance = GeneratedColumn<bool>(
+    'is_recurring_instance',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_recurring_instance" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _seriesExternalEventIdMeta =
+      const VerificationMeta('seriesExternalEventId');
+  @override
+  late final GeneratedColumn<String> seriesExternalEventId =
+      GeneratedColumn<String>(
+        'series_external_event_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _versionMeta = const VerificationMeta(
     'version',
   );
@@ -219,6 +255,9 @@ class $CalendarEventsTable extends CalendarEvents
     externalCalendarId,
     externalEventId,
     reminderMinutesJson,
+    recurrenceRule,
+    isRecurringInstance,
+    seriesExternalEventId,
     version,
     createdAtUtc,
     updatedAtUtc,
@@ -344,6 +383,33 @@ class $CalendarEventsTable extends CalendarEvents
         ),
       );
     }
+    if (data.containsKey('recurrence_rule')) {
+      context.handle(
+        _recurrenceRuleMeta,
+        recurrenceRule.isAcceptableOrUnknown(
+          data['recurrence_rule']!,
+          _recurrenceRuleMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_recurring_instance')) {
+      context.handle(
+        _isRecurringInstanceMeta,
+        isRecurringInstance.isAcceptableOrUnknown(
+          data['is_recurring_instance']!,
+          _isRecurringInstanceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('series_external_event_id')) {
+      context.handle(
+        _seriesExternalEventIdMeta,
+        seriesExternalEventId.isAcceptableOrUnknown(
+          data['series_external_event_id']!,
+          _seriesExternalEventIdMeta,
+        ),
+      );
+    }
     if (data.containsKey('version')) {
       context.handle(
         _versionMeta,
@@ -450,6 +516,18 @@ class $CalendarEventsTable extends CalendarEvents
         DriftSqlType.string,
         data['${effectivePrefix}reminder_minutes_json'],
       )!,
+      recurrenceRule: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}recurrence_rule'],
+      ),
+      isRecurringInstance: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_recurring_instance'],
+      )!,
+      seriesExternalEventId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}series_external_event_id'],
+      ),
       version: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}version'],
@@ -490,6 +568,9 @@ class CalendarEvent extends DataClass implements Insertable<CalendarEvent> {
   final String? externalCalendarId;
   final String? externalEventId;
   final String reminderMinutesJson;
+  final String? recurrenceRule;
+  final bool isRecurringInstance;
+  final String? seriesExternalEventId;
   final int version;
   final DateTime createdAtUtc;
   final DateTime updatedAtUtc;
@@ -509,6 +590,9 @@ class CalendarEvent extends DataClass implements Insertable<CalendarEvent> {
     this.externalCalendarId,
     this.externalEventId,
     required this.reminderMinutesJson,
+    this.recurrenceRule,
+    required this.isRecurringInstance,
+    this.seriesExternalEventId,
     required this.version,
     required this.createdAtUtc,
     required this.updatedAtUtc,
@@ -543,6 +627,13 @@ class CalendarEvent extends DataClass implements Insertable<CalendarEvent> {
       map['external_event_id'] = Variable<String>(externalEventId);
     }
     map['reminder_minutes_json'] = Variable<String>(reminderMinutesJson);
+    if (!nullToAbsent || recurrenceRule != null) {
+      map['recurrence_rule'] = Variable<String>(recurrenceRule);
+    }
+    map['is_recurring_instance'] = Variable<bool>(isRecurringInstance);
+    if (!nullToAbsent || seriesExternalEventId != null) {
+      map['series_external_event_id'] = Variable<String>(seriesExternalEventId);
+    }
     map['version'] = Variable<int>(version);
     map['created_at_utc'] = Variable<DateTime>(createdAtUtc);
     map['updated_at_utc'] = Variable<DateTime>(updatedAtUtc);
@@ -580,6 +671,13 @@ class CalendarEvent extends DataClass implements Insertable<CalendarEvent> {
           ? const Value.absent()
           : Value(externalEventId),
       reminderMinutesJson: Value(reminderMinutesJson),
+      recurrenceRule: recurrenceRule == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recurrenceRule),
+      isRecurringInstance: Value(isRecurringInstance),
+      seriesExternalEventId: seriesExternalEventId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(seriesExternalEventId),
       version: Value(version),
       createdAtUtc: Value(createdAtUtc),
       updatedAtUtc: Value(updatedAtUtc),
@@ -613,6 +711,13 @@ class CalendarEvent extends DataClass implements Insertable<CalendarEvent> {
       reminderMinutesJson: serializer.fromJson<String>(
         json['reminderMinutesJson'],
       ),
+      recurrenceRule: serializer.fromJson<String?>(json['recurrenceRule']),
+      isRecurringInstance: serializer.fromJson<bool>(
+        json['isRecurringInstance'],
+      ),
+      seriesExternalEventId: serializer.fromJson<String?>(
+        json['seriesExternalEventId'],
+      ),
       version: serializer.fromJson<int>(json['version']),
       createdAtUtc: serializer.fromJson<DateTime>(json['createdAtUtc']),
       updatedAtUtc: serializer.fromJson<DateTime>(json['updatedAtUtc']),
@@ -637,6 +742,11 @@ class CalendarEvent extends DataClass implements Insertable<CalendarEvent> {
       'externalCalendarId': serializer.toJson<String?>(externalCalendarId),
       'externalEventId': serializer.toJson<String?>(externalEventId),
       'reminderMinutesJson': serializer.toJson<String>(reminderMinutesJson),
+      'recurrenceRule': serializer.toJson<String?>(recurrenceRule),
+      'isRecurringInstance': serializer.toJson<bool>(isRecurringInstance),
+      'seriesExternalEventId': serializer.toJson<String?>(
+        seriesExternalEventId,
+      ),
       'version': serializer.toJson<int>(version),
       'createdAtUtc': serializer.toJson<DateTime>(createdAtUtc),
       'updatedAtUtc': serializer.toJson<DateTime>(updatedAtUtc),
@@ -659,6 +769,9 @@ class CalendarEvent extends DataClass implements Insertable<CalendarEvent> {
     Value<String?> externalCalendarId = const Value.absent(),
     Value<String?> externalEventId = const Value.absent(),
     String? reminderMinutesJson,
+    Value<String?> recurrenceRule = const Value.absent(),
+    bool? isRecurringInstance,
+    Value<String?> seriesExternalEventId = const Value.absent(),
     int? version,
     DateTime? createdAtUtc,
     DateTime? updatedAtUtc,
@@ -684,6 +797,13 @@ class CalendarEvent extends DataClass implements Insertable<CalendarEvent> {
         ? externalEventId.value
         : this.externalEventId,
     reminderMinutesJson: reminderMinutesJson ?? this.reminderMinutesJson,
+    recurrenceRule: recurrenceRule.present
+        ? recurrenceRule.value
+        : this.recurrenceRule,
+    isRecurringInstance: isRecurringInstance ?? this.isRecurringInstance,
+    seriesExternalEventId: seriesExternalEventId.present
+        ? seriesExternalEventId.value
+        : this.seriesExternalEventId,
     version: version ?? this.version,
     createdAtUtc: createdAtUtc ?? this.createdAtUtc,
     updatedAtUtc: updatedAtUtc ?? this.updatedAtUtc,
@@ -717,6 +837,15 @@ class CalendarEvent extends DataClass implements Insertable<CalendarEvent> {
       reminderMinutesJson: data.reminderMinutesJson.present
           ? data.reminderMinutesJson.value
           : this.reminderMinutesJson,
+      recurrenceRule: data.recurrenceRule.present
+          ? data.recurrenceRule.value
+          : this.recurrenceRule,
+      isRecurringInstance: data.isRecurringInstance.present
+          ? data.isRecurringInstance.value
+          : this.isRecurringInstance,
+      seriesExternalEventId: data.seriesExternalEventId.present
+          ? data.seriesExternalEventId.value
+          : this.seriesExternalEventId,
       version: data.version.present ? data.version.value : this.version,
       createdAtUtc: data.createdAtUtc.present
           ? data.createdAtUtc.value
@@ -747,6 +876,9 @@ class CalendarEvent extends DataClass implements Insertable<CalendarEvent> {
           ..write('externalCalendarId: $externalCalendarId, ')
           ..write('externalEventId: $externalEventId, ')
           ..write('reminderMinutesJson: $reminderMinutesJson, ')
+          ..write('recurrenceRule: $recurrenceRule, ')
+          ..write('isRecurringInstance: $isRecurringInstance, ')
+          ..write('seriesExternalEventId: $seriesExternalEventId, ')
           ..write('version: $version, ')
           ..write('createdAtUtc: $createdAtUtc, ')
           ..write('updatedAtUtc: $updatedAtUtc, ')
@@ -756,7 +888,7 @@ class CalendarEvent extends DataClass implements Insertable<CalendarEvent> {
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     title,
     notes,
@@ -771,11 +903,14 @@ class CalendarEvent extends DataClass implements Insertable<CalendarEvent> {
     externalCalendarId,
     externalEventId,
     reminderMinutesJson,
+    recurrenceRule,
+    isRecurringInstance,
+    seriesExternalEventId,
     version,
     createdAtUtc,
     updatedAtUtc,
     deletedAtUtc,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -794,6 +929,9 @@ class CalendarEvent extends DataClass implements Insertable<CalendarEvent> {
           other.externalCalendarId == this.externalCalendarId &&
           other.externalEventId == this.externalEventId &&
           other.reminderMinutesJson == this.reminderMinutesJson &&
+          other.recurrenceRule == this.recurrenceRule &&
+          other.isRecurringInstance == this.isRecurringInstance &&
+          other.seriesExternalEventId == this.seriesExternalEventId &&
           other.version == this.version &&
           other.createdAtUtc == this.createdAtUtc &&
           other.updatedAtUtc == this.updatedAtUtc &&
@@ -815,6 +953,9 @@ class CalendarEventsCompanion extends UpdateCompanion<CalendarEvent> {
   final Value<String?> externalCalendarId;
   final Value<String?> externalEventId;
   final Value<String> reminderMinutesJson;
+  final Value<String?> recurrenceRule;
+  final Value<bool> isRecurringInstance;
+  final Value<String?> seriesExternalEventId;
   final Value<int> version;
   final Value<DateTime> createdAtUtc;
   final Value<DateTime> updatedAtUtc;
@@ -835,6 +976,9 @@ class CalendarEventsCompanion extends UpdateCompanion<CalendarEvent> {
     this.externalCalendarId = const Value.absent(),
     this.externalEventId = const Value.absent(),
     this.reminderMinutesJson = const Value.absent(),
+    this.recurrenceRule = const Value.absent(),
+    this.isRecurringInstance = const Value.absent(),
+    this.seriesExternalEventId = const Value.absent(),
     this.version = const Value.absent(),
     this.createdAtUtc = const Value.absent(),
     this.updatedAtUtc = const Value.absent(),
@@ -856,6 +1000,9 @@ class CalendarEventsCompanion extends UpdateCompanion<CalendarEvent> {
     this.externalCalendarId = const Value.absent(),
     this.externalEventId = const Value.absent(),
     this.reminderMinutesJson = const Value.absent(),
+    this.recurrenceRule = const Value.absent(),
+    this.isRecurringInstance = const Value.absent(),
+    this.seriesExternalEventId = const Value.absent(),
     this.version = const Value.absent(),
     required DateTime createdAtUtc,
     required DateTime updatedAtUtc,
@@ -884,6 +1031,9 @@ class CalendarEventsCompanion extends UpdateCompanion<CalendarEvent> {
     Expression<String>? externalCalendarId,
     Expression<String>? externalEventId,
     Expression<String>? reminderMinutesJson,
+    Expression<String>? recurrenceRule,
+    Expression<bool>? isRecurringInstance,
+    Expression<String>? seriesExternalEventId,
     Expression<int>? version,
     Expression<DateTime>? createdAtUtc,
     Expression<DateTime>? updatedAtUtc,
@@ -907,6 +1057,11 @@ class CalendarEventsCompanion extends UpdateCompanion<CalendarEvent> {
       if (externalEventId != null) 'external_event_id': externalEventId,
       if (reminderMinutesJson != null)
         'reminder_minutes_json': reminderMinutesJson,
+      if (recurrenceRule != null) 'recurrence_rule': recurrenceRule,
+      if (isRecurringInstance != null)
+        'is_recurring_instance': isRecurringInstance,
+      if (seriesExternalEventId != null)
+        'series_external_event_id': seriesExternalEventId,
       if (version != null) 'version': version,
       if (createdAtUtc != null) 'created_at_utc': createdAtUtc,
       if (updatedAtUtc != null) 'updated_at_utc': updatedAtUtc,
@@ -930,6 +1085,9 @@ class CalendarEventsCompanion extends UpdateCompanion<CalendarEvent> {
     Value<String?>? externalCalendarId,
     Value<String?>? externalEventId,
     Value<String>? reminderMinutesJson,
+    Value<String?>? recurrenceRule,
+    Value<bool>? isRecurringInstance,
+    Value<String?>? seriesExternalEventId,
     Value<int>? version,
     Value<DateTime>? createdAtUtc,
     Value<DateTime>? updatedAtUtc,
@@ -951,6 +1109,10 @@ class CalendarEventsCompanion extends UpdateCompanion<CalendarEvent> {
       externalCalendarId: externalCalendarId ?? this.externalCalendarId,
       externalEventId: externalEventId ?? this.externalEventId,
       reminderMinutesJson: reminderMinutesJson ?? this.reminderMinutesJson,
+      recurrenceRule: recurrenceRule ?? this.recurrenceRule,
+      isRecurringInstance: isRecurringInstance ?? this.isRecurringInstance,
+      seriesExternalEventId:
+          seriesExternalEventId ?? this.seriesExternalEventId,
       version: version ?? this.version,
       createdAtUtc: createdAtUtc ?? this.createdAtUtc,
       updatedAtUtc: updatedAtUtc ?? this.updatedAtUtc,
@@ -1006,6 +1168,17 @@ class CalendarEventsCompanion extends UpdateCompanion<CalendarEvent> {
         reminderMinutesJson.value,
       );
     }
+    if (recurrenceRule.present) {
+      map['recurrence_rule'] = Variable<String>(recurrenceRule.value);
+    }
+    if (isRecurringInstance.present) {
+      map['is_recurring_instance'] = Variable<bool>(isRecurringInstance.value);
+    }
+    if (seriesExternalEventId.present) {
+      map['series_external_event_id'] = Variable<String>(
+        seriesExternalEventId.value,
+      );
+    }
     if (version.present) {
       map['version'] = Variable<int>(version.value);
     }
@@ -1041,6 +1214,9 @@ class CalendarEventsCompanion extends UpdateCompanion<CalendarEvent> {
           ..write('externalCalendarId: $externalCalendarId, ')
           ..write('externalEventId: $externalEventId, ')
           ..write('reminderMinutesJson: $reminderMinutesJson, ')
+          ..write('recurrenceRule: $recurrenceRule, ')
+          ..write('isRecurringInstance: $isRecurringInstance, ')
+          ..write('seriesExternalEventId: $seriesExternalEventId, ')
           ..write('version: $version, ')
           ..write('createdAtUtc: $createdAtUtc, ')
           ..write('updatedAtUtc: $updatedAtUtc, ')
@@ -1144,6 +1320,111 @@ class $CalendarEventLinksTable extends CalendarEventLinks
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _presenceStatusMeta = const VerificationMeta(
+    'presenceStatus',
+  );
+  @override
+  late final GeneratedColumn<String> presenceStatus = GeneratedColumn<String>(
+    'presence_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('present'),
+  );
+  static const VerificationMeta _lastSeenExternallyAtUtcMeta =
+      const VerificationMeta('lastSeenExternallyAtUtc');
+  @override
+  late final GeneratedColumn<DateTime> lastSeenExternallyAtUtc =
+      GeneratedColumn<DateTime>(
+        'last_seen_externally_at_utc',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _firstMissingObservationAtUtcMeta =
+      const VerificationMeta('firstMissingObservationAtUtc');
+  @override
+  late final GeneratedColumn<DateTime> firstMissingObservationAtUtc =
+      GeneratedColumn<DateTime>(
+        'first_missing_observation_at_utc',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _lastMissingObservationAtUtcMeta =
+      const VerificationMeta('lastMissingObservationAtUtc');
+  @override
+  late final GeneratedColumn<DateTime> lastMissingObservationAtUtc =
+      GeneratedColumn<DateTime>(
+        'last_missing_observation_at_utc',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _missingObservationCountMeta =
+      const VerificationMeta('missingObservationCount');
+  @override
+  late final GeneratedColumn<int> missingObservationCount =
+      GeneratedColumn<int>(
+        'missing_observation_count',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(0),
+      );
+  static const VerificationMeta _lastCompleteQueryStartUtcMeta =
+      const VerificationMeta('lastCompleteQueryStartUtc');
+  @override
+  late final GeneratedColumn<DateTime> lastCompleteQueryStartUtc =
+      GeneratedColumn<DateTime>(
+        'last_complete_query_start_utc',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _lastCompleteQueryEndUtcMeta =
+      const VerificationMeta('lastCompleteQueryEndUtc');
+  @override
+  late final GeneratedColumn<DateTime> lastCompleteQueryEndUtc =
+      GeneratedColumn<DateTime>(
+        'last_complete_query_end_utc',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _hiddenLocallyMeta = const VerificationMeta(
+    'hiddenLocally',
+  );
+  @override
+  late final GeneratedColumn<bool> hiddenLocally = GeneratedColumn<bool>(
+    'hidden_locally',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("hidden_locally" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _memyMarkerMeta = const VerificationMeta(
+    'memyMarker',
+  );
+  @override
+  late final GeneratedColumn<String> memyMarker = GeneratedColumn<String>(
+    'memy_marker',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1154,6 +1435,15 @@ class $CalendarEventLinksTable extends CalendarEventLinks
     lastSyncedAtUtc,
     lastKnownExternalUpdatedAtUtc,
     createdAtUtc,
+    presenceStatus,
+    lastSeenExternallyAtUtc,
+    firstMissingObservationAtUtc,
+    lastMissingObservationAtUtc,
+    missingObservationCount,
+    lastCompleteQueryStartUtc,
+    lastCompleteQueryEndUtc,
+    hiddenLocally,
+    memyMarker,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1244,6 +1534,84 @@ class $CalendarEventLinksTable extends CalendarEventLinks
     } else if (isInserting) {
       context.missing(_createdAtUtcMeta);
     }
+    if (data.containsKey('presence_status')) {
+      context.handle(
+        _presenceStatusMeta,
+        presenceStatus.isAcceptableOrUnknown(
+          data['presence_status']!,
+          _presenceStatusMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_seen_externally_at_utc')) {
+      context.handle(
+        _lastSeenExternallyAtUtcMeta,
+        lastSeenExternallyAtUtc.isAcceptableOrUnknown(
+          data['last_seen_externally_at_utc']!,
+          _lastSeenExternallyAtUtcMeta,
+        ),
+      );
+    }
+    if (data.containsKey('first_missing_observation_at_utc')) {
+      context.handle(
+        _firstMissingObservationAtUtcMeta,
+        firstMissingObservationAtUtc.isAcceptableOrUnknown(
+          data['first_missing_observation_at_utc']!,
+          _firstMissingObservationAtUtcMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_missing_observation_at_utc')) {
+      context.handle(
+        _lastMissingObservationAtUtcMeta,
+        lastMissingObservationAtUtc.isAcceptableOrUnknown(
+          data['last_missing_observation_at_utc']!,
+          _lastMissingObservationAtUtcMeta,
+        ),
+      );
+    }
+    if (data.containsKey('missing_observation_count')) {
+      context.handle(
+        _missingObservationCountMeta,
+        missingObservationCount.isAcceptableOrUnknown(
+          data['missing_observation_count']!,
+          _missingObservationCountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_complete_query_start_utc')) {
+      context.handle(
+        _lastCompleteQueryStartUtcMeta,
+        lastCompleteQueryStartUtc.isAcceptableOrUnknown(
+          data['last_complete_query_start_utc']!,
+          _lastCompleteQueryStartUtcMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_complete_query_end_utc')) {
+      context.handle(
+        _lastCompleteQueryEndUtcMeta,
+        lastCompleteQueryEndUtc.isAcceptableOrUnknown(
+          data['last_complete_query_end_utc']!,
+          _lastCompleteQueryEndUtcMeta,
+        ),
+      );
+    }
+    if (data.containsKey('hidden_locally')) {
+      context.handle(
+        _hiddenLocallyMeta,
+        hiddenLocally.isAcceptableOrUnknown(
+          data['hidden_locally']!,
+          _hiddenLocallyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('memy_marker')) {
+      context.handle(
+        _memyMarkerMeta,
+        memyMarker.isAcceptableOrUnknown(data['memy_marker']!, _memyMarkerMeta),
+      );
+    }
     return context;
   }
 
@@ -1290,6 +1658,42 @@ class $CalendarEventLinksTable extends CalendarEventLinks
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at_utc'],
       )!,
+      presenceStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}presence_status'],
+      )!,
+      lastSeenExternallyAtUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_seen_externally_at_utc'],
+      ),
+      firstMissingObservationAtUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}first_missing_observation_at_utc'],
+      ),
+      lastMissingObservationAtUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_missing_observation_at_utc'],
+      ),
+      missingObservationCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}missing_observation_count'],
+      )!,
+      lastCompleteQueryStartUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_complete_query_start_utc'],
+      ),
+      lastCompleteQueryEndUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_complete_query_end_utc'],
+      ),
+      hiddenLocally: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}hidden_locally'],
+      )!,
+      memyMarker: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}memy_marker'],
+      ),
     );
   }
 
@@ -1309,6 +1713,15 @@ class CalendarEventLink extends DataClass
   final DateTime lastSyncedAtUtc;
   final DateTime? lastKnownExternalUpdatedAtUtc;
   final DateTime createdAtUtc;
+  final String presenceStatus;
+  final DateTime? lastSeenExternallyAtUtc;
+  final DateTime? firstMissingObservationAtUtc;
+  final DateTime? lastMissingObservationAtUtc;
+  final int missingObservationCount;
+  final DateTime? lastCompleteQueryStartUtc;
+  final DateTime? lastCompleteQueryEndUtc;
+  final bool hiddenLocally;
+  final String? memyMarker;
   const CalendarEventLink({
     required this.id,
     required this.memyEventId,
@@ -1318,6 +1731,15 @@ class CalendarEventLink extends DataClass
     required this.lastSyncedAtUtc,
     this.lastKnownExternalUpdatedAtUtc,
     required this.createdAtUtc,
+    required this.presenceStatus,
+    this.lastSeenExternallyAtUtc,
+    this.firstMissingObservationAtUtc,
+    this.lastMissingObservationAtUtc,
+    required this.missingObservationCount,
+    this.lastCompleteQueryStartUtc,
+    this.lastCompleteQueryEndUtc,
+    required this.hiddenLocally,
+    this.memyMarker,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1334,6 +1756,37 @@ class CalendarEventLink extends DataClass
       );
     }
     map['created_at_utc'] = Variable<DateTime>(createdAtUtc);
+    map['presence_status'] = Variable<String>(presenceStatus);
+    if (!nullToAbsent || lastSeenExternallyAtUtc != null) {
+      map['last_seen_externally_at_utc'] = Variable<DateTime>(
+        lastSeenExternallyAtUtc,
+      );
+    }
+    if (!nullToAbsent || firstMissingObservationAtUtc != null) {
+      map['first_missing_observation_at_utc'] = Variable<DateTime>(
+        firstMissingObservationAtUtc,
+      );
+    }
+    if (!nullToAbsent || lastMissingObservationAtUtc != null) {
+      map['last_missing_observation_at_utc'] = Variable<DateTime>(
+        lastMissingObservationAtUtc,
+      );
+    }
+    map['missing_observation_count'] = Variable<int>(missingObservationCount);
+    if (!nullToAbsent || lastCompleteQueryStartUtc != null) {
+      map['last_complete_query_start_utc'] = Variable<DateTime>(
+        lastCompleteQueryStartUtc,
+      );
+    }
+    if (!nullToAbsent || lastCompleteQueryEndUtc != null) {
+      map['last_complete_query_end_utc'] = Variable<DateTime>(
+        lastCompleteQueryEndUtc,
+      );
+    }
+    map['hidden_locally'] = Variable<bool>(hiddenLocally);
+    if (!nullToAbsent || memyMarker != null) {
+      map['memy_marker'] = Variable<String>(memyMarker);
+    }
     return map;
   }
 
@@ -1350,6 +1803,30 @@ class CalendarEventLink extends DataClass
           ? const Value.absent()
           : Value(lastKnownExternalUpdatedAtUtc),
       createdAtUtc: Value(createdAtUtc),
+      presenceStatus: Value(presenceStatus),
+      lastSeenExternallyAtUtc: lastSeenExternallyAtUtc == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSeenExternallyAtUtc),
+      firstMissingObservationAtUtc:
+          firstMissingObservationAtUtc == null && nullToAbsent
+          ? const Value.absent()
+          : Value(firstMissingObservationAtUtc),
+      lastMissingObservationAtUtc:
+          lastMissingObservationAtUtc == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastMissingObservationAtUtc),
+      missingObservationCount: Value(missingObservationCount),
+      lastCompleteQueryStartUtc:
+          lastCompleteQueryStartUtc == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastCompleteQueryStartUtc),
+      lastCompleteQueryEndUtc: lastCompleteQueryEndUtc == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastCompleteQueryEndUtc),
+      hiddenLocally: Value(hiddenLocally),
+      memyMarker: memyMarker == null && nullToAbsent
+          ? const Value.absent()
+          : Value(memyMarker),
     );
   }
 
@@ -1371,6 +1848,27 @@ class CalendarEventLink extends DataClass
         json['lastKnownExternalUpdatedAtUtc'],
       ),
       createdAtUtc: serializer.fromJson<DateTime>(json['createdAtUtc']),
+      presenceStatus: serializer.fromJson<String>(json['presenceStatus']),
+      lastSeenExternallyAtUtc: serializer.fromJson<DateTime?>(
+        json['lastSeenExternallyAtUtc'],
+      ),
+      firstMissingObservationAtUtc: serializer.fromJson<DateTime?>(
+        json['firstMissingObservationAtUtc'],
+      ),
+      lastMissingObservationAtUtc: serializer.fromJson<DateTime?>(
+        json['lastMissingObservationAtUtc'],
+      ),
+      missingObservationCount: serializer.fromJson<int>(
+        json['missingObservationCount'],
+      ),
+      lastCompleteQueryStartUtc: serializer.fromJson<DateTime?>(
+        json['lastCompleteQueryStartUtc'],
+      ),
+      lastCompleteQueryEndUtc: serializer.fromJson<DateTime?>(
+        json['lastCompleteQueryEndUtc'],
+      ),
+      hiddenLocally: serializer.fromJson<bool>(json['hiddenLocally']),
+      memyMarker: serializer.fromJson<String?>(json['memyMarker']),
     );
   }
   @override
@@ -1387,6 +1885,27 @@ class CalendarEventLink extends DataClass
         lastKnownExternalUpdatedAtUtc,
       ),
       'createdAtUtc': serializer.toJson<DateTime>(createdAtUtc),
+      'presenceStatus': serializer.toJson<String>(presenceStatus),
+      'lastSeenExternallyAtUtc': serializer.toJson<DateTime?>(
+        lastSeenExternallyAtUtc,
+      ),
+      'firstMissingObservationAtUtc': serializer.toJson<DateTime?>(
+        firstMissingObservationAtUtc,
+      ),
+      'lastMissingObservationAtUtc': serializer.toJson<DateTime?>(
+        lastMissingObservationAtUtc,
+      ),
+      'missingObservationCount': serializer.toJson<int>(
+        missingObservationCount,
+      ),
+      'lastCompleteQueryStartUtc': serializer.toJson<DateTime?>(
+        lastCompleteQueryStartUtc,
+      ),
+      'lastCompleteQueryEndUtc': serializer.toJson<DateTime?>(
+        lastCompleteQueryEndUtc,
+      ),
+      'hiddenLocally': serializer.toJson<bool>(hiddenLocally),
+      'memyMarker': serializer.toJson<String?>(memyMarker),
     };
   }
 
@@ -1399,6 +1918,15 @@ class CalendarEventLink extends DataClass
     DateTime? lastSyncedAtUtc,
     Value<DateTime?> lastKnownExternalUpdatedAtUtc = const Value.absent(),
     DateTime? createdAtUtc,
+    String? presenceStatus,
+    Value<DateTime?> lastSeenExternallyAtUtc = const Value.absent(),
+    Value<DateTime?> firstMissingObservationAtUtc = const Value.absent(),
+    Value<DateTime?> lastMissingObservationAtUtc = const Value.absent(),
+    int? missingObservationCount,
+    Value<DateTime?> lastCompleteQueryStartUtc = const Value.absent(),
+    Value<DateTime?> lastCompleteQueryEndUtc = const Value.absent(),
+    bool? hiddenLocally,
+    Value<String?> memyMarker = const Value.absent(),
   }) => CalendarEventLink(
     id: id ?? this.id,
     memyEventId: memyEventId ?? this.memyEventId,
@@ -1410,6 +1938,26 @@ class CalendarEventLink extends DataClass
         ? lastKnownExternalUpdatedAtUtc.value
         : this.lastKnownExternalUpdatedAtUtc,
     createdAtUtc: createdAtUtc ?? this.createdAtUtc,
+    presenceStatus: presenceStatus ?? this.presenceStatus,
+    lastSeenExternallyAtUtc: lastSeenExternallyAtUtc.present
+        ? lastSeenExternallyAtUtc.value
+        : this.lastSeenExternallyAtUtc,
+    firstMissingObservationAtUtc: firstMissingObservationAtUtc.present
+        ? firstMissingObservationAtUtc.value
+        : this.firstMissingObservationAtUtc,
+    lastMissingObservationAtUtc: lastMissingObservationAtUtc.present
+        ? lastMissingObservationAtUtc.value
+        : this.lastMissingObservationAtUtc,
+    missingObservationCount:
+        missingObservationCount ?? this.missingObservationCount,
+    lastCompleteQueryStartUtc: lastCompleteQueryStartUtc.present
+        ? lastCompleteQueryStartUtc.value
+        : this.lastCompleteQueryStartUtc,
+    lastCompleteQueryEndUtc: lastCompleteQueryEndUtc.present
+        ? lastCompleteQueryEndUtc.value
+        : this.lastCompleteQueryEndUtc,
+    hiddenLocally: hiddenLocally ?? this.hiddenLocally,
+    memyMarker: memyMarker.present ? memyMarker.value : this.memyMarker,
   );
   CalendarEventLink copyWithCompanion(CalendarEventLinksCompanion data) {
     return CalendarEventLink(
@@ -1433,6 +1981,33 @@ class CalendarEventLink extends DataClass
       createdAtUtc: data.createdAtUtc.present
           ? data.createdAtUtc.value
           : this.createdAtUtc,
+      presenceStatus: data.presenceStatus.present
+          ? data.presenceStatus.value
+          : this.presenceStatus,
+      lastSeenExternallyAtUtc: data.lastSeenExternallyAtUtc.present
+          ? data.lastSeenExternallyAtUtc.value
+          : this.lastSeenExternallyAtUtc,
+      firstMissingObservationAtUtc: data.firstMissingObservationAtUtc.present
+          ? data.firstMissingObservationAtUtc.value
+          : this.firstMissingObservationAtUtc,
+      lastMissingObservationAtUtc: data.lastMissingObservationAtUtc.present
+          ? data.lastMissingObservationAtUtc.value
+          : this.lastMissingObservationAtUtc,
+      missingObservationCount: data.missingObservationCount.present
+          ? data.missingObservationCount.value
+          : this.missingObservationCount,
+      lastCompleteQueryStartUtc: data.lastCompleteQueryStartUtc.present
+          ? data.lastCompleteQueryStartUtc.value
+          : this.lastCompleteQueryStartUtc,
+      lastCompleteQueryEndUtc: data.lastCompleteQueryEndUtc.present
+          ? data.lastCompleteQueryEndUtc.value
+          : this.lastCompleteQueryEndUtc,
+      hiddenLocally: data.hiddenLocally.present
+          ? data.hiddenLocally.value
+          : this.hiddenLocally,
+      memyMarker: data.memyMarker.present
+          ? data.memyMarker.value
+          : this.memyMarker,
     );
   }
 
@@ -1448,7 +2023,18 @@ class CalendarEventLink extends DataClass
           ..write(
             'lastKnownExternalUpdatedAtUtc: $lastKnownExternalUpdatedAtUtc, ',
           )
-          ..write('createdAtUtc: $createdAtUtc')
+          ..write('createdAtUtc: $createdAtUtc, ')
+          ..write('presenceStatus: $presenceStatus, ')
+          ..write('lastSeenExternallyAtUtc: $lastSeenExternallyAtUtc, ')
+          ..write(
+            'firstMissingObservationAtUtc: $firstMissingObservationAtUtc, ',
+          )
+          ..write('lastMissingObservationAtUtc: $lastMissingObservationAtUtc, ')
+          ..write('missingObservationCount: $missingObservationCount, ')
+          ..write('lastCompleteQueryStartUtc: $lastCompleteQueryStartUtc, ')
+          ..write('lastCompleteQueryEndUtc: $lastCompleteQueryEndUtc, ')
+          ..write('hiddenLocally: $hiddenLocally, ')
+          ..write('memyMarker: $memyMarker')
           ..write(')'))
         .toString();
   }
@@ -1463,6 +2049,15 @@ class CalendarEventLink extends DataClass
     lastSyncedAtUtc,
     lastKnownExternalUpdatedAtUtc,
     createdAtUtc,
+    presenceStatus,
+    lastSeenExternallyAtUtc,
+    firstMissingObservationAtUtc,
+    lastMissingObservationAtUtc,
+    missingObservationCount,
+    lastCompleteQueryStartUtc,
+    lastCompleteQueryEndUtc,
+    hiddenLocally,
+    memyMarker,
   );
   @override
   bool operator ==(Object other) =>
@@ -1476,7 +2071,18 @@ class CalendarEventLink extends DataClass
           other.lastSyncedAtUtc == this.lastSyncedAtUtc &&
           other.lastKnownExternalUpdatedAtUtc ==
               this.lastKnownExternalUpdatedAtUtc &&
-          other.createdAtUtc == this.createdAtUtc);
+          other.createdAtUtc == this.createdAtUtc &&
+          other.presenceStatus == this.presenceStatus &&
+          other.lastSeenExternallyAtUtc == this.lastSeenExternallyAtUtc &&
+          other.firstMissingObservationAtUtc ==
+              this.firstMissingObservationAtUtc &&
+          other.lastMissingObservationAtUtc ==
+              this.lastMissingObservationAtUtc &&
+          other.missingObservationCount == this.missingObservationCount &&
+          other.lastCompleteQueryStartUtc == this.lastCompleteQueryStartUtc &&
+          other.lastCompleteQueryEndUtc == this.lastCompleteQueryEndUtc &&
+          other.hiddenLocally == this.hiddenLocally &&
+          other.memyMarker == this.memyMarker);
 }
 
 class CalendarEventLinksCompanion extends UpdateCompanion<CalendarEventLink> {
@@ -1488,6 +2094,15 @@ class CalendarEventLinksCompanion extends UpdateCompanion<CalendarEventLink> {
   final Value<DateTime> lastSyncedAtUtc;
   final Value<DateTime?> lastKnownExternalUpdatedAtUtc;
   final Value<DateTime> createdAtUtc;
+  final Value<String> presenceStatus;
+  final Value<DateTime?> lastSeenExternallyAtUtc;
+  final Value<DateTime?> firstMissingObservationAtUtc;
+  final Value<DateTime?> lastMissingObservationAtUtc;
+  final Value<int> missingObservationCount;
+  final Value<DateTime?> lastCompleteQueryStartUtc;
+  final Value<DateTime?> lastCompleteQueryEndUtc;
+  final Value<bool> hiddenLocally;
+  final Value<String?> memyMarker;
   final Value<int> rowid;
   const CalendarEventLinksCompanion({
     this.id = const Value.absent(),
@@ -1498,6 +2113,15 @@ class CalendarEventLinksCompanion extends UpdateCompanion<CalendarEventLink> {
     this.lastSyncedAtUtc = const Value.absent(),
     this.lastKnownExternalUpdatedAtUtc = const Value.absent(),
     this.createdAtUtc = const Value.absent(),
+    this.presenceStatus = const Value.absent(),
+    this.lastSeenExternallyAtUtc = const Value.absent(),
+    this.firstMissingObservationAtUtc = const Value.absent(),
+    this.lastMissingObservationAtUtc = const Value.absent(),
+    this.missingObservationCount = const Value.absent(),
+    this.lastCompleteQueryStartUtc = const Value.absent(),
+    this.lastCompleteQueryEndUtc = const Value.absent(),
+    this.hiddenLocally = const Value.absent(),
+    this.memyMarker = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   CalendarEventLinksCompanion.insert({
@@ -1509,6 +2133,15 @@ class CalendarEventLinksCompanion extends UpdateCompanion<CalendarEventLink> {
     required DateTime lastSyncedAtUtc,
     this.lastKnownExternalUpdatedAtUtc = const Value.absent(),
     required DateTime createdAtUtc,
+    this.presenceStatus = const Value.absent(),
+    this.lastSeenExternallyAtUtc = const Value.absent(),
+    this.firstMissingObservationAtUtc = const Value.absent(),
+    this.lastMissingObservationAtUtc = const Value.absent(),
+    this.missingObservationCount = const Value.absent(),
+    this.lastCompleteQueryStartUtc = const Value.absent(),
+    this.lastCompleteQueryEndUtc = const Value.absent(),
+    this.hiddenLocally = const Value.absent(),
+    this.memyMarker = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        memyEventId = Value(memyEventId),
@@ -1526,6 +2159,15 @@ class CalendarEventLinksCompanion extends UpdateCompanion<CalendarEventLink> {
     Expression<DateTime>? lastSyncedAtUtc,
     Expression<DateTime>? lastKnownExternalUpdatedAtUtc,
     Expression<DateTime>? createdAtUtc,
+    Expression<String>? presenceStatus,
+    Expression<DateTime>? lastSeenExternallyAtUtc,
+    Expression<DateTime>? firstMissingObservationAtUtc,
+    Expression<DateTime>? lastMissingObservationAtUtc,
+    Expression<int>? missingObservationCount,
+    Expression<DateTime>? lastCompleteQueryStartUtc,
+    Expression<DateTime>? lastCompleteQueryEndUtc,
+    Expression<bool>? hiddenLocally,
+    Expression<String>? memyMarker,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1539,6 +2181,21 @@ class CalendarEventLinksCompanion extends UpdateCompanion<CalendarEventLink> {
       if (lastKnownExternalUpdatedAtUtc != null)
         'last_known_external_updated_at_utc': lastKnownExternalUpdatedAtUtc,
       if (createdAtUtc != null) 'created_at_utc': createdAtUtc,
+      if (presenceStatus != null) 'presence_status': presenceStatus,
+      if (lastSeenExternallyAtUtc != null)
+        'last_seen_externally_at_utc': lastSeenExternallyAtUtc,
+      if (firstMissingObservationAtUtc != null)
+        'first_missing_observation_at_utc': firstMissingObservationAtUtc,
+      if (lastMissingObservationAtUtc != null)
+        'last_missing_observation_at_utc': lastMissingObservationAtUtc,
+      if (missingObservationCount != null)
+        'missing_observation_count': missingObservationCount,
+      if (lastCompleteQueryStartUtc != null)
+        'last_complete_query_start_utc': lastCompleteQueryStartUtc,
+      if (lastCompleteQueryEndUtc != null)
+        'last_complete_query_end_utc': lastCompleteQueryEndUtc,
+      if (hiddenLocally != null) 'hidden_locally': hiddenLocally,
+      if (memyMarker != null) 'memy_marker': memyMarker,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1552,6 +2209,15 @@ class CalendarEventLinksCompanion extends UpdateCompanion<CalendarEventLink> {
     Value<DateTime>? lastSyncedAtUtc,
     Value<DateTime?>? lastKnownExternalUpdatedAtUtc,
     Value<DateTime>? createdAtUtc,
+    Value<String>? presenceStatus,
+    Value<DateTime?>? lastSeenExternallyAtUtc,
+    Value<DateTime?>? firstMissingObservationAtUtc,
+    Value<DateTime?>? lastMissingObservationAtUtc,
+    Value<int>? missingObservationCount,
+    Value<DateTime?>? lastCompleteQueryStartUtc,
+    Value<DateTime?>? lastCompleteQueryEndUtc,
+    Value<bool>? hiddenLocally,
+    Value<String?>? memyMarker,
     Value<int>? rowid,
   }) {
     return CalendarEventLinksCompanion(
@@ -1564,6 +2230,21 @@ class CalendarEventLinksCompanion extends UpdateCompanion<CalendarEventLink> {
       lastKnownExternalUpdatedAtUtc:
           lastKnownExternalUpdatedAtUtc ?? this.lastKnownExternalUpdatedAtUtc,
       createdAtUtc: createdAtUtc ?? this.createdAtUtc,
+      presenceStatus: presenceStatus ?? this.presenceStatus,
+      lastSeenExternallyAtUtc:
+          lastSeenExternallyAtUtc ?? this.lastSeenExternallyAtUtc,
+      firstMissingObservationAtUtc:
+          firstMissingObservationAtUtc ?? this.firstMissingObservationAtUtc,
+      lastMissingObservationAtUtc:
+          lastMissingObservationAtUtc ?? this.lastMissingObservationAtUtc,
+      missingObservationCount:
+          missingObservationCount ?? this.missingObservationCount,
+      lastCompleteQueryStartUtc:
+          lastCompleteQueryStartUtc ?? this.lastCompleteQueryStartUtc,
+      lastCompleteQueryEndUtc:
+          lastCompleteQueryEndUtc ?? this.lastCompleteQueryEndUtc,
+      hiddenLocally: hiddenLocally ?? this.hiddenLocally,
+      memyMarker: memyMarker ?? this.memyMarker,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1597,6 +2278,45 @@ class CalendarEventLinksCompanion extends UpdateCompanion<CalendarEventLink> {
     if (createdAtUtc.present) {
       map['created_at_utc'] = Variable<DateTime>(createdAtUtc.value);
     }
+    if (presenceStatus.present) {
+      map['presence_status'] = Variable<String>(presenceStatus.value);
+    }
+    if (lastSeenExternallyAtUtc.present) {
+      map['last_seen_externally_at_utc'] = Variable<DateTime>(
+        lastSeenExternallyAtUtc.value,
+      );
+    }
+    if (firstMissingObservationAtUtc.present) {
+      map['first_missing_observation_at_utc'] = Variable<DateTime>(
+        firstMissingObservationAtUtc.value,
+      );
+    }
+    if (lastMissingObservationAtUtc.present) {
+      map['last_missing_observation_at_utc'] = Variable<DateTime>(
+        lastMissingObservationAtUtc.value,
+      );
+    }
+    if (missingObservationCount.present) {
+      map['missing_observation_count'] = Variable<int>(
+        missingObservationCount.value,
+      );
+    }
+    if (lastCompleteQueryStartUtc.present) {
+      map['last_complete_query_start_utc'] = Variable<DateTime>(
+        lastCompleteQueryStartUtc.value,
+      );
+    }
+    if (lastCompleteQueryEndUtc.present) {
+      map['last_complete_query_end_utc'] = Variable<DateTime>(
+        lastCompleteQueryEndUtc.value,
+      );
+    }
+    if (hiddenLocally.present) {
+      map['hidden_locally'] = Variable<bool>(hiddenLocally.value);
+    }
+    if (memyMarker.present) {
+      map['memy_marker'] = Variable<String>(memyMarker.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1616,6 +2336,17 @@ class CalendarEventLinksCompanion extends UpdateCompanion<CalendarEventLink> {
             'lastKnownExternalUpdatedAtUtc: $lastKnownExternalUpdatedAtUtc, ',
           )
           ..write('createdAtUtc: $createdAtUtc, ')
+          ..write('presenceStatus: $presenceStatus, ')
+          ..write('lastSeenExternallyAtUtc: $lastSeenExternallyAtUtc, ')
+          ..write(
+            'firstMissingObservationAtUtc: $firstMissingObservationAtUtc, ',
+          )
+          ..write('lastMissingObservationAtUtc: $lastMissingObservationAtUtc, ')
+          ..write('missingObservationCount: $missingObservationCount, ')
+          ..write('lastCompleteQueryStartUtc: $lastCompleteQueryStartUtc, ')
+          ..write('lastCompleteQueryEndUtc: $lastCompleteQueryEndUtc, ')
+          ..write('hiddenLocally: $hiddenLocally, ')
+          ..write('memyMarker: $memyMarker, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2173,6 +2904,891 @@ class CalendarConflictsCompanion extends UpdateCompanion<CalendarConflict> {
   }
 }
 
+class $CalendarSyncOperationsTable extends CalendarSyncOperations
+    with TableInfo<$CalendarSyncOperationsTable, CalendarSyncOperation> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CalendarSyncOperationsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _memyEventIdMeta = const VerificationMeta(
+    'memyEventId',
+  );
+  @override
+  late final GeneratedColumn<String> memyEventId = GeneratedColumn<String>(
+    'memy_event_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _operationTypeMeta = const VerificationMeta(
+    'operationType',
+  );
+  @override
+  late final GeneratedColumn<String> operationType = GeneratedColumn<String>(
+    'operation_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _targetCalendarIdMeta = const VerificationMeta(
+    'targetCalendarId',
+  );
+  @override
+  late final GeneratedColumn<String> targetCalendarId = GeneratedColumn<String>(
+    'target_calendar_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payloadFingerprintMeta =
+      const VerificationMeta('payloadFingerprint');
+  @override
+  late final GeneratedColumn<String> payloadFingerprint =
+      GeneratedColumn<String>(
+        'payload_fingerprint',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _stateMeta = const VerificationMeta('state');
+  @override
+  late final GeneratedColumn<String> state = GeneratedColumn<String>(
+    'state',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _attemptCountMeta = const VerificationMeta(
+    'attemptCount',
+  );
+  @override
+  late final GeneratedColumn<int> attemptCount = GeneratedColumn<int>(
+    'attempt_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _providerExternalEventIdMeta =
+      const VerificationMeta('providerExternalEventId');
+  @override
+  late final GeneratedColumn<String> providerExternalEventId =
+      GeneratedColumn<String>(
+        'provider_external_event_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _memyMarkerMeta = const VerificationMeta(
+    'memyMarker',
+  );
+  @override
+  late final GeneratedColumn<String> memyMarker = GeneratedColumn<String>(
+    'memy_marker',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtUtcMeta = const VerificationMeta(
+    'createdAtUtc',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAtUtc = GeneratedColumn<DateTime>(
+    'created_at_utc',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _startedAtUtcMeta = const VerificationMeta(
+    'startedAtUtc',
+  );
+  @override
+  late final GeneratedColumn<DateTime> startedAtUtc = GeneratedColumn<DateTime>(
+    'started_at_utc',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _completedAtUtcMeta = const VerificationMeta(
+    'completedAtUtc',
+  );
+  @override
+  late final GeneratedColumn<DateTime> completedAtUtc =
+      GeneratedColumn<DateTime>(
+        'completed_at_utc',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _nextRetryAtUtcMeta = const VerificationMeta(
+    'nextRetryAtUtc',
+  );
+  @override
+  late final GeneratedColumn<DateTime> nextRetryAtUtc =
+      GeneratedColumn<DateTime>(
+        'next_retry_at_utc',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _lastErrorCodeMeta = const VerificationMeta(
+    'lastErrorCode',
+  );
+  @override
+  late final GeneratedColumn<String> lastErrorCode = GeneratedColumn<String>(
+    'last_error_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    memyEventId,
+    operationType,
+    targetCalendarId,
+    payloadFingerprint,
+    state,
+    attemptCount,
+    providerExternalEventId,
+    memyMarker,
+    createdAtUtc,
+    startedAtUtc,
+    completedAtUtc,
+    nextRetryAtUtc,
+    lastErrorCode,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'calendar_sync_operations';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CalendarSyncOperation> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('memy_event_id')) {
+      context.handle(
+        _memyEventIdMeta,
+        memyEventId.isAcceptableOrUnknown(
+          data['memy_event_id']!,
+          _memyEventIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_memyEventIdMeta);
+    }
+    if (data.containsKey('operation_type')) {
+      context.handle(
+        _operationTypeMeta,
+        operationType.isAcceptableOrUnknown(
+          data['operation_type']!,
+          _operationTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_operationTypeMeta);
+    }
+    if (data.containsKey('target_calendar_id')) {
+      context.handle(
+        _targetCalendarIdMeta,
+        targetCalendarId.isAcceptableOrUnknown(
+          data['target_calendar_id']!,
+          _targetCalendarIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_targetCalendarIdMeta);
+    }
+    if (data.containsKey('payload_fingerprint')) {
+      context.handle(
+        _payloadFingerprintMeta,
+        payloadFingerprint.isAcceptableOrUnknown(
+          data['payload_fingerprint']!,
+          _payloadFingerprintMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadFingerprintMeta);
+    }
+    if (data.containsKey('state')) {
+      context.handle(
+        _stateMeta,
+        state.isAcceptableOrUnknown(data['state']!, _stateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_stateMeta);
+    }
+    if (data.containsKey('attempt_count')) {
+      context.handle(
+        _attemptCountMeta,
+        attemptCount.isAcceptableOrUnknown(
+          data['attempt_count']!,
+          _attemptCountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('provider_external_event_id')) {
+      context.handle(
+        _providerExternalEventIdMeta,
+        providerExternalEventId.isAcceptableOrUnknown(
+          data['provider_external_event_id']!,
+          _providerExternalEventIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('memy_marker')) {
+      context.handle(
+        _memyMarkerMeta,
+        memyMarker.isAcceptableOrUnknown(data['memy_marker']!, _memyMarkerMeta),
+      );
+    }
+    if (data.containsKey('created_at_utc')) {
+      context.handle(
+        _createdAtUtcMeta,
+        createdAtUtc.isAcceptableOrUnknown(
+          data['created_at_utc']!,
+          _createdAtUtcMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtUtcMeta);
+    }
+    if (data.containsKey('started_at_utc')) {
+      context.handle(
+        _startedAtUtcMeta,
+        startedAtUtc.isAcceptableOrUnknown(
+          data['started_at_utc']!,
+          _startedAtUtcMeta,
+        ),
+      );
+    }
+    if (data.containsKey('completed_at_utc')) {
+      context.handle(
+        _completedAtUtcMeta,
+        completedAtUtc.isAcceptableOrUnknown(
+          data['completed_at_utc']!,
+          _completedAtUtcMeta,
+        ),
+      );
+    }
+    if (data.containsKey('next_retry_at_utc')) {
+      context.handle(
+        _nextRetryAtUtcMeta,
+        nextRetryAtUtc.isAcceptableOrUnknown(
+          data['next_retry_at_utc']!,
+          _nextRetryAtUtcMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_error_code')) {
+      context.handle(
+        _lastErrorCodeMeta,
+        lastErrorCode.isAcceptableOrUnknown(
+          data['last_error_code']!,
+          _lastErrorCodeMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CalendarSyncOperation map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CalendarSyncOperation(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      memyEventId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}memy_event_id'],
+      )!,
+      operationType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}operation_type'],
+      )!,
+      targetCalendarId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}target_calendar_id'],
+      )!,
+      payloadFingerprint: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload_fingerprint'],
+      )!,
+      state: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}state'],
+      )!,
+      attemptCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}attempt_count'],
+      )!,
+      providerExternalEventId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}provider_external_event_id'],
+      ),
+      memyMarker: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}memy_marker'],
+      ),
+      createdAtUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at_utc'],
+      )!,
+      startedAtUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}started_at_utc'],
+      ),
+      completedAtUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}completed_at_utc'],
+      ),
+      nextRetryAtUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}next_retry_at_utc'],
+      ),
+      lastErrorCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_error_code'],
+      ),
+    );
+  }
+
+  @override
+  $CalendarSyncOperationsTable createAlias(String alias) {
+    return $CalendarSyncOperationsTable(attachedDatabase, alias);
+  }
+}
+
+class CalendarSyncOperation extends DataClass
+    implements Insertable<CalendarSyncOperation> {
+  final String id;
+  final String memyEventId;
+  final String operationType;
+  final String targetCalendarId;
+  final String payloadFingerprint;
+  final String state;
+  final int attemptCount;
+  final String? providerExternalEventId;
+  final String? memyMarker;
+  final DateTime createdAtUtc;
+  final DateTime? startedAtUtc;
+  final DateTime? completedAtUtc;
+  final DateTime? nextRetryAtUtc;
+  final String? lastErrorCode;
+  const CalendarSyncOperation({
+    required this.id,
+    required this.memyEventId,
+    required this.operationType,
+    required this.targetCalendarId,
+    required this.payloadFingerprint,
+    required this.state,
+    required this.attemptCount,
+    this.providerExternalEventId,
+    this.memyMarker,
+    required this.createdAtUtc,
+    this.startedAtUtc,
+    this.completedAtUtc,
+    this.nextRetryAtUtc,
+    this.lastErrorCode,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['memy_event_id'] = Variable<String>(memyEventId);
+    map['operation_type'] = Variable<String>(operationType);
+    map['target_calendar_id'] = Variable<String>(targetCalendarId);
+    map['payload_fingerprint'] = Variable<String>(payloadFingerprint);
+    map['state'] = Variable<String>(state);
+    map['attempt_count'] = Variable<int>(attemptCount);
+    if (!nullToAbsent || providerExternalEventId != null) {
+      map['provider_external_event_id'] = Variable<String>(
+        providerExternalEventId,
+      );
+    }
+    if (!nullToAbsent || memyMarker != null) {
+      map['memy_marker'] = Variable<String>(memyMarker);
+    }
+    map['created_at_utc'] = Variable<DateTime>(createdAtUtc);
+    if (!nullToAbsent || startedAtUtc != null) {
+      map['started_at_utc'] = Variable<DateTime>(startedAtUtc);
+    }
+    if (!nullToAbsent || completedAtUtc != null) {
+      map['completed_at_utc'] = Variable<DateTime>(completedAtUtc);
+    }
+    if (!nullToAbsent || nextRetryAtUtc != null) {
+      map['next_retry_at_utc'] = Variable<DateTime>(nextRetryAtUtc);
+    }
+    if (!nullToAbsent || lastErrorCode != null) {
+      map['last_error_code'] = Variable<String>(lastErrorCode);
+    }
+    return map;
+  }
+
+  CalendarSyncOperationsCompanion toCompanion(bool nullToAbsent) {
+    return CalendarSyncOperationsCompanion(
+      id: Value(id),
+      memyEventId: Value(memyEventId),
+      operationType: Value(operationType),
+      targetCalendarId: Value(targetCalendarId),
+      payloadFingerprint: Value(payloadFingerprint),
+      state: Value(state),
+      attemptCount: Value(attemptCount),
+      providerExternalEventId: providerExternalEventId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(providerExternalEventId),
+      memyMarker: memyMarker == null && nullToAbsent
+          ? const Value.absent()
+          : Value(memyMarker),
+      createdAtUtc: Value(createdAtUtc),
+      startedAtUtc: startedAtUtc == null && nullToAbsent
+          ? const Value.absent()
+          : Value(startedAtUtc),
+      completedAtUtc: completedAtUtc == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completedAtUtc),
+      nextRetryAtUtc: nextRetryAtUtc == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextRetryAtUtc),
+      lastErrorCode: lastErrorCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastErrorCode),
+    );
+  }
+
+  factory CalendarSyncOperation.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CalendarSyncOperation(
+      id: serializer.fromJson<String>(json['id']),
+      memyEventId: serializer.fromJson<String>(json['memyEventId']),
+      operationType: serializer.fromJson<String>(json['operationType']),
+      targetCalendarId: serializer.fromJson<String>(json['targetCalendarId']),
+      payloadFingerprint: serializer.fromJson<String>(
+        json['payloadFingerprint'],
+      ),
+      state: serializer.fromJson<String>(json['state']),
+      attemptCount: serializer.fromJson<int>(json['attemptCount']),
+      providerExternalEventId: serializer.fromJson<String?>(
+        json['providerExternalEventId'],
+      ),
+      memyMarker: serializer.fromJson<String?>(json['memyMarker']),
+      createdAtUtc: serializer.fromJson<DateTime>(json['createdAtUtc']),
+      startedAtUtc: serializer.fromJson<DateTime?>(json['startedAtUtc']),
+      completedAtUtc: serializer.fromJson<DateTime?>(json['completedAtUtc']),
+      nextRetryAtUtc: serializer.fromJson<DateTime?>(json['nextRetryAtUtc']),
+      lastErrorCode: serializer.fromJson<String?>(json['lastErrorCode']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'memyEventId': serializer.toJson<String>(memyEventId),
+      'operationType': serializer.toJson<String>(operationType),
+      'targetCalendarId': serializer.toJson<String>(targetCalendarId),
+      'payloadFingerprint': serializer.toJson<String>(payloadFingerprint),
+      'state': serializer.toJson<String>(state),
+      'attemptCount': serializer.toJson<int>(attemptCount),
+      'providerExternalEventId': serializer.toJson<String?>(
+        providerExternalEventId,
+      ),
+      'memyMarker': serializer.toJson<String?>(memyMarker),
+      'createdAtUtc': serializer.toJson<DateTime>(createdAtUtc),
+      'startedAtUtc': serializer.toJson<DateTime?>(startedAtUtc),
+      'completedAtUtc': serializer.toJson<DateTime?>(completedAtUtc),
+      'nextRetryAtUtc': serializer.toJson<DateTime?>(nextRetryAtUtc),
+      'lastErrorCode': serializer.toJson<String?>(lastErrorCode),
+    };
+  }
+
+  CalendarSyncOperation copyWith({
+    String? id,
+    String? memyEventId,
+    String? operationType,
+    String? targetCalendarId,
+    String? payloadFingerprint,
+    String? state,
+    int? attemptCount,
+    Value<String?> providerExternalEventId = const Value.absent(),
+    Value<String?> memyMarker = const Value.absent(),
+    DateTime? createdAtUtc,
+    Value<DateTime?> startedAtUtc = const Value.absent(),
+    Value<DateTime?> completedAtUtc = const Value.absent(),
+    Value<DateTime?> nextRetryAtUtc = const Value.absent(),
+    Value<String?> lastErrorCode = const Value.absent(),
+  }) => CalendarSyncOperation(
+    id: id ?? this.id,
+    memyEventId: memyEventId ?? this.memyEventId,
+    operationType: operationType ?? this.operationType,
+    targetCalendarId: targetCalendarId ?? this.targetCalendarId,
+    payloadFingerprint: payloadFingerprint ?? this.payloadFingerprint,
+    state: state ?? this.state,
+    attemptCount: attemptCount ?? this.attemptCount,
+    providerExternalEventId: providerExternalEventId.present
+        ? providerExternalEventId.value
+        : this.providerExternalEventId,
+    memyMarker: memyMarker.present ? memyMarker.value : this.memyMarker,
+    createdAtUtc: createdAtUtc ?? this.createdAtUtc,
+    startedAtUtc: startedAtUtc.present ? startedAtUtc.value : this.startedAtUtc,
+    completedAtUtc: completedAtUtc.present
+        ? completedAtUtc.value
+        : this.completedAtUtc,
+    nextRetryAtUtc: nextRetryAtUtc.present
+        ? nextRetryAtUtc.value
+        : this.nextRetryAtUtc,
+    lastErrorCode: lastErrorCode.present
+        ? lastErrorCode.value
+        : this.lastErrorCode,
+  );
+  CalendarSyncOperation copyWithCompanion(
+    CalendarSyncOperationsCompanion data,
+  ) {
+    return CalendarSyncOperation(
+      id: data.id.present ? data.id.value : this.id,
+      memyEventId: data.memyEventId.present
+          ? data.memyEventId.value
+          : this.memyEventId,
+      operationType: data.operationType.present
+          ? data.operationType.value
+          : this.operationType,
+      targetCalendarId: data.targetCalendarId.present
+          ? data.targetCalendarId.value
+          : this.targetCalendarId,
+      payloadFingerprint: data.payloadFingerprint.present
+          ? data.payloadFingerprint.value
+          : this.payloadFingerprint,
+      state: data.state.present ? data.state.value : this.state,
+      attemptCount: data.attemptCount.present
+          ? data.attemptCount.value
+          : this.attemptCount,
+      providerExternalEventId: data.providerExternalEventId.present
+          ? data.providerExternalEventId.value
+          : this.providerExternalEventId,
+      memyMarker: data.memyMarker.present
+          ? data.memyMarker.value
+          : this.memyMarker,
+      createdAtUtc: data.createdAtUtc.present
+          ? data.createdAtUtc.value
+          : this.createdAtUtc,
+      startedAtUtc: data.startedAtUtc.present
+          ? data.startedAtUtc.value
+          : this.startedAtUtc,
+      completedAtUtc: data.completedAtUtc.present
+          ? data.completedAtUtc.value
+          : this.completedAtUtc,
+      nextRetryAtUtc: data.nextRetryAtUtc.present
+          ? data.nextRetryAtUtc.value
+          : this.nextRetryAtUtc,
+      lastErrorCode: data.lastErrorCode.present
+          ? data.lastErrorCode.value
+          : this.lastErrorCode,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CalendarSyncOperation(')
+          ..write('id: $id, ')
+          ..write('memyEventId: $memyEventId, ')
+          ..write('operationType: $operationType, ')
+          ..write('targetCalendarId: $targetCalendarId, ')
+          ..write('payloadFingerprint: $payloadFingerprint, ')
+          ..write('state: $state, ')
+          ..write('attemptCount: $attemptCount, ')
+          ..write('providerExternalEventId: $providerExternalEventId, ')
+          ..write('memyMarker: $memyMarker, ')
+          ..write('createdAtUtc: $createdAtUtc, ')
+          ..write('startedAtUtc: $startedAtUtc, ')
+          ..write('completedAtUtc: $completedAtUtc, ')
+          ..write('nextRetryAtUtc: $nextRetryAtUtc, ')
+          ..write('lastErrorCode: $lastErrorCode')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    memyEventId,
+    operationType,
+    targetCalendarId,
+    payloadFingerprint,
+    state,
+    attemptCount,
+    providerExternalEventId,
+    memyMarker,
+    createdAtUtc,
+    startedAtUtc,
+    completedAtUtc,
+    nextRetryAtUtc,
+    lastErrorCode,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CalendarSyncOperation &&
+          other.id == this.id &&
+          other.memyEventId == this.memyEventId &&
+          other.operationType == this.operationType &&
+          other.targetCalendarId == this.targetCalendarId &&
+          other.payloadFingerprint == this.payloadFingerprint &&
+          other.state == this.state &&
+          other.attemptCount == this.attemptCount &&
+          other.providerExternalEventId == this.providerExternalEventId &&
+          other.memyMarker == this.memyMarker &&
+          other.createdAtUtc == this.createdAtUtc &&
+          other.startedAtUtc == this.startedAtUtc &&
+          other.completedAtUtc == this.completedAtUtc &&
+          other.nextRetryAtUtc == this.nextRetryAtUtc &&
+          other.lastErrorCode == this.lastErrorCode);
+}
+
+class CalendarSyncOperationsCompanion
+    extends UpdateCompanion<CalendarSyncOperation> {
+  final Value<String> id;
+  final Value<String> memyEventId;
+  final Value<String> operationType;
+  final Value<String> targetCalendarId;
+  final Value<String> payloadFingerprint;
+  final Value<String> state;
+  final Value<int> attemptCount;
+  final Value<String?> providerExternalEventId;
+  final Value<String?> memyMarker;
+  final Value<DateTime> createdAtUtc;
+  final Value<DateTime?> startedAtUtc;
+  final Value<DateTime?> completedAtUtc;
+  final Value<DateTime?> nextRetryAtUtc;
+  final Value<String?> lastErrorCode;
+  final Value<int> rowid;
+  const CalendarSyncOperationsCompanion({
+    this.id = const Value.absent(),
+    this.memyEventId = const Value.absent(),
+    this.operationType = const Value.absent(),
+    this.targetCalendarId = const Value.absent(),
+    this.payloadFingerprint = const Value.absent(),
+    this.state = const Value.absent(),
+    this.attemptCount = const Value.absent(),
+    this.providerExternalEventId = const Value.absent(),
+    this.memyMarker = const Value.absent(),
+    this.createdAtUtc = const Value.absent(),
+    this.startedAtUtc = const Value.absent(),
+    this.completedAtUtc = const Value.absent(),
+    this.nextRetryAtUtc = const Value.absent(),
+    this.lastErrorCode = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CalendarSyncOperationsCompanion.insert({
+    required String id,
+    required String memyEventId,
+    required String operationType,
+    required String targetCalendarId,
+    required String payloadFingerprint,
+    required String state,
+    this.attemptCount = const Value.absent(),
+    this.providerExternalEventId = const Value.absent(),
+    this.memyMarker = const Value.absent(),
+    required DateTime createdAtUtc,
+    this.startedAtUtc = const Value.absent(),
+    this.completedAtUtc = const Value.absent(),
+    this.nextRetryAtUtc = const Value.absent(),
+    this.lastErrorCode = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       memyEventId = Value(memyEventId),
+       operationType = Value(operationType),
+       targetCalendarId = Value(targetCalendarId),
+       payloadFingerprint = Value(payloadFingerprint),
+       state = Value(state),
+       createdAtUtc = Value(createdAtUtc);
+  static Insertable<CalendarSyncOperation> custom({
+    Expression<String>? id,
+    Expression<String>? memyEventId,
+    Expression<String>? operationType,
+    Expression<String>? targetCalendarId,
+    Expression<String>? payloadFingerprint,
+    Expression<String>? state,
+    Expression<int>? attemptCount,
+    Expression<String>? providerExternalEventId,
+    Expression<String>? memyMarker,
+    Expression<DateTime>? createdAtUtc,
+    Expression<DateTime>? startedAtUtc,
+    Expression<DateTime>? completedAtUtc,
+    Expression<DateTime>? nextRetryAtUtc,
+    Expression<String>? lastErrorCode,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (memyEventId != null) 'memy_event_id': memyEventId,
+      if (operationType != null) 'operation_type': operationType,
+      if (targetCalendarId != null) 'target_calendar_id': targetCalendarId,
+      if (payloadFingerprint != null) 'payload_fingerprint': payloadFingerprint,
+      if (state != null) 'state': state,
+      if (attemptCount != null) 'attempt_count': attemptCount,
+      if (providerExternalEventId != null)
+        'provider_external_event_id': providerExternalEventId,
+      if (memyMarker != null) 'memy_marker': memyMarker,
+      if (createdAtUtc != null) 'created_at_utc': createdAtUtc,
+      if (startedAtUtc != null) 'started_at_utc': startedAtUtc,
+      if (completedAtUtc != null) 'completed_at_utc': completedAtUtc,
+      if (nextRetryAtUtc != null) 'next_retry_at_utc': nextRetryAtUtc,
+      if (lastErrorCode != null) 'last_error_code': lastErrorCode,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CalendarSyncOperationsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? memyEventId,
+    Value<String>? operationType,
+    Value<String>? targetCalendarId,
+    Value<String>? payloadFingerprint,
+    Value<String>? state,
+    Value<int>? attemptCount,
+    Value<String?>? providerExternalEventId,
+    Value<String?>? memyMarker,
+    Value<DateTime>? createdAtUtc,
+    Value<DateTime?>? startedAtUtc,
+    Value<DateTime?>? completedAtUtc,
+    Value<DateTime?>? nextRetryAtUtc,
+    Value<String?>? lastErrorCode,
+    Value<int>? rowid,
+  }) {
+    return CalendarSyncOperationsCompanion(
+      id: id ?? this.id,
+      memyEventId: memyEventId ?? this.memyEventId,
+      operationType: operationType ?? this.operationType,
+      targetCalendarId: targetCalendarId ?? this.targetCalendarId,
+      payloadFingerprint: payloadFingerprint ?? this.payloadFingerprint,
+      state: state ?? this.state,
+      attemptCount: attemptCount ?? this.attemptCount,
+      providerExternalEventId:
+          providerExternalEventId ?? this.providerExternalEventId,
+      memyMarker: memyMarker ?? this.memyMarker,
+      createdAtUtc: createdAtUtc ?? this.createdAtUtc,
+      startedAtUtc: startedAtUtc ?? this.startedAtUtc,
+      completedAtUtc: completedAtUtc ?? this.completedAtUtc,
+      nextRetryAtUtc: nextRetryAtUtc ?? this.nextRetryAtUtc,
+      lastErrorCode: lastErrorCode ?? this.lastErrorCode,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (memyEventId.present) {
+      map['memy_event_id'] = Variable<String>(memyEventId.value);
+    }
+    if (operationType.present) {
+      map['operation_type'] = Variable<String>(operationType.value);
+    }
+    if (targetCalendarId.present) {
+      map['target_calendar_id'] = Variable<String>(targetCalendarId.value);
+    }
+    if (payloadFingerprint.present) {
+      map['payload_fingerprint'] = Variable<String>(payloadFingerprint.value);
+    }
+    if (state.present) {
+      map['state'] = Variable<String>(state.value);
+    }
+    if (attemptCount.present) {
+      map['attempt_count'] = Variable<int>(attemptCount.value);
+    }
+    if (providerExternalEventId.present) {
+      map['provider_external_event_id'] = Variable<String>(
+        providerExternalEventId.value,
+      );
+    }
+    if (memyMarker.present) {
+      map['memy_marker'] = Variable<String>(memyMarker.value);
+    }
+    if (createdAtUtc.present) {
+      map['created_at_utc'] = Variable<DateTime>(createdAtUtc.value);
+    }
+    if (startedAtUtc.present) {
+      map['started_at_utc'] = Variable<DateTime>(startedAtUtc.value);
+    }
+    if (completedAtUtc.present) {
+      map['completed_at_utc'] = Variable<DateTime>(completedAtUtc.value);
+    }
+    if (nextRetryAtUtc.present) {
+      map['next_retry_at_utc'] = Variable<DateTime>(nextRetryAtUtc.value);
+    }
+    if (lastErrorCode.present) {
+      map['last_error_code'] = Variable<String>(lastErrorCode.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CalendarSyncOperationsCompanion(')
+          ..write('id: $id, ')
+          ..write('memyEventId: $memyEventId, ')
+          ..write('operationType: $operationType, ')
+          ..write('targetCalendarId: $targetCalendarId, ')
+          ..write('payloadFingerprint: $payloadFingerprint, ')
+          ..write('state: $state, ')
+          ..write('attemptCount: $attemptCount, ')
+          ..write('providerExternalEventId: $providerExternalEventId, ')
+          ..write('memyMarker: $memyMarker, ')
+          ..write('createdAtUtc: $createdAtUtc, ')
+          ..write('startedAtUtc: $startedAtUtc, ')
+          ..write('completedAtUtc: $completedAtUtc, ')
+          ..write('nextRetryAtUtc: $nextRetryAtUtc, ')
+          ..write('lastErrorCode: $lastErrorCode, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $CalendarConfigRowsTable extends CalendarConfigRows
     with TableInfo<$CalendarConfigRowsTable, CalendarConfigRow> {
   @override
@@ -2201,6 +3817,73 @@ class $CalendarConfigRowsTable extends CalendarConfigRows
         requiredDuringInsert: false,
         defaultValue: const Constant('[]'),
       );
+  static const VerificationMeta _readableCalendarIdsJsonMeta =
+      const VerificationMeta('readableCalendarIdsJson');
+  @override
+  late final GeneratedColumn<String> readableCalendarIdsJson =
+      GeneratedColumn<String>(
+        'readable_calendar_ids_json',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('[]'),
+      );
+  static const VerificationMeta _defaultWritableCalendarIdMeta =
+      const VerificationMeta('defaultWritableCalendarId');
+  @override
+  late final GeneratedColumn<String> defaultWritableCalendarId =
+      GeneratedColumn<String>(
+        'default_writable_calendar_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _dedicatedMeMyCalendarIdMeta =
+      const VerificationMeta('dedicatedMeMyCalendarId');
+  @override
+  late final GeneratedColumn<String> dedicatedMeMyCalendarId =
+      GeneratedColumn<String>(
+        'dedicated_me_my_calendar_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _syncPastWindowDaysMeta =
+      const VerificationMeta('syncPastWindowDays');
+  @override
+  late final GeneratedColumn<int> syncPastWindowDays = GeneratedColumn<int>(
+    'sync_past_window_days',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(30),
+  );
+  static const VerificationMeta _syncFutureWindowDaysMeta =
+      const VerificationMeta('syncFutureWindowDays');
+  @override
+  late final GeneratedColumn<int> syncFutureWindowDays = GeneratedColumn<int>(
+    'sync_future_window_days',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(365),
+  );
+  static const VerificationMeta _calendarSchemaVersionMeta =
+      const VerificationMeta('calendarSchemaVersion');
+  @override
+  late final GeneratedColumn<int> calendarSchemaVersion = GeneratedColumn<int>(
+    'calendar_schema_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(2),
+  );
   static const VerificationMeta _lastFullSyncAtUtcMeta = const VerificationMeta(
     'lastFullSyncAtUtc',
   );
@@ -2208,6 +3891,61 @@ class $CalendarConfigRowsTable extends CalendarConfigRows
   late final GeneratedColumn<DateTime> lastFullSyncAtUtc =
       GeneratedColumn<DateTime>(
         'last_full_sync_at_utc',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _lastSuccessfulPullAtUtcMeta =
+      const VerificationMeta('lastSuccessfulPullAtUtc');
+  @override
+  late final GeneratedColumn<DateTime> lastSuccessfulPullAtUtc =
+      GeneratedColumn<DateTime>(
+        'last_successful_pull_at_utc',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _lastSuccessfulPushAtUtcMeta =
+      const VerificationMeta('lastSuccessfulPushAtUtc');
+  @override
+  late final GeneratedColumn<DateTime> lastSuccessfulPushAtUtc =
+      GeneratedColumn<DateTime>(
+        'last_successful_push_at_utc',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _lastPermissionCheckAtUtcMeta =
+      const VerificationMeta('lastPermissionCheckAtUtc');
+  @override
+  late final GeneratedColumn<DateTime> lastPermissionCheckAtUtc =
+      GeneratedColumn<DateTime>(
+        'last_permission_check_at_utc',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _lastCalendarDiscoveryAtUtcMeta =
+      const VerificationMeta('lastCalendarDiscoveryAtUtc');
+  @override
+  late final GeneratedColumn<DateTime> lastCalendarDiscoveryAtUtc =
+      GeneratedColumn<DateTime>(
+        'last_calendar_discovery_at_utc',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _connectionConfiguredAtUtcMeta =
+      const VerificationMeta('connectionConfiguredAtUtc');
+  @override
+  late final GeneratedColumn<DateTime> connectionConfiguredAtUtc =
+      GeneratedColumn<DateTime>(
+        'connection_configured_at_utc',
         aliasedName,
         true,
         type: DriftSqlType.dateTime,
@@ -2239,7 +3977,18 @@ class $CalendarConfigRowsTable extends CalendarConfigRows
   List<GeneratedColumn> get $columns => [
     id,
     selectedCalendarIdsJson,
+    readableCalendarIdsJson,
+    defaultWritableCalendarId,
+    dedicatedMeMyCalendarId,
+    syncPastWindowDays,
+    syncFutureWindowDays,
+    calendarSchemaVersion,
     lastFullSyncAtUtc,
+    lastSuccessfulPullAtUtc,
+    lastSuccessfulPushAtUtc,
+    lastPermissionCheckAtUtc,
+    lastCalendarDiscoveryAtUtc,
+    connectionConfiguredAtUtc,
     initialSyncAnchorPastUtc,
     initialSyncAnchorFutureUtc,
   ];
@@ -2267,12 +4016,111 @@ class $CalendarConfigRowsTable extends CalendarConfigRows
         ),
       );
     }
+    if (data.containsKey('readable_calendar_ids_json')) {
+      context.handle(
+        _readableCalendarIdsJsonMeta,
+        readableCalendarIdsJson.isAcceptableOrUnknown(
+          data['readable_calendar_ids_json']!,
+          _readableCalendarIdsJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('default_writable_calendar_id')) {
+      context.handle(
+        _defaultWritableCalendarIdMeta,
+        defaultWritableCalendarId.isAcceptableOrUnknown(
+          data['default_writable_calendar_id']!,
+          _defaultWritableCalendarIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('dedicated_me_my_calendar_id')) {
+      context.handle(
+        _dedicatedMeMyCalendarIdMeta,
+        dedicatedMeMyCalendarId.isAcceptableOrUnknown(
+          data['dedicated_me_my_calendar_id']!,
+          _dedicatedMeMyCalendarIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sync_past_window_days')) {
+      context.handle(
+        _syncPastWindowDaysMeta,
+        syncPastWindowDays.isAcceptableOrUnknown(
+          data['sync_past_window_days']!,
+          _syncPastWindowDaysMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sync_future_window_days')) {
+      context.handle(
+        _syncFutureWindowDaysMeta,
+        syncFutureWindowDays.isAcceptableOrUnknown(
+          data['sync_future_window_days']!,
+          _syncFutureWindowDaysMeta,
+        ),
+      );
+    }
+    if (data.containsKey('calendar_schema_version')) {
+      context.handle(
+        _calendarSchemaVersionMeta,
+        calendarSchemaVersion.isAcceptableOrUnknown(
+          data['calendar_schema_version']!,
+          _calendarSchemaVersionMeta,
+        ),
+      );
+    }
     if (data.containsKey('last_full_sync_at_utc')) {
       context.handle(
         _lastFullSyncAtUtcMeta,
         lastFullSyncAtUtc.isAcceptableOrUnknown(
           data['last_full_sync_at_utc']!,
           _lastFullSyncAtUtcMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_successful_pull_at_utc')) {
+      context.handle(
+        _lastSuccessfulPullAtUtcMeta,
+        lastSuccessfulPullAtUtc.isAcceptableOrUnknown(
+          data['last_successful_pull_at_utc']!,
+          _lastSuccessfulPullAtUtcMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_successful_push_at_utc')) {
+      context.handle(
+        _lastSuccessfulPushAtUtcMeta,
+        lastSuccessfulPushAtUtc.isAcceptableOrUnknown(
+          data['last_successful_push_at_utc']!,
+          _lastSuccessfulPushAtUtcMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_permission_check_at_utc')) {
+      context.handle(
+        _lastPermissionCheckAtUtcMeta,
+        lastPermissionCheckAtUtc.isAcceptableOrUnknown(
+          data['last_permission_check_at_utc']!,
+          _lastPermissionCheckAtUtcMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_calendar_discovery_at_utc')) {
+      context.handle(
+        _lastCalendarDiscoveryAtUtcMeta,
+        lastCalendarDiscoveryAtUtc.isAcceptableOrUnknown(
+          data['last_calendar_discovery_at_utc']!,
+          _lastCalendarDiscoveryAtUtcMeta,
+        ),
+      );
+    }
+    if (data.containsKey('connection_configured_at_utc')) {
+      context.handle(
+        _connectionConfiguredAtUtcMeta,
+        connectionConfiguredAtUtc.isAcceptableOrUnknown(
+          data['connection_configured_at_utc']!,
+          _connectionConfiguredAtUtcMeta,
         ),
       );
     }
@@ -2311,9 +4159,53 @@ class $CalendarConfigRowsTable extends CalendarConfigRows
         DriftSqlType.string,
         data['${effectivePrefix}selected_calendar_ids_json'],
       )!,
+      readableCalendarIdsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}readable_calendar_ids_json'],
+      )!,
+      defaultWritableCalendarId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}default_writable_calendar_id'],
+      ),
+      dedicatedMeMyCalendarId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}dedicated_me_my_calendar_id'],
+      ),
+      syncPastWindowDays: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_past_window_days'],
+      )!,
+      syncFutureWindowDays: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_future_window_days'],
+      )!,
+      calendarSchemaVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}calendar_schema_version'],
+      )!,
       lastFullSyncAtUtc: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}last_full_sync_at_utc'],
+      ),
+      lastSuccessfulPullAtUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_successful_pull_at_utc'],
+      ),
+      lastSuccessfulPushAtUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_successful_push_at_utc'],
+      ),
+      lastPermissionCheckAtUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_permission_check_at_utc'],
+      ),
+      lastCalendarDiscoveryAtUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_calendar_discovery_at_utc'],
+      ),
+      connectionConfiguredAtUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}connection_configured_at_utc'],
       ),
       initialSyncAnchorPastUtc: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
@@ -2335,14 +4227,40 @@ class $CalendarConfigRowsTable extends CalendarConfigRows
 class CalendarConfigRow extends DataClass
     implements Insertable<CalendarConfigRow> {
   final int id;
+
+  /// Legacy v1 column — migrated into [readableCalendarIdsJson].
   final String selectedCalendarIdsJson;
+  final String readableCalendarIdsJson;
+  final String? defaultWritableCalendarId;
+  final String? dedicatedMeMyCalendarId;
+  final int syncPastWindowDays;
+  final int syncFutureWindowDays;
+  final int calendarSchemaVersion;
   final DateTime? lastFullSyncAtUtc;
+  final DateTime? lastSuccessfulPullAtUtc;
+  final DateTime? lastSuccessfulPushAtUtc;
+  final DateTime? lastPermissionCheckAtUtc;
+  final DateTime? lastCalendarDiscoveryAtUtc;
+  final DateTime? connectionConfiguredAtUtc;
+
+  /// Legacy frozen anchors — retained for migration, unused by sync.
   final DateTime? initialSyncAnchorPastUtc;
   final DateTime? initialSyncAnchorFutureUtc;
   const CalendarConfigRow({
     required this.id,
     required this.selectedCalendarIdsJson,
+    required this.readableCalendarIdsJson,
+    this.defaultWritableCalendarId,
+    this.dedicatedMeMyCalendarId,
+    required this.syncPastWindowDays,
+    required this.syncFutureWindowDays,
+    required this.calendarSchemaVersion,
     this.lastFullSyncAtUtc,
+    this.lastSuccessfulPullAtUtc,
+    this.lastSuccessfulPushAtUtc,
+    this.lastPermissionCheckAtUtc,
+    this.lastCalendarDiscoveryAtUtc,
+    this.connectionConfiguredAtUtc,
     this.initialSyncAnchorPastUtc,
     this.initialSyncAnchorFutureUtc,
   });
@@ -2353,8 +4271,49 @@ class CalendarConfigRow extends DataClass
     map['selected_calendar_ids_json'] = Variable<String>(
       selectedCalendarIdsJson,
     );
+    map['readable_calendar_ids_json'] = Variable<String>(
+      readableCalendarIdsJson,
+    );
+    if (!nullToAbsent || defaultWritableCalendarId != null) {
+      map['default_writable_calendar_id'] = Variable<String>(
+        defaultWritableCalendarId,
+      );
+    }
+    if (!nullToAbsent || dedicatedMeMyCalendarId != null) {
+      map['dedicated_me_my_calendar_id'] = Variable<String>(
+        dedicatedMeMyCalendarId,
+      );
+    }
+    map['sync_past_window_days'] = Variable<int>(syncPastWindowDays);
+    map['sync_future_window_days'] = Variable<int>(syncFutureWindowDays);
+    map['calendar_schema_version'] = Variable<int>(calendarSchemaVersion);
     if (!nullToAbsent || lastFullSyncAtUtc != null) {
       map['last_full_sync_at_utc'] = Variable<DateTime>(lastFullSyncAtUtc);
+    }
+    if (!nullToAbsent || lastSuccessfulPullAtUtc != null) {
+      map['last_successful_pull_at_utc'] = Variable<DateTime>(
+        lastSuccessfulPullAtUtc,
+      );
+    }
+    if (!nullToAbsent || lastSuccessfulPushAtUtc != null) {
+      map['last_successful_push_at_utc'] = Variable<DateTime>(
+        lastSuccessfulPushAtUtc,
+      );
+    }
+    if (!nullToAbsent || lastPermissionCheckAtUtc != null) {
+      map['last_permission_check_at_utc'] = Variable<DateTime>(
+        lastPermissionCheckAtUtc,
+      );
+    }
+    if (!nullToAbsent || lastCalendarDiscoveryAtUtc != null) {
+      map['last_calendar_discovery_at_utc'] = Variable<DateTime>(
+        lastCalendarDiscoveryAtUtc,
+      );
+    }
+    if (!nullToAbsent || connectionConfiguredAtUtc != null) {
+      map['connection_configured_at_utc'] = Variable<DateTime>(
+        connectionConfiguredAtUtc,
+      );
     }
     if (!nullToAbsent || initialSyncAnchorPastUtc != null) {
       map['initial_sync_anchor_past_utc'] = Variable<DateTime>(
@@ -2373,9 +4332,37 @@ class CalendarConfigRow extends DataClass
     return CalendarConfigRowsCompanion(
       id: Value(id),
       selectedCalendarIdsJson: Value(selectedCalendarIdsJson),
+      readableCalendarIdsJson: Value(readableCalendarIdsJson),
+      defaultWritableCalendarId:
+          defaultWritableCalendarId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(defaultWritableCalendarId),
+      dedicatedMeMyCalendarId: dedicatedMeMyCalendarId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dedicatedMeMyCalendarId),
+      syncPastWindowDays: Value(syncPastWindowDays),
+      syncFutureWindowDays: Value(syncFutureWindowDays),
+      calendarSchemaVersion: Value(calendarSchemaVersion),
       lastFullSyncAtUtc: lastFullSyncAtUtc == null && nullToAbsent
           ? const Value.absent()
           : Value(lastFullSyncAtUtc),
+      lastSuccessfulPullAtUtc: lastSuccessfulPullAtUtc == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSuccessfulPullAtUtc),
+      lastSuccessfulPushAtUtc: lastSuccessfulPushAtUtc == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSuccessfulPushAtUtc),
+      lastPermissionCheckAtUtc: lastPermissionCheckAtUtc == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastPermissionCheckAtUtc),
+      lastCalendarDiscoveryAtUtc:
+          lastCalendarDiscoveryAtUtc == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastCalendarDiscoveryAtUtc),
+      connectionConfiguredAtUtc:
+          connectionConfiguredAtUtc == null && nullToAbsent
+          ? const Value.absent()
+          : Value(connectionConfiguredAtUtc),
       initialSyncAnchorPastUtc: initialSyncAnchorPastUtc == null && nullToAbsent
           ? const Value.absent()
           : Value(initialSyncAnchorPastUtc),
@@ -2396,8 +4383,39 @@ class CalendarConfigRow extends DataClass
       selectedCalendarIdsJson: serializer.fromJson<String>(
         json['selectedCalendarIdsJson'],
       ),
+      readableCalendarIdsJson: serializer.fromJson<String>(
+        json['readableCalendarIdsJson'],
+      ),
+      defaultWritableCalendarId: serializer.fromJson<String?>(
+        json['defaultWritableCalendarId'],
+      ),
+      dedicatedMeMyCalendarId: serializer.fromJson<String?>(
+        json['dedicatedMeMyCalendarId'],
+      ),
+      syncPastWindowDays: serializer.fromJson<int>(json['syncPastWindowDays']),
+      syncFutureWindowDays: serializer.fromJson<int>(
+        json['syncFutureWindowDays'],
+      ),
+      calendarSchemaVersion: serializer.fromJson<int>(
+        json['calendarSchemaVersion'],
+      ),
       lastFullSyncAtUtc: serializer.fromJson<DateTime?>(
         json['lastFullSyncAtUtc'],
+      ),
+      lastSuccessfulPullAtUtc: serializer.fromJson<DateTime?>(
+        json['lastSuccessfulPullAtUtc'],
+      ),
+      lastSuccessfulPushAtUtc: serializer.fromJson<DateTime?>(
+        json['lastSuccessfulPushAtUtc'],
+      ),
+      lastPermissionCheckAtUtc: serializer.fromJson<DateTime?>(
+        json['lastPermissionCheckAtUtc'],
+      ),
+      lastCalendarDiscoveryAtUtc: serializer.fromJson<DateTime?>(
+        json['lastCalendarDiscoveryAtUtc'],
+      ),
+      connectionConfiguredAtUtc: serializer.fromJson<DateTime?>(
+        json['connectionConfiguredAtUtc'],
       ),
       initialSyncAnchorPastUtc: serializer.fromJson<DateTime?>(
         json['initialSyncAnchorPastUtc'],
@@ -2415,7 +4433,34 @@ class CalendarConfigRow extends DataClass
       'selectedCalendarIdsJson': serializer.toJson<String>(
         selectedCalendarIdsJson,
       ),
+      'readableCalendarIdsJson': serializer.toJson<String>(
+        readableCalendarIdsJson,
+      ),
+      'defaultWritableCalendarId': serializer.toJson<String?>(
+        defaultWritableCalendarId,
+      ),
+      'dedicatedMeMyCalendarId': serializer.toJson<String?>(
+        dedicatedMeMyCalendarId,
+      ),
+      'syncPastWindowDays': serializer.toJson<int>(syncPastWindowDays),
+      'syncFutureWindowDays': serializer.toJson<int>(syncFutureWindowDays),
+      'calendarSchemaVersion': serializer.toJson<int>(calendarSchemaVersion),
       'lastFullSyncAtUtc': serializer.toJson<DateTime?>(lastFullSyncAtUtc),
+      'lastSuccessfulPullAtUtc': serializer.toJson<DateTime?>(
+        lastSuccessfulPullAtUtc,
+      ),
+      'lastSuccessfulPushAtUtc': serializer.toJson<DateTime?>(
+        lastSuccessfulPushAtUtc,
+      ),
+      'lastPermissionCheckAtUtc': serializer.toJson<DateTime?>(
+        lastPermissionCheckAtUtc,
+      ),
+      'lastCalendarDiscoveryAtUtc': serializer.toJson<DateTime?>(
+        lastCalendarDiscoveryAtUtc,
+      ),
+      'connectionConfiguredAtUtc': serializer.toJson<DateTime?>(
+        connectionConfiguredAtUtc,
+      ),
       'initialSyncAnchorPastUtc': serializer.toJson<DateTime?>(
         initialSyncAnchorPastUtc,
       ),
@@ -2428,16 +4473,53 @@ class CalendarConfigRow extends DataClass
   CalendarConfigRow copyWith({
     int? id,
     String? selectedCalendarIdsJson,
+    String? readableCalendarIdsJson,
+    Value<String?> defaultWritableCalendarId = const Value.absent(),
+    Value<String?> dedicatedMeMyCalendarId = const Value.absent(),
+    int? syncPastWindowDays,
+    int? syncFutureWindowDays,
+    int? calendarSchemaVersion,
     Value<DateTime?> lastFullSyncAtUtc = const Value.absent(),
+    Value<DateTime?> lastSuccessfulPullAtUtc = const Value.absent(),
+    Value<DateTime?> lastSuccessfulPushAtUtc = const Value.absent(),
+    Value<DateTime?> lastPermissionCheckAtUtc = const Value.absent(),
+    Value<DateTime?> lastCalendarDiscoveryAtUtc = const Value.absent(),
+    Value<DateTime?> connectionConfiguredAtUtc = const Value.absent(),
     Value<DateTime?> initialSyncAnchorPastUtc = const Value.absent(),
     Value<DateTime?> initialSyncAnchorFutureUtc = const Value.absent(),
   }) => CalendarConfigRow(
     id: id ?? this.id,
     selectedCalendarIdsJson:
         selectedCalendarIdsJson ?? this.selectedCalendarIdsJson,
+    readableCalendarIdsJson:
+        readableCalendarIdsJson ?? this.readableCalendarIdsJson,
+    defaultWritableCalendarId: defaultWritableCalendarId.present
+        ? defaultWritableCalendarId.value
+        : this.defaultWritableCalendarId,
+    dedicatedMeMyCalendarId: dedicatedMeMyCalendarId.present
+        ? dedicatedMeMyCalendarId.value
+        : this.dedicatedMeMyCalendarId,
+    syncPastWindowDays: syncPastWindowDays ?? this.syncPastWindowDays,
+    syncFutureWindowDays: syncFutureWindowDays ?? this.syncFutureWindowDays,
+    calendarSchemaVersion: calendarSchemaVersion ?? this.calendarSchemaVersion,
     lastFullSyncAtUtc: lastFullSyncAtUtc.present
         ? lastFullSyncAtUtc.value
         : this.lastFullSyncAtUtc,
+    lastSuccessfulPullAtUtc: lastSuccessfulPullAtUtc.present
+        ? lastSuccessfulPullAtUtc.value
+        : this.lastSuccessfulPullAtUtc,
+    lastSuccessfulPushAtUtc: lastSuccessfulPushAtUtc.present
+        ? lastSuccessfulPushAtUtc.value
+        : this.lastSuccessfulPushAtUtc,
+    lastPermissionCheckAtUtc: lastPermissionCheckAtUtc.present
+        ? lastPermissionCheckAtUtc.value
+        : this.lastPermissionCheckAtUtc,
+    lastCalendarDiscoveryAtUtc: lastCalendarDiscoveryAtUtc.present
+        ? lastCalendarDiscoveryAtUtc.value
+        : this.lastCalendarDiscoveryAtUtc,
+    connectionConfiguredAtUtc: connectionConfiguredAtUtc.present
+        ? connectionConfiguredAtUtc.value
+        : this.connectionConfiguredAtUtc,
     initialSyncAnchorPastUtc: initialSyncAnchorPastUtc.present
         ? initialSyncAnchorPastUtc.value
         : this.initialSyncAnchorPastUtc,
@@ -2451,9 +4533,42 @@ class CalendarConfigRow extends DataClass
       selectedCalendarIdsJson: data.selectedCalendarIdsJson.present
           ? data.selectedCalendarIdsJson.value
           : this.selectedCalendarIdsJson,
+      readableCalendarIdsJson: data.readableCalendarIdsJson.present
+          ? data.readableCalendarIdsJson.value
+          : this.readableCalendarIdsJson,
+      defaultWritableCalendarId: data.defaultWritableCalendarId.present
+          ? data.defaultWritableCalendarId.value
+          : this.defaultWritableCalendarId,
+      dedicatedMeMyCalendarId: data.dedicatedMeMyCalendarId.present
+          ? data.dedicatedMeMyCalendarId.value
+          : this.dedicatedMeMyCalendarId,
+      syncPastWindowDays: data.syncPastWindowDays.present
+          ? data.syncPastWindowDays.value
+          : this.syncPastWindowDays,
+      syncFutureWindowDays: data.syncFutureWindowDays.present
+          ? data.syncFutureWindowDays.value
+          : this.syncFutureWindowDays,
+      calendarSchemaVersion: data.calendarSchemaVersion.present
+          ? data.calendarSchemaVersion.value
+          : this.calendarSchemaVersion,
       lastFullSyncAtUtc: data.lastFullSyncAtUtc.present
           ? data.lastFullSyncAtUtc.value
           : this.lastFullSyncAtUtc,
+      lastSuccessfulPullAtUtc: data.lastSuccessfulPullAtUtc.present
+          ? data.lastSuccessfulPullAtUtc.value
+          : this.lastSuccessfulPullAtUtc,
+      lastSuccessfulPushAtUtc: data.lastSuccessfulPushAtUtc.present
+          ? data.lastSuccessfulPushAtUtc.value
+          : this.lastSuccessfulPushAtUtc,
+      lastPermissionCheckAtUtc: data.lastPermissionCheckAtUtc.present
+          ? data.lastPermissionCheckAtUtc.value
+          : this.lastPermissionCheckAtUtc,
+      lastCalendarDiscoveryAtUtc: data.lastCalendarDiscoveryAtUtc.present
+          ? data.lastCalendarDiscoveryAtUtc.value
+          : this.lastCalendarDiscoveryAtUtc,
+      connectionConfiguredAtUtc: data.connectionConfiguredAtUtc.present
+          ? data.connectionConfiguredAtUtc.value
+          : this.connectionConfiguredAtUtc,
       initialSyncAnchorPastUtc: data.initialSyncAnchorPastUtc.present
           ? data.initialSyncAnchorPastUtc.value
           : this.initialSyncAnchorPastUtc,
@@ -2468,7 +4583,18 @@ class CalendarConfigRow extends DataClass
     return (StringBuffer('CalendarConfigRow(')
           ..write('id: $id, ')
           ..write('selectedCalendarIdsJson: $selectedCalendarIdsJson, ')
+          ..write('readableCalendarIdsJson: $readableCalendarIdsJson, ')
+          ..write('defaultWritableCalendarId: $defaultWritableCalendarId, ')
+          ..write('dedicatedMeMyCalendarId: $dedicatedMeMyCalendarId, ')
+          ..write('syncPastWindowDays: $syncPastWindowDays, ')
+          ..write('syncFutureWindowDays: $syncFutureWindowDays, ')
+          ..write('calendarSchemaVersion: $calendarSchemaVersion, ')
           ..write('lastFullSyncAtUtc: $lastFullSyncAtUtc, ')
+          ..write('lastSuccessfulPullAtUtc: $lastSuccessfulPullAtUtc, ')
+          ..write('lastSuccessfulPushAtUtc: $lastSuccessfulPushAtUtc, ')
+          ..write('lastPermissionCheckAtUtc: $lastPermissionCheckAtUtc, ')
+          ..write('lastCalendarDiscoveryAtUtc: $lastCalendarDiscoveryAtUtc, ')
+          ..write('connectionConfiguredAtUtc: $connectionConfiguredAtUtc, ')
           ..write('initialSyncAnchorPastUtc: $initialSyncAnchorPastUtc, ')
           ..write('initialSyncAnchorFutureUtc: $initialSyncAnchorFutureUtc')
           ..write(')'))
@@ -2479,7 +4605,18 @@ class CalendarConfigRow extends DataClass
   int get hashCode => Object.hash(
     id,
     selectedCalendarIdsJson,
+    readableCalendarIdsJson,
+    defaultWritableCalendarId,
+    dedicatedMeMyCalendarId,
+    syncPastWindowDays,
+    syncFutureWindowDays,
+    calendarSchemaVersion,
     lastFullSyncAtUtc,
+    lastSuccessfulPullAtUtc,
+    lastSuccessfulPushAtUtc,
+    lastPermissionCheckAtUtc,
+    lastCalendarDiscoveryAtUtc,
+    connectionConfiguredAtUtc,
     initialSyncAnchorPastUtc,
     initialSyncAnchorFutureUtc,
   );
@@ -2489,7 +4626,18 @@ class CalendarConfigRow extends DataClass
       (other is CalendarConfigRow &&
           other.id == this.id &&
           other.selectedCalendarIdsJson == this.selectedCalendarIdsJson &&
+          other.readableCalendarIdsJson == this.readableCalendarIdsJson &&
+          other.defaultWritableCalendarId == this.defaultWritableCalendarId &&
+          other.dedicatedMeMyCalendarId == this.dedicatedMeMyCalendarId &&
+          other.syncPastWindowDays == this.syncPastWindowDays &&
+          other.syncFutureWindowDays == this.syncFutureWindowDays &&
+          other.calendarSchemaVersion == this.calendarSchemaVersion &&
           other.lastFullSyncAtUtc == this.lastFullSyncAtUtc &&
+          other.lastSuccessfulPullAtUtc == this.lastSuccessfulPullAtUtc &&
+          other.lastSuccessfulPushAtUtc == this.lastSuccessfulPushAtUtc &&
+          other.lastPermissionCheckAtUtc == this.lastPermissionCheckAtUtc &&
+          other.lastCalendarDiscoveryAtUtc == this.lastCalendarDiscoveryAtUtc &&
+          other.connectionConfiguredAtUtc == this.connectionConfiguredAtUtc &&
           other.initialSyncAnchorPastUtc == this.initialSyncAnchorPastUtc &&
           other.initialSyncAnchorFutureUtc == this.initialSyncAnchorFutureUtc);
 }
@@ -2497,27 +4645,71 @@ class CalendarConfigRow extends DataClass
 class CalendarConfigRowsCompanion extends UpdateCompanion<CalendarConfigRow> {
   final Value<int> id;
   final Value<String> selectedCalendarIdsJson;
+  final Value<String> readableCalendarIdsJson;
+  final Value<String?> defaultWritableCalendarId;
+  final Value<String?> dedicatedMeMyCalendarId;
+  final Value<int> syncPastWindowDays;
+  final Value<int> syncFutureWindowDays;
+  final Value<int> calendarSchemaVersion;
   final Value<DateTime?> lastFullSyncAtUtc;
+  final Value<DateTime?> lastSuccessfulPullAtUtc;
+  final Value<DateTime?> lastSuccessfulPushAtUtc;
+  final Value<DateTime?> lastPermissionCheckAtUtc;
+  final Value<DateTime?> lastCalendarDiscoveryAtUtc;
+  final Value<DateTime?> connectionConfiguredAtUtc;
   final Value<DateTime?> initialSyncAnchorPastUtc;
   final Value<DateTime?> initialSyncAnchorFutureUtc;
   const CalendarConfigRowsCompanion({
     this.id = const Value.absent(),
     this.selectedCalendarIdsJson = const Value.absent(),
+    this.readableCalendarIdsJson = const Value.absent(),
+    this.defaultWritableCalendarId = const Value.absent(),
+    this.dedicatedMeMyCalendarId = const Value.absent(),
+    this.syncPastWindowDays = const Value.absent(),
+    this.syncFutureWindowDays = const Value.absent(),
+    this.calendarSchemaVersion = const Value.absent(),
     this.lastFullSyncAtUtc = const Value.absent(),
+    this.lastSuccessfulPullAtUtc = const Value.absent(),
+    this.lastSuccessfulPushAtUtc = const Value.absent(),
+    this.lastPermissionCheckAtUtc = const Value.absent(),
+    this.lastCalendarDiscoveryAtUtc = const Value.absent(),
+    this.connectionConfiguredAtUtc = const Value.absent(),
     this.initialSyncAnchorPastUtc = const Value.absent(),
     this.initialSyncAnchorFutureUtc = const Value.absent(),
   });
   CalendarConfigRowsCompanion.insert({
     this.id = const Value.absent(),
     this.selectedCalendarIdsJson = const Value.absent(),
+    this.readableCalendarIdsJson = const Value.absent(),
+    this.defaultWritableCalendarId = const Value.absent(),
+    this.dedicatedMeMyCalendarId = const Value.absent(),
+    this.syncPastWindowDays = const Value.absent(),
+    this.syncFutureWindowDays = const Value.absent(),
+    this.calendarSchemaVersion = const Value.absent(),
     this.lastFullSyncAtUtc = const Value.absent(),
+    this.lastSuccessfulPullAtUtc = const Value.absent(),
+    this.lastSuccessfulPushAtUtc = const Value.absent(),
+    this.lastPermissionCheckAtUtc = const Value.absent(),
+    this.lastCalendarDiscoveryAtUtc = const Value.absent(),
+    this.connectionConfiguredAtUtc = const Value.absent(),
     this.initialSyncAnchorPastUtc = const Value.absent(),
     this.initialSyncAnchorFutureUtc = const Value.absent(),
   });
   static Insertable<CalendarConfigRow> custom({
     Expression<int>? id,
     Expression<String>? selectedCalendarIdsJson,
+    Expression<String>? readableCalendarIdsJson,
+    Expression<String>? defaultWritableCalendarId,
+    Expression<String>? dedicatedMeMyCalendarId,
+    Expression<int>? syncPastWindowDays,
+    Expression<int>? syncFutureWindowDays,
+    Expression<int>? calendarSchemaVersion,
     Expression<DateTime>? lastFullSyncAtUtc,
+    Expression<DateTime>? lastSuccessfulPullAtUtc,
+    Expression<DateTime>? lastSuccessfulPushAtUtc,
+    Expression<DateTime>? lastPermissionCheckAtUtc,
+    Expression<DateTime>? lastCalendarDiscoveryAtUtc,
+    Expression<DateTime>? connectionConfiguredAtUtc,
     Expression<DateTime>? initialSyncAnchorPastUtc,
     Expression<DateTime>? initialSyncAnchorFutureUtc,
   }) {
@@ -2525,7 +4717,29 @@ class CalendarConfigRowsCompanion extends UpdateCompanion<CalendarConfigRow> {
       if (id != null) 'id': id,
       if (selectedCalendarIdsJson != null)
         'selected_calendar_ids_json': selectedCalendarIdsJson,
+      if (readableCalendarIdsJson != null)
+        'readable_calendar_ids_json': readableCalendarIdsJson,
+      if (defaultWritableCalendarId != null)
+        'default_writable_calendar_id': defaultWritableCalendarId,
+      if (dedicatedMeMyCalendarId != null)
+        'dedicated_me_my_calendar_id': dedicatedMeMyCalendarId,
+      if (syncPastWindowDays != null)
+        'sync_past_window_days': syncPastWindowDays,
+      if (syncFutureWindowDays != null)
+        'sync_future_window_days': syncFutureWindowDays,
+      if (calendarSchemaVersion != null)
+        'calendar_schema_version': calendarSchemaVersion,
       if (lastFullSyncAtUtc != null) 'last_full_sync_at_utc': lastFullSyncAtUtc,
+      if (lastSuccessfulPullAtUtc != null)
+        'last_successful_pull_at_utc': lastSuccessfulPullAtUtc,
+      if (lastSuccessfulPushAtUtc != null)
+        'last_successful_push_at_utc': lastSuccessfulPushAtUtc,
+      if (lastPermissionCheckAtUtc != null)
+        'last_permission_check_at_utc': lastPermissionCheckAtUtc,
+      if (lastCalendarDiscoveryAtUtc != null)
+        'last_calendar_discovery_at_utc': lastCalendarDiscoveryAtUtc,
+      if (connectionConfiguredAtUtc != null)
+        'connection_configured_at_utc': connectionConfiguredAtUtc,
       if (initialSyncAnchorPastUtc != null)
         'initial_sync_anchor_past_utc': initialSyncAnchorPastUtc,
       if (initialSyncAnchorFutureUtc != null)
@@ -2536,7 +4750,18 @@ class CalendarConfigRowsCompanion extends UpdateCompanion<CalendarConfigRow> {
   CalendarConfigRowsCompanion copyWith({
     Value<int>? id,
     Value<String>? selectedCalendarIdsJson,
+    Value<String>? readableCalendarIdsJson,
+    Value<String?>? defaultWritableCalendarId,
+    Value<String?>? dedicatedMeMyCalendarId,
+    Value<int>? syncPastWindowDays,
+    Value<int>? syncFutureWindowDays,
+    Value<int>? calendarSchemaVersion,
     Value<DateTime?>? lastFullSyncAtUtc,
+    Value<DateTime?>? lastSuccessfulPullAtUtc,
+    Value<DateTime?>? lastSuccessfulPushAtUtc,
+    Value<DateTime?>? lastPermissionCheckAtUtc,
+    Value<DateTime?>? lastCalendarDiscoveryAtUtc,
+    Value<DateTime?>? connectionConfiguredAtUtc,
     Value<DateTime?>? initialSyncAnchorPastUtc,
     Value<DateTime?>? initialSyncAnchorFutureUtc,
   }) {
@@ -2544,7 +4769,27 @@ class CalendarConfigRowsCompanion extends UpdateCompanion<CalendarConfigRow> {
       id: id ?? this.id,
       selectedCalendarIdsJson:
           selectedCalendarIdsJson ?? this.selectedCalendarIdsJson,
+      readableCalendarIdsJson:
+          readableCalendarIdsJson ?? this.readableCalendarIdsJson,
+      defaultWritableCalendarId:
+          defaultWritableCalendarId ?? this.defaultWritableCalendarId,
+      dedicatedMeMyCalendarId:
+          dedicatedMeMyCalendarId ?? this.dedicatedMeMyCalendarId,
+      syncPastWindowDays: syncPastWindowDays ?? this.syncPastWindowDays,
+      syncFutureWindowDays: syncFutureWindowDays ?? this.syncFutureWindowDays,
+      calendarSchemaVersion:
+          calendarSchemaVersion ?? this.calendarSchemaVersion,
       lastFullSyncAtUtc: lastFullSyncAtUtc ?? this.lastFullSyncAtUtc,
+      lastSuccessfulPullAtUtc:
+          lastSuccessfulPullAtUtc ?? this.lastSuccessfulPullAtUtc,
+      lastSuccessfulPushAtUtc:
+          lastSuccessfulPushAtUtc ?? this.lastSuccessfulPushAtUtc,
+      lastPermissionCheckAtUtc:
+          lastPermissionCheckAtUtc ?? this.lastPermissionCheckAtUtc,
+      lastCalendarDiscoveryAtUtc:
+          lastCalendarDiscoveryAtUtc ?? this.lastCalendarDiscoveryAtUtc,
+      connectionConfiguredAtUtc:
+          connectionConfiguredAtUtc ?? this.connectionConfiguredAtUtc,
       initialSyncAnchorPastUtc:
           initialSyncAnchorPastUtc ?? this.initialSyncAnchorPastUtc,
       initialSyncAnchorFutureUtc:
@@ -2563,9 +4808,62 @@ class CalendarConfigRowsCompanion extends UpdateCompanion<CalendarConfigRow> {
         selectedCalendarIdsJson.value,
       );
     }
+    if (readableCalendarIdsJson.present) {
+      map['readable_calendar_ids_json'] = Variable<String>(
+        readableCalendarIdsJson.value,
+      );
+    }
+    if (defaultWritableCalendarId.present) {
+      map['default_writable_calendar_id'] = Variable<String>(
+        defaultWritableCalendarId.value,
+      );
+    }
+    if (dedicatedMeMyCalendarId.present) {
+      map['dedicated_me_my_calendar_id'] = Variable<String>(
+        dedicatedMeMyCalendarId.value,
+      );
+    }
+    if (syncPastWindowDays.present) {
+      map['sync_past_window_days'] = Variable<int>(syncPastWindowDays.value);
+    }
+    if (syncFutureWindowDays.present) {
+      map['sync_future_window_days'] = Variable<int>(
+        syncFutureWindowDays.value,
+      );
+    }
+    if (calendarSchemaVersion.present) {
+      map['calendar_schema_version'] = Variable<int>(
+        calendarSchemaVersion.value,
+      );
+    }
     if (lastFullSyncAtUtc.present) {
       map['last_full_sync_at_utc'] = Variable<DateTime>(
         lastFullSyncAtUtc.value,
+      );
+    }
+    if (lastSuccessfulPullAtUtc.present) {
+      map['last_successful_pull_at_utc'] = Variable<DateTime>(
+        lastSuccessfulPullAtUtc.value,
+      );
+    }
+    if (lastSuccessfulPushAtUtc.present) {
+      map['last_successful_push_at_utc'] = Variable<DateTime>(
+        lastSuccessfulPushAtUtc.value,
+      );
+    }
+    if (lastPermissionCheckAtUtc.present) {
+      map['last_permission_check_at_utc'] = Variable<DateTime>(
+        lastPermissionCheckAtUtc.value,
+      );
+    }
+    if (lastCalendarDiscoveryAtUtc.present) {
+      map['last_calendar_discovery_at_utc'] = Variable<DateTime>(
+        lastCalendarDiscoveryAtUtc.value,
+      );
+    }
+    if (connectionConfiguredAtUtc.present) {
+      map['connection_configured_at_utc'] = Variable<DateTime>(
+        connectionConfiguredAtUtc.value,
       );
     }
     if (initialSyncAnchorPastUtc.present) {
@@ -2586,7 +4884,18 @@ class CalendarConfigRowsCompanion extends UpdateCompanion<CalendarConfigRow> {
     return (StringBuffer('CalendarConfigRowsCompanion(')
           ..write('id: $id, ')
           ..write('selectedCalendarIdsJson: $selectedCalendarIdsJson, ')
+          ..write('readableCalendarIdsJson: $readableCalendarIdsJson, ')
+          ..write('defaultWritableCalendarId: $defaultWritableCalendarId, ')
+          ..write('dedicatedMeMyCalendarId: $dedicatedMeMyCalendarId, ')
+          ..write('syncPastWindowDays: $syncPastWindowDays, ')
+          ..write('syncFutureWindowDays: $syncFutureWindowDays, ')
+          ..write('calendarSchemaVersion: $calendarSchemaVersion, ')
           ..write('lastFullSyncAtUtc: $lastFullSyncAtUtc, ')
+          ..write('lastSuccessfulPullAtUtc: $lastSuccessfulPullAtUtc, ')
+          ..write('lastSuccessfulPushAtUtc: $lastSuccessfulPushAtUtc, ')
+          ..write('lastPermissionCheckAtUtc: $lastPermissionCheckAtUtc, ')
+          ..write('lastCalendarDiscoveryAtUtc: $lastCalendarDiscoveryAtUtc, ')
+          ..write('connectionConfiguredAtUtc: $connectionConfiguredAtUtc, ')
           ..write('initialSyncAnchorPastUtc: $initialSyncAnchorPastUtc, ')
           ..write('initialSyncAnchorFutureUtc: $initialSyncAnchorFutureUtc')
           ..write(')'))
@@ -2602,6 +4911,8 @@ abstract class _$CalendarDatabase extends GeneratedDatabase {
       $CalendarEventLinksTable(this);
   late final $CalendarConflictsTable calendarConflicts =
       $CalendarConflictsTable(this);
+  late final $CalendarSyncOperationsTable calendarSyncOperations =
+      $CalendarSyncOperationsTable(this);
   late final $CalendarConfigRowsTable calendarConfigRows =
       $CalendarConfigRowsTable(this);
   @override
@@ -2612,6 +4923,7 @@ abstract class _$CalendarDatabase extends GeneratedDatabase {
     calendarEvents,
     calendarEventLinks,
     calendarConflicts,
+    calendarSyncOperations,
     calendarConfigRows,
   ];
 }
@@ -2632,6 +4944,9 @@ typedef $$CalendarEventsTableCreateCompanionBuilder =
       Value<String?> externalCalendarId,
       Value<String?> externalEventId,
       Value<String> reminderMinutesJson,
+      Value<String?> recurrenceRule,
+      Value<bool> isRecurringInstance,
+      Value<String?> seriesExternalEventId,
       Value<int> version,
       required DateTime createdAtUtc,
       required DateTime updatedAtUtc,
@@ -2654,6 +4969,9 @@ typedef $$CalendarEventsTableUpdateCompanionBuilder =
       Value<String?> externalCalendarId,
       Value<String?> externalEventId,
       Value<String> reminderMinutesJson,
+      Value<String?> recurrenceRule,
+      Value<bool> isRecurringInstance,
+      Value<String?> seriesExternalEventId,
       Value<int> version,
       Value<DateTime> createdAtUtc,
       Value<DateTime> updatedAtUtc,
@@ -2737,6 +5055,21 @@ class $$CalendarEventsTableFilterComposer
 
   ColumnFilters<String> get reminderMinutesJson => $composableBuilder(
     column: $table.reminderMinutesJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recurrenceRule => $composableBuilder(
+    column: $table.recurrenceRule,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isRecurringInstance => $composableBuilder(
+    column: $table.isRecurringInstance,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get seriesExternalEventId => $composableBuilder(
+    column: $table.seriesExternalEventId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2840,6 +5173,21 @@ class $$CalendarEventsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get recurrenceRule => $composableBuilder(
+    column: $table.recurrenceRule,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isRecurringInstance => $composableBuilder(
+    column: $table.isRecurringInstance,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get seriesExternalEventId => $composableBuilder(
+    column: $table.seriesExternalEventId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get version => $composableBuilder(
     column: $table.version,
     builder: (column) => ColumnOrderings(column),
@@ -2924,6 +5272,21 @@ class $$CalendarEventsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get recurrenceRule => $composableBuilder(
+    column: $table.recurrenceRule,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isRecurringInstance => $composableBuilder(
+    column: $table.isRecurringInstance,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get seriesExternalEventId => $composableBuilder(
+    column: $table.seriesExternalEventId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get version =>
       $composableBuilder(column: $table.version, builder: (column) => column);
 
@@ -2994,6 +5357,9 @@ class $$CalendarEventsTableTableManager
                 Value<String?> externalCalendarId = const Value.absent(),
                 Value<String?> externalEventId = const Value.absent(),
                 Value<String> reminderMinutesJson = const Value.absent(),
+                Value<String?> recurrenceRule = const Value.absent(),
+                Value<bool> isRecurringInstance = const Value.absent(),
+                Value<String?> seriesExternalEventId = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 Value<DateTime> createdAtUtc = const Value.absent(),
                 Value<DateTime> updatedAtUtc = const Value.absent(),
@@ -3014,6 +5380,9 @@ class $$CalendarEventsTableTableManager
                 externalCalendarId: externalCalendarId,
                 externalEventId: externalEventId,
                 reminderMinutesJson: reminderMinutesJson,
+                recurrenceRule: recurrenceRule,
+                isRecurringInstance: isRecurringInstance,
+                seriesExternalEventId: seriesExternalEventId,
                 version: version,
                 createdAtUtc: createdAtUtc,
                 updatedAtUtc: updatedAtUtc,
@@ -3036,6 +5405,9 @@ class $$CalendarEventsTableTableManager
                 Value<String?> externalCalendarId = const Value.absent(),
                 Value<String?> externalEventId = const Value.absent(),
                 Value<String> reminderMinutesJson = const Value.absent(),
+                Value<String?> recurrenceRule = const Value.absent(),
+                Value<bool> isRecurringInstance = const Value.absent(),
+                Value<String?> seriesExternalEventId = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 required DateTime createdAtUtc,
                 required DateTime updatedAtUtc,
@@ -3056,6 +5428,9 @@ class $$CalendarEventsTableTableManager
                 externalCalendarId: externalCalendarId,
                 externalEventId: externalEventId,
                 reminderMinutesJson: reminderMinutesJson,
+                recurrenceRule: recurrenceRule,
+                isRecurringInstance: isRecurringInstance,
+                seriesExternalEventId: seriesExternalEventId,
                 version: version,
                 createdAtUtc: createdAtUtc,
                 updatedAtUtc: updatedAtUtc,
@@ -3097,6 +5472,15 @@ typedef $$CalendarEventLinksTableCreateCompanionBuilder =
       required DateTime lastSyncedAtUtc,
       Value<DateTime?> lastKnownExternalUpdatedAtUtc,
       required DateTime createdAtUtc,
+      Value<String> presenceStatus,
+      Value<DateTime?> lastSeenExternallyAtUtc,
+      Value<DateTime?> firstMissingObservationAtUtc,
+      Value<DateTime?> lastMissingObservationAtUtc,
+      Value<int> missingObservationCount,
+      Value<DateTime?> lastCompleteQueryStartUtc,
+      Value<DateTime?> lastCompleteQueryEndUtc,
+      Value<bool> hiddenLocally,
+      Value<String?> memyMarker,
       Value<int> rowid,
     });
 typedef $$CalendarEventLinksTableUpdateCompanionBuilder =
@@ -3109,6 +5493,15 @@ typedef $$CalendarEventLinksTableUpdateCompanionBuilder =
       Value<DateTime> lastSyncedAtUtc,
       Value<DateTime?> lastKnownExternalUpdatedAtUtc,
       Value<DateTime> createdAtUtc,
+      Value<String> presenceStatus,
+      Value<DateTime?> lastSeenExternallyAtUtc,
+      Value<DateTime?> firstMissingObservationAtUtc,
+      Value<DateTime?> lastMissingObservationAtUtc,
+      Value<int> missingObservationCount,
+      Value<DateTime?> lastCompleteQueryStartUtc,
+      Value<DateTime?> lastCompleteQueryEndUtc,
+      Value<bool> hiddenLocally,
+      Value<String?> memyMarker,
       Value<int> rowid,
     });
 
@@ -3159,6 +5552,52 @@ class $$CalendarEventLinksTableFilterComposer
 
   ColumnFilters<DateTime> get createdAtUtc => $composableBuilder(
     column: $table.createdAtUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get presenceStatus => $composableBuilder(
+    column: $table.presenceStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastSeenExternallyAtUtc => $composableBuilder(
+    column: $table.lastSeenExternallyAtUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get firstMissingObservationAtUtc =>
+      $composableBuilder(
+        column: $table.firstMissingObservationAtUtc,
+        builder: (column) => ColumnFilters(column),
+      );
+
+  ColumnFilters<DateTime> get lastMissingObservationAtUtc => $composableBuilder(
+    column: $table.lastMissingObservationAtUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get missingObservationCount => $composableBuilder(
+    column: $table.missingObservationCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastCompleteQueryStartUtc => $composableBuilder(
+    column: $table.lastCompleteQueryStartUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastCompleteQueryEndUtc => $composableBuilder(
+    column: $table.lastCompleteQueryEndUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get hiddenLocally => $composableBuilder(
+    column: $table.hiddenLocally,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get memyMarker => $composableBuilder(
+    column: $table.memyMarker,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -3212,6 +5651,53 @@ class $$CalendarEventLinksTableOrderingComposer
     column: $table.createdAtUtc,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get presenceStatus => $composableBuilder(
+    column: $table.presenceStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastSeenExternallyAtUtc => $composableBuilder(
+    column: $table.lastSeenExternallyAtUtc,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get firstMissingObservationAtUtc =>
+      $composableBuilder(
+        column: $table.firstMissingObservationAtUtc,
+        builder: (column) => ColumnOrderings(column),
+      );
+
+  ColumnOrderings<DateTime> get lastMissingObservationAtUtc =>
+      $composableBuilder(
+        column: $table.lastMissingObservationAtUtc,
+        builder: (column) => ColumnOrderings(column),
+      );
+
+  ColumnOrderings<int> get missingObservationCount => $composableBuilder(
+    column: $table.missingObservationCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastCompleteQueryStartUtc => $composableBuilder(
+    column: $table.lastCompleteQueryStartUtc,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastCompleteQueryEndUtc => $composableBuilder(
+    column: $table.lastCompleteQueryEndUtc,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get hiddenLocally => $composableBuilder(
+    column: $table.hiddenLocally,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get memyMarker => $composableBuilder(
+    column: $table.memyMarker,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$CalendarEventLinksTableAnnotationComposer
@@ -3257,6 +5743,53 @@ class $$CalendarEventLinksTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAtUtc => $composableBuilder(
     column: $table.createdAtUtc,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get presenceStatus => $composableBuilder(
+    column: $table.presenceStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastSeenExternallyAtUtc => $composableBuilder(
+    column: $table.lastSeenExternallyAtUtc,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get firstMissingObservationAtUtc =>
+      $composableBuilder(
+        column: $table.firstMissingObservationAtUtc,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<DateTime> get lastMissingObservationAtUtc =>
+      $composableBuilder(
+        column: $table.lastMissingObservationAtUtc,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<int> get missingObservationCount => $composableBuilder(
+    column: $table.missingObservationCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastCompleteQueryStartUtc => $composableBuilder(
+    column: $table.lastCompleteQueryStartUtc,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastCompleteQueryEndUtc => $composableBuilder(
+    column: $table.lastCompleteQueryEndUtc,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get hiddenLocally => $composableBuilder(
+    column: $table.hiddenLocally,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get memyMarker => $composableBuilder(
+    column: $table.memyMarker,
     builder: (column) => column,
   );
 }
@@ -3310,6 +5843,18 @@ class $$CalendarEventLinksTableTableManager
                 Value<DateTime?> lastKnownExternalUpdatedAtUtc =
                     const Value.absent(),
                 Value<DateTime> createdAtUtc = const Value.absent(),
+                Value<String> presenceStatus = const Value.absent(),
+                Value<DateTime?> lastSeenExternallyAtUtc = const Value.absent(),
+                Value<DateTime?> firstMissingObservationAtUtc =
+                    const Value.absent(),
+                Value<DateTime?> lastMissingObservationAtUtc =
+                    const Value.absent(),
+                Value<int> missingObservationCount = const Value.absent(),
+                Value<DateTime?> lastCompleteQueryStartUtc =
+                    const Value.absent(),
+                Value<DateTime?> lastCompleteQueryEndUtc = const Value.absent(),
+                Value<bool> hiddenLocally = const Value.absent(),
+                Value<String?> memyMarker = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CalendarEventLinksCompanion(
                 id: id,
@@ -3320,6 +5865,15 @@ class $$CalendarEventLinksTableTableManager
                 lastSyncedAtUtc: lastSyncedAtUtc,
                 lastKnownExternalUpdatedAtUtc: lastKnownExternalUpdatedAtUtc,
                 createdAtUtc: createdAtUtc,
+                presenceStatus: presenceStatus,
+                lastSeenExternallyAtUtc: lastSeenExternallyAtUtc,
+                firstMissingObservationAtUtc: firstMissingObservationAtUtc,
+                lastMissingObservationAtUtc: lastMissingObservationAtUtc,
+                missingObservationCount: missingObservationCount,
+                lastCompleteQueryStartUtc: lastCompleteQueryStartUtc,
+                lastCompleteQueryEndUtc: lastCompleteQueryEndUtc,
+                hiddenLocally: hiddenLocally,
+                memyMarker: memyMarker,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -3333,6 +5887,18 @@ class $$CalendarEventLinksTableTableManager
                 Value<DateTime?> lastKnownExternalUpdatedAtUtc =
                     const Value.absent(),
                 required DateTime createdAtUtc,
+                Value<String> presenceStatus = const Value.absent(),
+                Value<DateTime?> lastSeenExternallyAtUtc = const Value.absent(),
+                Value<DateTime?> firstMissingObservationAtUtc =
+                    const Value.absent(),
+                Value<DateTime?> lastMissingObservationAtUtc =
+                    const Value.absent(),
+                Value<int> missingObservationCount = const Value.absent(),
+                Value<DateTime?> lastCompleteQueryStartUtc =
+                    const Value.absent(),
+                Value<DateTime?> lastCompleteQueryEndUtc = const Value.absent(),
+                Value<bool> hiddenLocally = const Value.absent(),
+                Value<String?> memyMarker = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CalendarEventLinksCompanion.insert(
                 id: id,
@@ -3343,6 +5909,15 @@ class $$CalendarEventLinksTableTableManager
                 lastSyncedAtUtc: lastSyncedAtUtc,
                 lastKnownExternalUpdatedAtUtc: lastKnownExternalUpdatedAtUtc,
                 createdAtUtc: createdAtUtc,
+                presenceStatus: presenceStatus,
+                lastSeenExternallyAtUtc: lastSeenExternallyAtUtc,
+                firstMissingObservationAtUtc: firstMissingObservationAtUtc,
+                lastMissingObservationAtUtc: lastMissingObservationAtUtc,
+                missingObservationCount: missingObservationCount,
+                lastCompleteQueryStartUtc: lastCompleteQueryStartUtc,
+                lastCompleteQueryEndUtc: lastCompleteQueryEndUtc,
+                hiddenLocally: hiddenLocally,
+                memyMarker: memyMarker,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -3656,11 +6231,436 @@ typedef $$CalendarConflictsTableProcessedTableManager =
       CalendarConflict,
       PrefetchHooks Function()
     >;
+typedef $$CalendarSyncOperationsTableCreateCompanionBuilder =
+    CalendarSyncOperationsCompanion Function({
+      required String id,
+      required String memyEventId,
+      required String operationType,
+      required String targetCalendarId,
+      required String payloadFingerprint,
+      required String state,
+      Value<int> attemptCount,
+      Value<String?> providerExternalEventId,
+      Value<String?> memyMarker,
+      required DateTime createdAtUtc,
+      Value<DateTime?> startedAtUtc,
+      Value<DateTime?> completedAtUtc,
+      Value<DateTime?> nextRetryAtUtc,
+      Value<String?> lastErrorCode,
+      Value<int> rowid,
+    });
+typedef $$CalendarSyncOperationsTableUpdateCompanionBuilder =
+    CalendarSyncOperationsCompanion Function({
+      Value<String> id,
+      Value<String> memyEventId,
+      Value<String> operationType,
+      Value<String> targetCalendarId,
+      Value<String> payloadFingerprint,
+      Value<String> state,
+      Value<int> attemptCount,
+      Value<String?> providerExternalEventId,
+      Value<String?> memyMarker,
+      Value<DateTime> createdAtUtc,
+      Value<DateTime?> startedAtUtc,
+      Value<DateTime?> completedAtUtc,
+      Value<DateTime?> nextRetryAtUtc,
+      Value<String?> lastErrorCode,
+      Value<int> rowid,
+    });
+
+class $$CalendarSyncOperationsTableFilterComposer
+    extends Composer<_$CalendarDatabase, $CalendarSyncOperationsTable> {
+  $$CalendarSyncOperationsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get memyEventId => $composableBuilder(
+    column: $table.memyEventId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get operationType => $composableBuilder(
+    column: $table.operationType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get targetCalendarId => $composableBuilder(
+    column: $table.targetCalendarId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payloadFingerprint => $composableBuilder(
+    column: $table.payloadFingerprint,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get state => $composableBuilder(
+    column: $table.state,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get attemptCount => $composableBuilder(
+    column: $table.attemptCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get providerExternalEventId => $composableBuilder(
+    column: $table.providerExternalEventId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get memyMarker => $composableBuilder(
+    column: $table.memyMarker,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAtUtc => $composableBuilder(
+    column: $table.createdAtUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get startedAtUtc => $composableBuilder(
+    column: $table.startedAtUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get completedAtUtc => $composableBuilder(
+    column: $table.completedAtUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get nextRetryAtUtc => $composableBuilder(
+    column: $table.nextRetryAtUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastErrorCode => $composableBuilder(
+    column: $table.lastErrorCode,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CalendarSyncOperationsTableOrderingComposer
+    extends Composer<_$CalendarDatabase, $CalendarSyncOperationsTable> {
+  $$CalendarSyncOperationsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get memyEventId => $composableBuilder(
+    column: $table.memyEventId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get operationType => $composableBuilder(
+    column: $table.operationType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get targetCalendarId => $composableBuilder(
+    column: $table.targetCalendarId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payloadFingerprint => $composableBuilder(
+    column: $table.payloadFingerprint,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get state => $composableBuilder(
+    column: $table.state,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get attemptCount => $composableBuilder(
+    column: $table.attemptCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get providerExternalEventId => $composableBuilder(
+    column: $table.providerExternalEventId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get memyMarker => $composableBuilder(
+    column: $table.memyMarker,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAtUtc => $composableBuilder(
+    column: $table.createdAtUtc,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get startedAtUtc => $composableBuilder(
+    column: $table.startedAtUtc,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get completedAtUtc => $composableBuilder(
+    column: $table.completedAtUtc,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get nextRetryAtUtc => $composableBuilder(
+    column: $table.nextRetryAtUtc,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastErrorCode => $composableBuilder(
+    column: $table.lastErrorCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CalendarSyncOperationsTableAnnotationComposer
+    extends Composer<_$CalendarDatabase, $CalendarSyncOperationsTable> {
+  $$CalendarSyncOperationsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get memyEventId => $composableBuilder(
+    column: $table.memyEventId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get operationType => $composableBuilder(
+    column: $table.operationType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get targetCalendarId => $composableBuilder(
+    column: $table.targetCalendarId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get payloadFingerprint => $composableBuilder(
+    column: $table.payloadFingerprint,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get state =>
+      $composableBuilder(column: $table.state, builder: (column) => column);
+
+  GeneratedColumn<int> get attemptCount => $composableBuilder(
+    column: $table.attemptCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get providerExternalEventId => $composableBuilder(
+    column: $table.providerExternalEventId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get memyMarker => $composableBuilder(
+    column: $table.memyMarker,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAtUtc => $composableBuilder(
+    column: $table.createdAtUtc,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get startedAtUtc => $composableBuilder(
+    column: $table.startedAtUtc,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get completedAtUtc => $composableBuilder(
+    column: $table.completedAtUtc,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get nextRetryAtUtc => $composableBuilder(
+    column: $table.nextRetryAtUtc,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lastErrorCode => $composableBuilder(
+    column: $table.lastErrorCode,
+    builder: (column) => column,
+  );
+}
+
+class $$CalendarSyncOperationsTableTableManager
+    extends
+        RootTableManager<
+          _$CalendarDatabase,
+          $CalendarSyncOperationsTable,
+          CalendarSyncOperation,
+          $$CalendarSyncOperationsTableFilterComposer,
+          $$CalendarSyncOperationsTableOrderingComposer,
+          $$CalendarSyncOperationsTableAnnotationComposer,
+          $$CalendarSyncOperationsTableCreateCompanionBuilder,
+          $$CalendarSyncOperationsTableUpdateCompanionBuilder,
+          (
+            CalendarSyncOperation,
+            BaseReferences<
+              _$CalendarDatabase,
+              $CalendarSyncOperationsTable,
+              CalendarSyncOperation
+            >,
+          ),
+          CalendarSyncOperation,
+          PrefetchHooks Function()
+        > {
+  $$CalendarSyncOperationsTableTableManager(
+    _$CalendarDatabase db,
+    $CalendarSyncOperationsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CalendarSyncOperationsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$CalendarSyncOperationsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$CalendarSyncOperationsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> memyEventId = const Value.absent(),
+                Value<String> operationType = const Value.absent(),
+                Value<String> targetCalendarId = const Value.absent(),
+                Value<String> payloadFingerprint = const Value.absent(),
+                Value<String> state = const Value.absent(),
+                Value<int> attemptCount = const Value.absent(),
+                Value<String?> providerExternalEventId = const Value.absent(),
+                Value<String?> memyMarker = const Value.absent(),
+                Value<DateTime> createdAtUtc = const Value.absent(),
+                Value<DateTime?> startedAtUtc = const Value.absent(),
+                Value<DateTime?> completedAtUtc = const Value.absent(),
+                Value<DateTime?> nextRetryAtUtc = const Value.absent(),
+                Value<String?> lastErrorCode = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CalendarSyncOperationsCompanion(
+                id: id,
+                memyEventId: memyEventId,
+                operationType: operationType,
+                targetCalendarId: targetCalendarId,
+                payloadFingerprint: payloadFingerprint,
+                state: state,
+                attemptCount: attemptCount,
+                providerExternalEventId: providerExternalEventId,
+                memyMarker: memyMarker,
+                createdAtUtc: createdAtUtc,
+                startedAtUtc: startedAtUtc,
+                completedAtUtc: completedAtUtc,
+                nextRetryAtUtc: nextRetryAtUtc,
+                lastErrorCode: lastErrorCode,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String memyEventId,
+                required String operationType,
+                required String targetCalendarId,
+                required String payloadFingerprint,
+                required String state,
+                Value<int> attemptCount = const Value.absent(),
+                Value<String?> providerExternalEventId = const Value.absent(),
+                Value<String?> memyMarker = const Value.absent(),
+                required DateTime createdAtUtc,
+                Value<DateTime?> startedAtUtc = const Value.absent(),
+                Value<DateTime?> completedAtUtc = const Value.absent(),
+                Value<DateTime?> nextRetryAtUtc = const Value.absent(),
+                Value<String?> lastErrorCode = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CalendarSyncOperationsCompanion.insert(
+                id: id,
+                memyEventId: memyEventId,
+                operationType: operationType,
+                targetCalendarId: targetCalendarId,
+                payloadFingerprint: payloadFingerprint,
+                state: state,
+                attemptCount: attemptCount,
+                providerExternalEventId: providerExternalEventId,
+                memyMarker: memyMarker,
+                createdAtUtc: createdAtUtc,
+                startedAtUtc: startedAtUtc,
+                completedAtUtc: completedAtUtc,
+                nextRetryAtUtc: nextRetryAtUtc,
+                lastErrorCode: lastErrorCode,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CalendarSyncOperationsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$CalendarDatabase,
+      $CalendarSyncOperationsTable,
+      CalendarSyncOperation,
+      $$CalendarSyncOperationsTableFilterComposer,
+      $$CalendarSyncOperationsTableOrderingComposer,
+      $$CalendarSyncOperationsTableAnnotationComposer,
+      $$CalendarSyncOperationsTableCreateCompanionBuilder,
+      $$CalendarSyncOperationsTableUpdateCompanionBuilder,
+      (
+        CalendarSyncOperation,
+        BaseReferences<
+          _$CalendarDatabase,
+          $CalendarSyncOperationsTable,
+          CalendarSyncOperation
+        >,
+      ),
+      CalendarSyncOperation,
+      PrefetchHooks Function()
+    >;
 typedef $$CalendarConfigRowsTableCreateCompanionBuilder =
     CalendarConfigRowsCompanion Function({
       Value<int> id,
       Value<String> selectedCalendarIdsJson,
+      Value<String> readableCalendarIdsJson,
+      Value<String?> defaultWritableCalendarId,
+      Value<String?> dedicatedMeMyCalendarId,
+      Value<int> syncPastWindowDays,
+      Value<int> syncFutureWindowDays,
+      Value<int> calendarSchemaVersion,
       Value<DateTime?> lastFullSyncAtUtc,
+      Value<DateTime?> lastSuccessfulPullAtUtc,
+      Value<DateTime?> lastSuccessfulPushAtUtc,
+      Value<DateTime?> lastPermissionCheckAtUtc,
+      Value<DateTime?> lastCalendarDiscoveryAtUtc,
+      Value<DateTime?> connectionConfiguredAtUtc,
       Value<DateTime?> initialSyncAnchorPastUtc,
       Value<DateTime?> initialSyncAnchorFutureUtc,
     });
@@ -3668,7 +6668,18 @@ typedef $$CalendarConfigRowsTableUpdateCompanionBuilder =
     CalendarConfigRowsCompanion Function({
       Value<int> id,
       Value<String> selectedCalendarIdsJson,
+      Value<String> readableCalendarIdsJson,
+      Value<String?> defaultWritableCalendarId,
+      Value<String?> dedicatedMeMyCalendarId,
+      Value<int> syncPastWindowDays,
+      Value<int> syncFutureWindowDays,
+      Value<int> calendarSchemaVersion,
       Value<DateTime?> lastFullSyncAtUtc,
+      Value<DateTime?> lastSuccessfulPullAtUtc,
+      Value<DateTime?> lastSuccessfulPushAtUtc,
+      Value<DateTime?> lastPermissionCheckAtUtc,
+      Value<DateTime?> lastCalendarDiscoveryAtUtc,
+      Value<DateTime?> connectionConfiguredAtUtc,
       Value<DateTime?> initialSyncAnchorPastUtc,
       Value<DateTime?> initialSyncAnchorFutureUtc,
     });
@@ -3692,8 +6703,63 @@ class $$CalendarConfigRowsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get readableCalendarIdsJson => $composableBuilder(
+    column: $table.readableCalendarIdsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get defaultWritableCalendarId => $composableBuilder(
+    column: $table.defaultWritableCalendarId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dedicatedMeMyCalendarId => $composableBuilder(
+    column: $table.dedicatedMeMyCalendarId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncPastWindowDays => $composableBuilder(
+    column: $table.syncPastWindowDays,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncFutureWindowDays => $composableBuilder(
+    column: $table.syncFutureWindowDays,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get calendarSchemaVersion => $composableBuilder(
+    column: $table.calendarSchemaVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<DateTime> get lastFullSyncAtUtc => $composableBuilder(
     column: $table.lastFullSyncAtUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastSuccessfulPullAtUtc => $composableBuilder(
+    column: $table.lastSuccessfulPullAtUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastSuccessfulPushAtUtc => $composableBuilder(
+    column: $table.lastSuccessfulPushAtUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastPermissionCheckAtUtc => $composableBuilder(
+    column: $table.lastPermissionCheckAtUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastCalendarDiscoveryAtUtc => $composableBuilder(
+    column: $table.lastCalendarDiscoveryAtUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get connectionConfiguredAtUtc => $composableBuilder(
+    column: $table.connectionConfiguredAtUtc,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3727,8 +6793,64 @@ class $$CalendarConfigRowsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get readableCalendarIdsJson => $composableBuilder(
+    column: $table.readableCalendarIdsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get defaultWritableCalendarId => $composableBuilder(
+    column: $table.defaultWritableCalendarId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dedicatedMeMyCalendarId => $composableBuilder(
+    column: $table.dedicatedMeMyCalendarId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncPastWindowDays => $composableBuilder(
+    column: $table.syncPastWindowDays,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncFutureWindowDays => $composableBuilder(
+    column: $table.syncFutureWindowDays,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get calendarSchemaVersion => $composableBuilder(
+    column: $table.calendarSchemaVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get lastFullSyncAtUtc => $composableBuilder(
     column: $table.lastFullSyncAtUtc,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastSuccessfulPullAtUtc => $composableBuilder(
+    column: $table.lastSuccessfulPullAtUtc,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastSuccessfulPushAtUtc => $composableBuilder(
+    column: $table.lastSuccessfulPushAtUtc,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastPermissionCheckAtUtc => $composableBuilder(
+    column: $table.lastPermissionCheckAtUtc,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastCalendarDiscoveryAtUtc =>
+      $composableBuilder(
+        column: $table.lastCalendarDiscoveryAtUtc,
+        builder: (column) => ColumnOrderings(column),
+      );
+
+  ColumnOrderings<DateTime> get connectionConfiguredAtUtc => $composableBuilder(
+    column: $table.connectionConfiguredAtUtc,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -3761,8 +6883,64 @@ class $$CalendarConfigRowsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get readableCalendarIdsJson => $composableBuilder(
+    column: $table.readableCalendarIdsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get defaultWritableCalendarId => $composableBuilder(
+    column: $table.defaultWritableCalendarId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get dedicatedMeMyCalendarId => $composableBuilder(
+    column: $table.dedicatedMeMyCalendarId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get syncPastWindowDays => $composableBuilder(
+    column: $table.syncPastWindowDays,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get syncFutureWindowDays => $composableBuilder(
+    column: $table.syncFutureWindowDays,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get calendarSchemaVersion => $composableBuilder(
+    column: $table.calendarSchemaVersion,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get lastFullSyncAtUtc => $composableBuilder(
     column: $table.lastFullSyncAtUtc,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastSuccessfulPullAtUtc => $composableBuilder(
+    column: $table.lastSuccessfulPullAtUtc,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastSuccessfulPushAtUtc => $composableBuilder(
+    column: $table.lastSuccessfulPushAtUtc,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastPermissionCheckAtUtc => $composableBuilder(
+    column: $table.lastPermissionCheckAtUtc,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastCalendarDiscoveryAtUtc =>
+      $composableBuilder(
+        column: $table.lastCalendarDiscoveryAtUtc,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<DateTime> get connectionConfiguredAtUtc => $composableBuilder(
+    column: $table.connectionConfiguredAtUtc,
     builder: (column) => column,
   );
 
@@ -3820,7 +6998,21 @@ class $$CalendarConfigRowsTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 Value<String> selectedCalendarIdsJson = const Value.absent(),
+                Value<String> readableCalendarIdsJson = const Value.absent(),
+                Value<String?> defaultWritableCalendarId = const Value.absent(),
+                Value<String?> dedicatedMeMyCalendarId = const Value.absent(),
+                Value<int> syncPastWindowDays = const Value.absent(),
+                Value<int> syncFutureWindowDays = const Value.absent(),
+                Value<int> calendarSchemaVersion = const Value.absent(),
                 Value<DateTime?> lastFullSyncAtUtc = const Value.absent(),
+                Value<DateTime?> lastSuccessfulPullAtUtc = const Value.absent(),
+                Value<DateTime?> lastSuccessfulPushAtUtc = const Value.absent(),
+                Value<DateTime?> lastPermissionCheckAtUtc =
+                    const Value.absent(),
+                Value<DateTime?> lastCalendarDiscoveryAtUtc =
+                    const Value.absent(),
+                Value<DateTime?> connectionConfiguredAtUtc =
+                    const Value.absent(),
                 Value<DateTime?> initialSyncAnchorPastUtc =
                     const Value.absent(),
                 Value<DateTime?> initialSyncAnchorFutureUtc =
@@ -3828,7 +7020,18 @@ class $$CalendarConfigRowsTableTableManager
               }) => CalendarConfigRowsCompanion(
                 id: id,
                 selectedCalendarIdsJson: selectedCalendarIdsJson,
+                readableCalendarIdsJson: readableCalendarIdsJson,
+                defaultWritableCalendarId: defaultWritableCalendarId,
+                dedicatedMeMyCalendarId: dedicatedMeMyCalendarId,
+                syncPastWindowDays: syncPastWindowDays,
+                syncFutureWindowDays: syncFutureWindowDays,
+                calendarSchemaVersion: calendarSchemaVersion,
                 lastFullSyncAtUtc: lastFullSyncAtUtc,
+                lastSuccessfulPullAtUtc: lastSuccessfulPullAtUtc,
+                lastSuccessfulPushAtUtc: lastSuccessfulPushAtUtc,
+                lastPermissionCheckAtUtc: lastPermissionCheckAtUtc,
+                lastCalendarDiscoveryAtUtc: lastCalendarDiscoveryAtUtc,
+                connectionConfiguredAtUtc: connectionConfiguredAtUtc,
                 initialSyncAnchorPastUtc: initialSyncAnchorPastUtc,
                 initialSyncAnchorFutureUtc: initialSyncAnchorFutureUtc,
               ),
@@ -3836,7 +7039,21 @@ class $$CalendarConfigRowsTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 Value<String> selectedCalendarIdsJson = const Value.absent(),
+                Value<String> readableCalendarIdsJson = const Value.absent(),
+                Value<String?> defaultWritableCalendarId = const Value.absent(),
+                Value<String?> dedicatedMeMyCalendarId = const Value.absent(),
+                Value<int> syncPastWindowDays = const Value.absent(),
+                Value<int> syncFutureWindowDays = const Value.absent(),
+                Value<int> calendarSchemaVersion = const Value.absent(),
                 Value<DateTime?> lastFullSyncAtUtc = const Value.absent(),
+                Value<DateTime?> lastSuccessfulPullAtUtc = const Value.absent(),
+                Value<DateTime?> lastSuccessfulPushAtUtc = const Value.absent(),
+                Value<DateTime?> lastPermissionCheckAtUtc =
+                    const Value.absent(),
+                Value<DateTime?> lastCalendarDiscoveryAtUtc =
+                    const Value.absent(),
+                Value<DateTime?> connectionConfiguredAtUtc =
+                    const Value.absent(),
                 Value<DateTime?> initialSyncAnchorPastUtc =
                     const Value.absent(),
                 Value<DateTime?> initialSyncAnchorFutureUtc =
@@ -3844,7 +7061,18 @@ class $$CalendarConfigRowsTableTableManager
               }) => CalendarConfigRowsCompanion.insert(
                 id: id,
                 selectedCalendarIdsJson: selectedCalendarIdsJson,
+                readableCalendarIdsJson: readableCalendarIdsJson,
+                defaultWritableCalendarId: defaultWritableCalendarId,
+                dedicatedMeMyCalendarId: dedicatedMeMyCalendarId,
+                syncPastWindowDays: syncPastWindowDays,
+                syncFutureWindowDays: syncFutureWindowDays,
+                calendarSchemaVersion: calendarSchemaVersion,
                 lastFullSyncAtUtc: lastFullSyncAtUtc,
+                lastSuccessfulPullAtUtc: lastSuccessfulPullAtUtc,
+                lastSuccessfulPushAtUtc: lastSuccessfulPushAtUtc,
+                lastPermissionCheckAtUtc: lastPermissionCheckAtUtc,
+                lastCalendarDiscoveryAtUtc: lastCalendarDiscoveryAtUtc,
+                connectionConfiguredAtUtc: connectionConfiguredAtUtc,
                 initialSyncAnchorPastUtc: initialSyncAnchorPastUtc,
                 initialSyncAnchorFutureUtc: initialSyncAnchorFutureUtc,
               ),
@@ -3887,6 +7115,11 @@ class $CalendarDatabaseManager {
       $$CalendarEventLinksTableTableManager(_db, _db.calendarEventLinks);
   $$CalendarConflictsTableTableManager get calendarConflicts =>
       $$CalendarConflictsTableTableManager(_db, _db.calendarConflicts);
+  $$CalendarSyncOperationsTableTableManager get calendarSyncOperations =>
+      $$CalendarSyncOperationsTableTableManager(
+        _db,
+        _db.calendarSyncOperations,
+      );
   $$CalendarConfigRowsTableTableManager get calendarConfigRows =>
       $$CalendarConfigRowsTableTableManager(_db, _db.calendarConfigRows);
 }

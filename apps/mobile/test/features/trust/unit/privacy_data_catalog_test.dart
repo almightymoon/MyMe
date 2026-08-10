@@ -1,10 +1,20 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:memy/core/config/environment_config.dart';
 import 'package:memy/features/trust/domain/entities/data_catalog.dart';
+import 'package:memy/features/trust/domain/services/data_module_registry.dart';
 import 'package:memy/features/trust/domain/services/privacy_data_catalog_service.dart';
 
 void main() {
-  const catalog = PrivacyDataCatalogService();
+  final catalog = PrivacyDataCatalogService(DataModuleRegistry.builtIn());
+
+  test('catalog is derived from registry', () {
+    final registry = DataModuleRegistry.builtIn();
+    expect(catalog.entries().length, registry.descriptors.length);
+    for (final descriptor in registry.descriptors) {
+      final match = catalog.entries().where((e) => e.title == descriptor.title);
+      expect(match, isNotEmpty);
+    }
+  });
 
   test('health aiTransfer is false and export is summary-only', () {
     final health = catalog.entryFor(DataModule.health)!;

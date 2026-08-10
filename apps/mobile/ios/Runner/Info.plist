@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Memy</string>
+	<string>MeMy</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -31,11 +31,14 @@
 	     MeMy never writes to HealthKit, so NSHealthUpdateUsageDescription
 	     and the HealthKit "Update" capability are intentionally omitted. -->
 	<key>NSHealthShareUsageDescription</key>
-	<string>MeMy reads your selected activity, heart-rate, sleep, and workout data to show your personal wellness dashboard. MeMy does not write health data and does not send it to any server or AI service.</string>
+	<string>MeMy reads the activity, heart-rate, sleep, and workout data you choose so it can display your personal wellness dashboard. MeMy does not write health data.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string>MeMy accesses the calendars you select so your schedule stays consistent between MeMy and the Calendar app. You choose which calendars to sync. MeMy can create and update only the events you add in MeMy.</string>
+	<string>MeMy accesses the calendars you select so your schedule can appear in MeMy and MeMy-created events can be added to your chosen calendar.</string>
 	<key>NSCalendarsUsageDescription</key>
-	<string>MeMy accesses the calendars you select so your schedule stays consistent between MeMy and the Calendar app.</string>
+	<string>MeMy accesses the calendars you select so your schedule can appear in MeMy and MeMy-created events can be added to your chosen calendar.</string>
+	<!-- Ordinary HTTPS networking only; no custom encryption. Owner confirms App Store Connect answer. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -13,6 +13,7 @@ import '../../../core/integrations/application/providers/integration_providers.d
 import '../../../core/integrations/domain/integration_connection_status.dart';
 import '../../../core/widgets/memy_card.dart';
 import '../../../core/widgets/memy_page_header.dart';
+import '../../calendar/application/providers/calendar_providers.dart';
 import '../../health/application/providers/health_providers.dart'
     as health_providers;
 
@@ -28,6 +29,8 @@ class ConnectedAppsScreen extends ConsumerWidget {
     final healthStatus =
         healthAsync.valueOrNull?.status ??
         IntegrationConnectionStatus.notConnected;
+    final recoveryCount =
+        ref.watch(calendarRecoveryCasesProvider).valueOrNull?.length ?? 0;
 
     return Scaffold(
       key: const Key('connected_apps'),
@@ -76,6 +79,22 @@ class ConnectedAppsScreen extends ConsumerWidget {
                     status: healthStatus,
                     onTap: () => context.push(RoutePaths.health),
                   ),
+                  if (recoveryCount > 0) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    ListTile(
+                      key: const Key('connected_apps_calendar_recovery'),
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.healing_rounded),
+                      title: Text(
+                        recoveryCount == 1
+                            ? '1 calendar create recovery'
+                            : '$recoveryCount calendar create recoveries',
+                      ),
+                      subtitle: const Text('Review ambiguous create syncs'),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () => context.push(RoutePaths.calendarRecovery),
+                    ),
+                  ],
                   const SizedBox(height: AppSpacing.lg),
                   ListTile(
                     key: const Key('connected_apps_diagnostics'),
@@ -128,9 +147,15 @@ class _ConnectionRow extends StatelessWidget {
   String get _statusLabel {
     switch (status) {
       case IntegrationConnectionStatus.connected:
+      case IntegrationConnectionStatus.syncing:
         return 'Connected';
       case IntegrationConnectionStatus.connecting:
         return 'Connecting…';
+      case IntegrationConnectionStatus.partiallyConnected:
+      case IntegrationConnectionStatus.staleCacheAvailable:
+      case IntegrationConnectionStatus.providerUnavailable:
+      case IntegrationConnectionStatus.permissionStatusUnknown:
+      case IntegrationConnectionStatus.configurationInvalid:
       case IntegrationConnectionStatus.error:
         return 'Needs attention';
       case IntegrationConnectionStatus.notConnected:
@@ -141,7 +166,13 @@ class _ConnectionRow extends StatelessWidget {
   Color get _statusColor {
     switch (status) {
       case IntegrationConnectionStatus.connected:
+      case IntegrationConnectionStatus.syncing:
         return AppColors.finance;
+      case IntegrationConnectionStatus.partiallyConnected:
+      case IntegrationConnectionStatus.staleCacheAvailable:
+      case IntegrationConnectionStatus.providerUnavailable:
+      case IntegrationConnectionStatus.permissionStatusUnknown:
+      case IntegrationConnectionStatus.configurationInvalid:
       case IntegrationConnectionStatus.error:
         return AppColors.health;
       case IntegrationConnectionStatus.connecting:

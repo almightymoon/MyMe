@@ -44,11 +44,12 @@ class CalendarOverviewScreen extends ConsumerWidget {
     );
     final conflicts =
         ref.watch(calendarConflictsProvider).valueOrNull ?? const [];
+    final recoveryCases =
+        ref.watch(calendarRecoveryCasesProvider).valueOrNull ?? const [];
 
     return MemyModuleScaffold(
       key: const Key('calendar_overview'),
       title: 'Calendar',
-      heroAsset: 'assets/images/modules/mod-calendar.png',
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -72,6 +73,10 @@ class CalendarOverviewScreen extends ConsumerWidget {
           if (conflicts.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.sm),
             _ConflictBanner(count: conflicts.length),
+          ],
+          if (recoveryCases.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            _RecoveryBanner(count: recoveryCases.length),
           ],
           const SizedBox(height: AppSpacing.sm),
           Row(
@@ -256,34 +261,48 @@ class _ConnectionBanner extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final connection = ref.watch(calendarConnectionProvider);
-    if (connection.status == IntegrationConnectionStatus.connected) {
+    if (connection.status == IntegrationConnectionStatus.connected ||
+        connection.status == IntegrationConnectionStatus.syncing) {
       return const SizedBox.shrink();
     }
 
-    final isError = connection.status == IntegrationConnectionStatus.error;
+    final isDegraded = connection.status.isDegraded;
+    final isStale =
+        connection.status == IntegrationConnectionStatus.staleCacheAvailable;
+    final label = switch (connection.status) {
+      IntegrationConnectionStatus.partiallyConnected =>
+        'Calendar is partially connected — pick a writable calendar to push events.',
+      IntegrationConnectionStatus.staleCacheAvailable =>
+        'Showing cached calendar. Live device calendar is temporarily unavailable.',
+      IntegrationConnectionStatus.providerUnavailable =>
+        'Device calendar is unavailable on this device.',
+      IntegrationConnectionStatus.permissionStatusUnknown ||
+      IntegrationConnectionStatus.error => 'Calendar sync needs attention.',
+      IntegrationConnectionStatus.configurationInvalid =>
+        'Calendar connection needs reconfiguration.',
+      _ => 'Connect a device calendar to see it here too.',
+    };
+
     return MemyCard(
       key: const Key('calendar_connection_banner'),
       padding: const EdgeInsets.all(14),
       child: Row(
         children: [
           Icon(
-            isError ? Icons.error_outline_rounded : Icons.link_rounded,
-            color: isError ? AppColors.health : AppColors.ember,
+            isStale
+                ? Icons.cloud_off_outlined
+                : isDegraded
+                ? Icons.error_outline_rounded
+                : Icons.link_rounded,
+            color: isDegraded ? AppColors.health : AppColors.ember,
           ),
           const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(
-              isError
-                  ? 'Calendar sync needs attention.'
-                  : 'Connect a device calendar to see it here too.',
-              style: AppTextStyles.bodySmall(),
-            ),
-          ),
+          Expanded(child: Text(label, style: AppTextStyles.bodySmall())),
           TextButton(
             key: const Key('calendar_connect_cta'),
             onPressed: () => context.push(RoutePaths.calendarConnect),
             child: Text(
-              'Connect',
+              isDegraded ? 'Fix' : 'Connect',
               style: AppTextStyles.labelMedium(color: AppColors.ember),
             ),
           ),
@@ -313,6 +332,36 @@ class _ConflictBanner extends StatelessWidget {
               count == 1
                   ? '1 sync conflict needs your review'
                   : '$count sync conflicts need your review',
+              style: AppTextStyles.bodySmall(),
+            ),
+          ),
+          const Icon(Icons.chevron_right_rounded, color: AppColors.faintText),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecoveryBanner extends StatelessWidget {
+  const _RecoveryBanner({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return MemyCard(
+      key: const Key('calendar_recovery_banner'),
+      padding: const EdgeInsets.all(14),
+      onTap: () => context.push(RoutePaths.calendarRecovery),
+      child: Row(
+        children: [
+          const Icon(Icons.healing_rounded, color: AppColors.health),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              count == 1
+                  ? '1 create recovery needs your review'
+                  : '$count create recoveries need your review',
               style: AppTextStyles.bodySmall(),
             ),
           ),

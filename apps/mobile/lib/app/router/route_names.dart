@@ -23,6 +23,7 @@ abstract final class RouteNames {
   static const String calendarConnect = 'calendarConnect';
   static const String calendarSelection = 'calendarSelection';
   static const String calendarConflicts = 'calendarConflicts';
+  static const String calendarRecovery = 'calendarRecovery';
   static const String eventDetail = 'eventDetail';
   static const String editEvent = 'editEvent';
   static const String health = 'health';
@@ -67,6 +68,7 @@ abstract final class RoutePaths {
   static const String calendarConnect = '/calendar/connect';
   static const String calendarSelection = '/calendar/connect/select';
   static const String calendarConflicts = '/calendar/conflicts';
+  static const String calendarRecovery = '/calendar/recovery';
   static const String eventDetail = '/calendar/event/:eventId';
   static const String editEvent = '/calendar/event/:eventId/edit';
   static const String health = '/health';

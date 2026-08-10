@@ -6,10 +6,12 @@ import '../../../../core/data/fake_repository_config.dart';
 import '../../../../core/integrations/application/providers/integration_providers.dart';
 import '../../data/gateways/fake_device_calendar_gateway.dart';
 import '../../data/gateways/system_device_calendar_gateway.dart';
-import '../../data/local/calendar_database.dart';
+import '../../data/local/calendar_database.dart'
+    hide CalendarCreateRecoveryCase;
 import '../../data/repositories/fake_calendar_repository.dart';
 import '../../data/repositories/local_calendar_repository.dart';
 import '../../domain/entities/calendar_config.dart';
+import '../../domain/entities/calendar_create_recovery_case.dart';
 import '../../domain/entities/calendar_sync_conflict.dart';
 import '../../domain/entities/memy_calendar_event.dart';
 import '../../domain/gateways/device_calendar_gateway.dart';
@@ -126,6 +128,14 @@ final calendarEventByIdProvider = FutureProvider.autoDispose
 final calendarConflictsProvider =
     StreamProvider.autoDispose<List<CalendarSyncConflict>>((ref) {
       return ref.watch(calendarRepositoryProvider).watchConflicts();
+    });
+
+/// Unresolved create-recovery cases. Invalidate after resolution actions.
+final calendarRecoveryCasesProvider =
+    FutureProvider.autoDispose<List<CalendarCreateRecoveryCase>>((ref) {
+      return ref
+          .watch(calendarSyncServiceProvider)
+          .listUnresolvedRecoveryCases();
     });
 
 /// Throttles the "sync on app foreground" hook so re-entering the app

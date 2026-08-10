@@ -13,6 +13,7 @@ import '../../features/calendar/presentation/screens/calendar_connection_screen.
 import '../../features/calendar/presentation/screens/calendar_conflict_screen.dart';
 import '../../features/calendar/presentation/screens/calendar_event_detail_screen.dart';
 import '../../features/calendar/presentation/screens/calendar_overview_screen.dart';
+import '../../features/calendar/presentation/screens/calendar_recovery_screen.dart';
 import '../../features/calendar/presentation/screens/calendar_selection_screen.dart';
 import '../../features/calendar/presentation/screens/edit_calendar_event_screen.dart';
 import '../../features/coach/presentation/coach_screen.dart';
@@ -239,6 +240,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RoutePaths.calendarConflicts,
         name: RouteNames.calendarConflicts,
         builder: (context, state) => const CalendarConflictScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.calendarRecovery,
+        name: RouteNames.calendarRecovery,
+        builder: (context, state) => const CalendarRecoveryScreen(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

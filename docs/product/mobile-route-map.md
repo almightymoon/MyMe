@@ -23,9 +23,18 @@ Back behavior: placeholder / feature routes use `context.pop()` when possible, o
 | `/finance/history` | Finance → See All | `TransactionHistoryScreen` | Live — chronological list | Pop → Finance |
 | `/finance/tx/:transactionId` | History / after save | `TransactionDetailScreen` | Live — detail, edit, delete | Pop or go history |
 | `/finance/tx/:transactionId/edit` | Detail → Edit | `EditTransactionScreen` | Live — update + validate | Pop → detail |
-| `/calendar` | Plan → Calendar card | `CalendarPlaceholderScreen` | Explicit Coming Soon placeholder | Pop → Plan (or Today) |
-| `/calendar/new` | Quick Add → Add Event | `AddEventPlaceholderScreen` | Explicit Coming Soon placeholder | Pop → previous |
-| `/health` | More → Health | `HealthPlaceholderScreen` | Explicit Coming Soon placeholder | Pop → More (or Today) |
+| `/calendar` | Plan → Calendar; Settings → Connections | `CalendarOverviewScreen` | Live — fake/system device calendars | Pop → Plan |
+| `/calendar/new` | Quick Add → Add Event | `AddCalendarEventScreen` | Live — MeMy event + pending push | Pop → previous |
+| `/calendar/connect` | Calendar banner / Connections | `CalendarConnectionScreen` | Live — permission + connect | Pop |
+| `/calendar/connect/select` | After connect | `CalendarSelectionScreen` | Live — readable/writable selection | Pop |
+| `/calendar/conflicts` | Sync conflicts | `CalendarConflictScreen` | Live | Pop |
+| `/calendar/event/:eventId` | Agenda row | `CalendarEventDetailScreen` | Live | Pop |
+| `/calendar/event/:eventId/edit` | Detail → Edit (MeMy-owned) | `EditCalendarEventScreen` | Live | Pop |
+| `/health` | More → Health; Today CTA | `HealthOverviewScreen` | Live — fake/system Health | Pop → More |
+| `/health/connect` | Health / Connections | `HealthConnectionScreen` | Live — explanation | Pop |
+| `/health/permissions` | Connect flow | `HealthPermissionSelectionScreen` | Live — granular groups | Pop |
+| `/health/workouts` | Health overview | `HealthWorkoutsScreen` | Live | Pop |
+| `/settings/connections` | Settings | `ConnectedAppsScreen` | Live — Calendar + Health + planned | Pop |
 | `/exercise` | More → Exercise | `ExercisePlaceholderScreen` | Explicit Coming Soon placeholder | Pop → More (or Today) |
 | `/wardrobe` | More → Wardrobe | `WardrobePlaceholderScreen` | Explicit Coming Soon placeholder | Pop → More (or Today) |
 | `/settings` | More → Settings | `SettingsScreen` | Explicit Coming Soon placeholder | Pop → More (or Today) |
@@ -43,7 +52,7 @@ Back behavior: placeholder / feature routes use `context.pop()` when possible, o
 | Quick Add FAB | Open Quick Add sheet | Wired |
 | Quick Add → Add Goal | `/goals/new` live form | Wired |
 | Quick Add → Add Transaction | `/finance/new` live form | Wired |
-| Quick Add → Add Event | `/calendar/new` placeholder | Wired |
+| Quick Add → Add Event | `/calendar/new` live form | Wired |
 | Quick Add → Add Habit | `/habits/new` live form | Wired |
 | Quick Add → Log Meal | `/nutrition/coming-soon` placeholder | Wired |
 | Plan Goals / Habits / Calendar cards | Push feature routes | Wired |

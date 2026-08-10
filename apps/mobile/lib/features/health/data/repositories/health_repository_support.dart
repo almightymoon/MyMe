@@ -13,7 +13,11 @@ import '../../domain/services/health_aggregation_service.dart';
 ///
 /// Reads a window wide enough to attribute overnight sleep to [date] (sleep
 /// samples are attributed by wake time — see [HealthAggregationService]),
-/// then aggregates only the metric types the user has actually granted.
+/// then aggregates only the metric types the user may read per
+/// [HealthPermissionState.isReadableForAggregation].
+///
+/// Prefers gateway daily totals for steps / distance / active energy when
+/// available (avoids double-counting overlapping raw samples).
 Future<DailyHealthSummary> buildDailySummary({
   required PlatformHealthGateway gateway,
   required HealthAggregationService aggregation,
@@ -21,15 +25,18 @@ Future<DailyHealthSummary> buildDailySummary({
   required LocalDate date,
   required DateTime now,
 }) async {
-  final grantedTypes = HealthMetricType.values
-      .where((m) => permissionState.isGranted(m.group))
+  final readableTypes = HealthMetricType.values
+      .where((m) => permissionState.isReadableForAggregation(m.group))
       .toSet();
   final unavailable = HealthMetricType.values
-      .where((m) => !grantedTypes.contains(m))
+      .where((m) => !readableTypes.contains(m))
       .toSet();
 
-  if (grantedTypes.isEmpty &&
-      !permissionState.isGranted(HealthMetricGroup.workouts)) {
+  final workoutsReadable = permissionState.isReadableForAggregation(
+    HealthMetricGroup.workouts,
+  );
+
+  if (readableTypes.isEmpty && !workoutsReadable) {
     return DailyHealthSummary.empty(date, now);
   }
 
@@ -38,18 +45,37 @@ Future<DailyHealthSummary> buildDailySummary({
   // before through the end of [date] to catch both.
   final windowStart = date.addDays(-1).toDateTimeLocal().toUtc();
   final windowEnd = date.addDays(1).toDateTimeLocal().toUtc();
+  final dayStart = date.toDateTimeLocal().toUtc();
+  final dayEnd = date.addDays(1).toDateTimeLocal().toUtc();
 
-  final List<NormalizedHealthSample> samples = grantedTypes.isEmpty
+  final List<NormalizedHealthSample> samples = readableTypes.isEmpty
       ? const []
       : await gateway.readSamples(
-          metricTypes: grantedTypes,
+          metricTypes: readableTypes,
           startUtc: windowStart,
           endUtc: windowEnd,
         );
-  final List<HealthWorkout> workouts =
-      permissionState.isGranted(HealthMetricGroup.workouts)
+  final List<HealthWorkout> workouts = workoutsReadable
       ? await gateway.readWorkouts(startUtc: windowStart, endUtc: windowEnd)
       : const [];
+
+  int? stepsOverride;
+  double? distanceOverride;
+  double? energyOverride;
+  if (permissionState.isReadableForAggregation(HealthMetricGroup.activity)) {
+    stepsOverride = await gateway.readDailyStepTotal(
+      startUtc: dayStart,
+      endUtc: dayEnd,
+    );
+    distanceOverride = await gateway.readDailyDistanceTotal(
+      startUtc: dayStart,
+      endUtc: dayEnd,
+    );
+    energyOverride = await gateway.readDailyActiveEnergyTotal(
+      startUtc: dayStart,
+      endUtc: dayEnd,
+    );
+  }
 
   return aggregation.summarizeDay(
     date: date,
@@ -57,5 +83,8 @@ Future<DailyHealthSummary> buildDailySummary({
     workouts: workouts,
     unavailableMetrics: unavailable,
     generatedAt: now,
+    stepsOverride: stepsOverride,
+    distanceMetersOverride: distanceOverride,
+    activeEnergyKcalOverride: energyOverride,
   );
 }

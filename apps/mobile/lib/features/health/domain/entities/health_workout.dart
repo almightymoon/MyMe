@@ -13,6 +13,12 @@ class HealthWorkout {
     this.energyBurnedKcal,
     this.distanceMeters,
     required this.source,
+    this.sourceApplicationId,
+    this.sourceApplicationName,
+    this.sourceDeviceId,
+    this.sourceDeviceModel,
+    this.dataOriginCategory,
+    this.fetchedAt,
   });
 
   /// Platform-assigned identifier, used only to de-duplicate within one
@@ -24,6 +30,15 @@ class HealthWorkout {
   final double? energyBurnedKcal;
   final double? distanceMeters;
   final HealthSampleSource source;
+
+  final String? sourceApplicationId;
+  final String? sourceApplicationName;
+
+  /// Opaque device id — never display in UI.
+  final String? sourceDeviceId;
+  final String? sourceDeviceModel;
+  final String? dataOriginCategory;
+  final DateTime? fetchedAt;
 
   Duration get duration => endAt.difference(startAt);
 

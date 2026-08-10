@@ -44,9 +44,15 @@ class HealthOverviewScreen extends ConsumerWidget {
       title: 'Health Overview',
       decoration: _peachWash,
       trailing: MemyIconPlain(
-        icon: Icons.notifications_none_rounded,
-        showBadge: true,
-        onPressed: () {},
+        icon: Icons.refresh_rounded,
+        showBadge: false,
+        onPressed: () {
+          ref.invalidate(dailyHealthSummaryProvider);
+          ref.invalidate(healthConnectionProvider);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Refreshing Health data…')),
+          );
+        },
       ),
       child: connectionAsync.when(
         data: (connection) =>
@@ -238,7 +244,7 @@ class _ConnectedContent extends StatelessWidget {
               ),
             ),
             HealthMetricTile(
-              label: 'Sleep',
+              label: 'Sleep (asleep)',
               value: summary.sleepDuration == null
                   ? null
                   : HealthFormat.duration(summary.sleepDuration!),

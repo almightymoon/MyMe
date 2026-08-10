@@ -11,6 +11,7 @@ import '../../../core/widgets/memy_module_scaffold.dart';
 import '../application/providers/health_providers.dart';
 import '../domain/entities/health_metric_type.dart';
 import '../domain/entities/health_workout.dart';
+import '../domain/services/source_attribution_formatter.dart';
 import 'widgets/health_disclaimer_banner.dart';
 
 /// Workouts read from the platform Health store for the selected day —
@@ -71,6 +72,7 @@ class _WorkoutRow extends StatelessWidget {
   const _WorkoutRow({required this.workout});
 
   final HealthWorkout workout;
+  static const _attribution = SourceAttributionFormatter();
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +97,8 @@ class _WorkoutRow extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   '${timeFormat.format(workout.startAt)} · '
-                  '${workout.duration.inMinutes} min · ${workout.source.label}',
+                  '${workout.duration.inMinutes} min · '
+                  '${_attribution.forWorkout(workout)}',
                   style: AppTextStyles.bodySmall(),
                 ),
               ],

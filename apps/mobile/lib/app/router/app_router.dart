@@ -6,8 +6,14 @@ import '../../features/auth/presentation/forgot_password_screen.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
 import '../../features/body/presentation/body_composition_screen.dart';
-import '../../features/calendar/presentation/add_event_placeholder_screen.dart';
-import '../../features/calendar/presentation/calendar_placeholder_screen.dart';
+import '../../features/calendar/domain/entities/device_calendar_descriptor.dart';
+import '../../features/calendar/presentation/screens/add_calendar_event_screen.dart';
+import '../../features/calendar/presentation/screens/calendar_connection_screen.dart';
+import '../../features/calendar/presentation/screens/calendar_conflict_screen.dart';
+import '../../features/calendar/presentation/screens/calendar_event_detail_screen.dart';
+import '../../features/calendar/presentation/screens/calendar_overview_screen.dart';
+import '../../features/calendar/presentation/screens/calendar_selection_screen.dart';
+import '../../features/calendar/presentation/screens/edit_calendar_event_screen.dart';
 import '../../features/coach/presentation/coach_screen.dart';
 import '../../features/exercise/presentation/screens/exercise_library_screen.dart';
 import '../../features/exercise/presentation/screens/exercise_overview_screen.dart';
@@ -24,10 +30,14 @@ import '../../features/habits/presentation/screens/add_habit_screen.dart';
 import '../../features/habits/presentation/screens/edit_habit_screen.dart';
 import '../../features/habits/presentation/screens/habit_detail_screen.dart';
 import '../../features/habits/presentation/screens/habits_overview_screen.dart';
-import '../../features/health/presentation/health_placeholder_screen.dart';
+import '../../features/health/presentation/health_connection_screen.dart';
+import '../../features/health/presentation/health_overview_screen.dart';
+import '../../features/health/presentation/health_permission_selection_screen.dart';
+import '../../features/health/presentation/health_workouts_screen.dart';
 import '../../features/more/presentation/more_screen.dart';
 import '../../features/plan/presentation/plan_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/settings/presentation/connected_apps_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/shell/presentation/memy_app_shell.dart';
 import '../../features/today/presentation/today_screen.dart';
@@ -197,19 +207,74 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         path: RoutePaths.calendar,
         name: RouteNames.calendar,
-        builder: (context, state) => const CalendarPlaceholderScreen(),
+        builder: (context, state) => const CalendarOverviewScreen(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: RoutePaths.addEvent,
         name: RouteNames.addEvent,
-        builder: (context, state) => const AddEventPlaceholderScreen(),
+        builder: (context, state) => const AddCalendarEventScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.calendarConnect,
+        name: RouteNames.calendarConnect,
+        builder: (context, state) => const CalendarConnectionScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.calendarSelection,
+        name: RouteNames.calendarSelection,
+        builder: (context, state) {
+          final calendars =
+              state.extra as List<DeviceCalendarDescriptor>? ?? const [];
+          return CalendarSelectionScreen(calendars: calendars);
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.calendarConflicts,
+        name: RouteNames.calendarConflicts,
+        builder: (context, state) => const CalendarConflictScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.eventDetail,
+        name: RouteNames.eventDetail,
+        builder: (context, state) => CalendarEventDetailScreen(
+          eventId: state.pathParameters['eventId']!,
+        ),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.editEvent,
+        name: RouteNames.editEvent,
+        builder: (context, state) =>
+            EditCalendarEventScreen(eventId: state.pathParameters['eventId']!),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: RoutePaths.health,
         name: RouteNames.health,
-        builder: (context, state) => const HealthPlaceholderScreen(),
+        builder: (context, state) => const HealthOverviewScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.healthConnect,
+        name: RouteNames.healthConnect,
+        builder: (context, state) => const HealthConnectionScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.healthPermissions,
+        name: RouteNames.healthPermissions,
+        builder: (context, state) => const HealthPermissionSelectionScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.healthWorkouts,
+        name: RouteNames.healthWorkouts,
+        builder: (context, state) => const HealthWorkoutsScreen(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
@@ -248,6 +313,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RoutePaths.settings,
         name: RouteNames.settings,
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.connectedApps,
+        name: RouteNames.connectedApps,
+        builder: (context, state) => const ConnectedAppsScreen(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

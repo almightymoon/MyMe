@@ -5,6 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:memy/core/constants/app_strings.dart';
+import 'package:memy/core/domain/clock/app_clock.dart';
+import 'package:memy/features/calendar/application/providers/calendar_providers.dart';
+import 'package:memy/features/calendar/data/repositories/fake_calendar_repository.dart';
 import 'package:memy/features/goals/application/providers/goal_providers.dart';
 import 'package:memy/features/goals/domain/entities/goal.dart';
 import 'package:memy/features/today/application/providers/today_providers.dart';
@@ -107,12 +110,19 @@ void main() {
   testWidgets('Today shows empty state when base and goals are empty', (
     tester,
   ) async {
+    final clock = FixedAppClock(DateTime.utc(2026, 6, 15, 9));
     await pumpMemyApp(
       tester,
       config: createTestFakeConfig(forceEmpty: true),
       seedGoals: false,
       seedFinance: false,
       seedHabits: false,
+      overrides: [
+        appClockProvider.overrideWithValue(clock),
+        calendarRepositoryProvider.overrideWith(
+          (ref) => FakeCalendarRepository(clock: clock, seedEvents: const []),
+        ),
+      ],
     );
     await signInToToday(tester);
 

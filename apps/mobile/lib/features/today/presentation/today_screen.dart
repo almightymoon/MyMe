@@ -10,6 +10,7 @@ import '../../../app/theme/app_text_styles.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/domain/services/money_format.dart';
 import '../../../core/errors/app_exception.dart';
+import '../../../core/integrations/domain/integration_connection_status.dart';
 import '../../../core/widgets/empty_feature_card.dart';
 import '../../../core/widgets/inline_error_card.dart';
 import '../../../core/widgets/life_score_ring.dart';
@@ -24,6 +25,10 @@ import '../../goals/domain/entities/goal_summary.dart';
 import '../../habits/application/providers/habit_providers.dart';
 import '../../habits/domain/entities/habit_enums.dart';
 import '../../habits/domain/entities/habit_progress.dart';
+import '../../health/application/providers/health_providers.dart';
+import '../../health/domain/entities/daily_health_summary.dart';
+import '../../health/domain/entities/health_connection_config.dart';
+import '../../health/presentation/widgets/health_format.dart';
 import '../../shell/presentation/memy_bottom_navigation.dart';
 import '../application/providers/today_providers.dart';
 import '../application/providers/today_tasks_provider.dart';
@@ -235,6 +240,8 @@ class _TodayPopulatedBody extends StatelessWidget {
           _TodayHabitsCard(items: summary.habits),
           const SizedBox(height: 12),
         ],
+        const _TodayHealthCard(),
+        const SizedBox(height: 12),
         _GlanceSection(items: summary.schedule),
         const SizedBox(height: 12),
         const _TasksSection(),
@@ -624,6 +631,192 @@ class _TodayFinanceCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Compact live Health readout — watches Health's own providers directly
+/// (not folded into [todaySummaryProvider]) so a Health failure only empties
+/// this one card, never the rest of Today. Never auto-requests permission;
+/// the only action here is a link into the Connect flow for the user to
+/// trigger explicitly.
+class _TodayHealthCard extends ConsumerWidget {
+  const _TodayHealthCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final connectionAsync = ref.watch(healthConnectionProvider);
+
+    return connectionAsync.when(
+      data: (connection) => _buildForConnection(context, ref, connection),
+      loading: () => const _TodayHealthCardShell(
+        child: SizedBox(
+          height: 40,
+          child: Center(
+            child: SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+        ),
+      ),
+      // A Health connection-stream failure must not blank Goals/Finance/
+      // Habits/Calendar — just fall back to a "not connected" style card.
+      error: (error, _) =>
+          _buildForConnection(context, ref, const HealthConnectionConfig()),
+    );
+  }
+
+  Widget _buildForConnection(
+    BuildContext context,
+    WidgetRef ref,
+    HealthConnectionConfig connection,
+  ) {
+    if (connection.status != IntegrationConnectionStatus.connected) {
+      return _TodayHealthCardShell(
+        key: const Key('today_health_connect_cta'),
+        onTap: () => context.push(RoutePaths.healthConnect),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.favorite_rounded,
+              color: AppColors.ember,
+              size: 20,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Connect Health to see steps, heart rate & sleep here',
+                style: AppTextStyles.bodySmall(color: AppColors.secondaryText),
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: AppColors.ember,
+            ),
+          ],
+        ),
+      );
+    }
+
+    final summaryAsync = ref.watch(todayHealthSummaryProvider);
+    return summaryAsync.when(
+      data: (summary) => _TodayHealthCardShell(
+        key: const Key('today_health_card'),
+        onTap: () => context.push(RoutePaths.health),
+        child: summary.hasAnyData
+            ? _TodayHealthMetrics(summary: summary)
+            : Text(
+                'No Health data yet for today.',
+                style: AppTextStyles.bodySmall(color: AppColors.faintText),
+              ),
+      ),
+      loading: () => const _TodayHealthCardShell(
+        child: SizedBox(
+          height: 40,
+          child: Center(
+            child: SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+        ),
+      ),
+      // Isolated failure: show a small inline notice, never touch the rest
+      // of the Today screen.
+      error: (error, _) => _TodayHealthCardShell(
+        key: const Key('today_health_error'),
+        onTap: () => context.push(RoutePaths.health),
+        child: Text(
+          "Couldn't load Health data right now.",
+          style: AppTextStyles.bodySmall(color: AppColors.faintText),
+        ),
+      ),
+    );
+  }
+}
+
+class _TodayHealthCardShell extends StatelessWidget {
+  const _TodayHealthCardShell({super.key, required this.child, this.onTap});
+
+  final Widget child;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return MemyCard(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Health',
+                  style: AppTextStyles.titleSmall().copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              if (onTap != null)
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 18,
+                  color: AppColors.faintText,
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _TodayHealthMetrics extends StatelessWidget {
+  const _TodayHealthMetrics({required this.summary});
+
+  final DailyHealthSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final chips = <(IconData, String)>[
+      if (summary.steps != null)
+        (Icons.directions_walk_rounded, HealthFormat.steps(summary.steps!)),
+      if (summary.latestHeartRateBpm != null)
+        (
+          Icons.favorite_rounded,
+          '${HealthFormat.beatsPerMinute(summary.latestHeartRateBpm!)} bpm',
+        ),
+      if (summary.sleepDuration != null)
+        (Icons.bedtime_rounded, HealthFormat.duration(summary.sleepDuration!)),
+      if (summary.activeEnergyKcal != null)
+        (
+          Icons.local_fire_department_rounded,
+          '${HealthFormat.kilocalories(summary.activeEnergyKcal!)} kcal',
+        ),
+    ];
+
+    return Row(
+      children: [
+        for (var i = 0; i < chips.length && i < 3; i++) ...[
+          if (i > 0) const SizedBox(width: 16),
+          Icon(chips[i].$1, size: 16, color: AppColors.ember),
+          const SizedBox(width: 4),
+          Text(
+            chips[i].$2,
+            style: AppTextStyles.bodySmall(
+              color: AppColors.primaryText,
+            ).copyWith(fontWeight: FontWeight.w600),
+          ),
+        ],
+      ],
     );
   }
 }

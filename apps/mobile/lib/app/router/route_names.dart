@@ -20,13 +20,22 @@ abstract final class RouteNames {
   static const String editTransaction = 'editTransaction';
   static const String calendar = 'calendar';
   static const String addEvent = 'addEvent';
+  static const String calendarConnect = 'calendarConnect';
+  static const String calendarSelection = 'calendarSelection';
+  static const String calendarConflicts = 'calendarConflicts';
+  static const String eventDetail = 'eventDetail';
+  static const String editEvent = 'editEvent';
   static const String health = 'health';
+  static const String healthConnect = 'healthConnect';
+  static const String healthPermissions = 'healthPermissions';
+  static const String healthWorkouts = 'healthWorkouts';
   static const String exercise = 'exercise';
   static const String exerciseLibrary = 'exerciseLibrary';
   static const String workoutSession = 'workoutSession';
   static const String wardrobe = 'wardrobe';
   static const String body = 'body';
   static const String settings = 'settings';
+  static const String connectedApps = 'connectedApps';
   static const String profile = 'profile';
   static const String nutritionComingSoon = 'nutritionComingSoon';
 }
@@ -53,15 +62,29 @@ abstract final class RoutePaths {
   static const String editTransaction = '/finance/tx/:transactionId/edit';
   static const String calendar = '/calendar';
   static const String addEvent = '/calendar/new';
+  static const String calendarConnect = '/calendar/connect';
+  static const String calendarSelection = '/calendar/connect/select';
+  static const String calendarConflicts = '/calendar/conflicts';
+  static const String eventDetail = '/calendar/event/:eventId';
+  static const String editEvent = '/calendar/event/:eventId/edit';
   static const String health = '/health';
+  static const String healthConnect = '/health/connect';
+  static const String healthPermissions = '/health/permissions';
+  static const String healthWorkouts = '/health/workouts';
   static const String exercise = '/exercise';
   static const String exerciseLibrary = '/exercise/library';
   static const String workoutSession = '/exercise/session';
   static const String wardrobe = '/wardrobe';
   static const String body = '/body';
   static const String settings = '/settings';
+  static const String connectedApps = '/settings/connections';
   static const String profile = '/profile';
   static const String nutritionComingSoon = '/nutrition/coming-soon';
+
+  static String eventDetailPath(String eventId) => '/calendar/event/$eventId';
+
+  static String editEventPath(String eventId) =>
+      '/calendar/event/$eventId/edit';
 
   static String goalDetailPath(String goalId) => '/goals/$goalId';
 

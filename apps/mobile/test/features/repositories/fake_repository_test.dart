@@ -12,7 +12,10 @@ void main() {
 
     expect(summary.hasDailyInformation, isTrue);
     expect(summary.focus?.title, TodaySeed.demoFocus.title);
-    expect(summary.schedule, isNotEmpty);
+    // Schedule is composed from CalendarRepository in todaySummaryProvider,
+    // not from TodaySeed (which keeps schedule empty).
+    expect(summary.schedule, isEmpty);
+    expect(summary.coachRecommendation, isNotNull);
   });
 
   test('FakeTodayRepository empty mode returns no daily information', () async {

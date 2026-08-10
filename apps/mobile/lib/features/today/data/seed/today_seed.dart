@@ -1,4 +1,3 @@
-import '../../../calendar/data/seed/calendar_seed.dart';
 import '../../../coach/data/seed/coach_seed.dart';
 import '../../../user/data/seed/user_seed.dart';
 import '../../domain/entities/daily_focus.dart';
@@ -9,6 +8,8 @@ import '../../domain/entities/today_summary.dart';
 /// Goals are injected by [todaySummaryProvider] from [GoalRepository].
 /// Finance is injected from [FinanceRepository] via [todayFinanceSummaryProvider].
 /// Habits are injected from [HabitRepository] via [todayHabitsProvider].
+/// Schedule is injected from [CalendarRepository] via [todayCalendarEventsProvider]
+/// — Team Meeting + Gym Workout come from `CalendarSeed.demoMemyEvents()`.
 abstract final class TodaySeed {
   static const DailyFocus demoFocus = DailyFocus(
     title: 'Finish AI Research Paper',
@@ -20,8 +21,7 @@ abstract final class TodaySeed {
     return TodaySummary(
       greetingName: UserSeed.demoProfile.displayName,
       focus: demoFocus,
-      // Home glance matches prototype: Team Meeting + Gym Workout.
-      schedule: [CalendarSeed.demoAgenda[0], CalendarSeed.demoAgenda[2]],
+      schedule: const [],
       goals: const [],
       habits: const [],
       finance: null,

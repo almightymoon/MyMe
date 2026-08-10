@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Health (read-only) — see NSHealthShareUsageDescription in Info.plist
+	     and lib/core/config/environment_config.dart. No `com.apple.developer.
+	     healthkit.access` clinical-record entitlement is requested: MeMy only
+	     reads the MVP wellness metrics, never clinical health records. -->
+	<key>com.apple.developer.healthkit</key>
+	<true/>
+</dict>
+</plist>

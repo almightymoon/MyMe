@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_navigation.dart';
@@ -6,6 +7,7 @@ import '../../../../app/router/route_names.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
+import '../../../../core/config/release_capabilities.dart';
 import '../../../../core/widgets/empty_feature_card.dart';
 import '../../../../core/widgets/memy_page_header.dart';
 import '../../../../core/widgets/memy_primary_button.dart';
@@ -15,7 +17,7 @@ import '../../domain/entities/exercise_difficulty.dart';
 import '../../domain/entities/exercise_item.dart';
 import '../widgets/exercise_list_tile.dart';
 
-class ExerciseLibraryScreen extends StatelessWidget {
+class ExerciseLibraryScreen extends ConsumerWidget {
   const ExerciseLibraryScreen({super.key, this.categoryId});
 
   final String? categoryId;
@@ -41,7 +43,10 @@ class ExerciseLibraryScreen extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final allowSessions = ref
+        .watch(releaseCapabilitiesProvider)
+        .exerciseSessions;
     final filter = _knownFilter;
     final items = _items();
     final title = _unknownCategory
@@ -105,7 +110,11 @@ class ExerciseLibraryScreen extends StatelessWidget {
                         final exercise = items[index];
                         return ExerciseListTile(
                           exercise: exercise,
-                          onTap: () => _showExerciseDetail(context, exercise),
+                          onTap: () => _showExerciseDetail(
+                            context,
+                            exercise,
+                            allowSessions: allowSessions,
+                          ),
                         );
                       },
                     ),
@@ -116,9 +125,12 @@ class ExerciseLibraryScreen extends StatelessWidget {
     );
   }
 
-  /// Shows what MeMy actually knows about the exercise and routes to the
-  /// labelled workout placeholder, rather than a dead "coming later" toast.
-  void _showExerciseDetail(BuildContext context, ExerciseItem exercise) {
+  /// Shows catalogue details. Start Workout is omitted when sessions are off.
+  void _showExerciseDetail(
+    BuildContext context,
+    ExerciseItem exercise, {
+    required bool allowSessions,
+  }) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -162,18 +174,23 @@ class ExerciseLibraryScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Text(
-                  'Step-by-step coaching media is planned for a later release.',
+                  allowSessions
+                      ? 'Step-by-step coaching media is planned for a later release.'
+                      : 'This release includes the exercise library only — '
+                            'live workout tracking is not available yet.',
                   style: AppTextStyles.bodySmall(color: AppColors.faintText),
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                MemyPrimaryButton(
-                  key: const Key('exercise_detail_start'),
-                  label: 'Open workout placeholder',
-                  onPressed: () {
-                    Navigator.of(sheetContext).pop();
-                    context.push(RoutePaths.workoutSession);
-                  },
-                ),
+                if (allowSessions) ...[
+                  const SizedBox(height: AppSpacing.lg),
+                  MemyPrimaryButton(
+                    key: const Key('exercise_detail_start'),
+                    label: 'Open workout placeholder',
+                    onPressed: () {
+                      Navigator.of(sheetContext).pop();
+                      context.push(RoutePaths.workoutSession);
+                    },
+                  ),
+                ],
               ],
             ),
           ),

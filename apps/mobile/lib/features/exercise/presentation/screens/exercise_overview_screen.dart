@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_navigation.dart';
 import '../../../../app/router/route_names.dart';
 import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_radii.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
+import '../../../../core/config/release_capabilities.dart';
 import '../../../../core/widgets/memy_chrome.dart';
 import '../../../../core/widgets/memy_page_header.dart';
 import '../../../../core/widgets/memy_primary_button.dart';
@@ -18,16 +21,14 @@ import '../../domain/entities/exercise_category.dart';
 import '../widgets/exercise_category_card.dart';
 import '../widgets/featured_workout_card.dart';
 import '../widgets/workout_summary_card.dart';
-import '../../../../app/theme/app_radii.dart';
 
-class ExerciseOverviewScreen extends StatelessWidget {
+class ExerciseOverviewScreen extends ConsumerWidget {
   const ExerciseOverviewScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final summary = ExerciseDemoData.weeklySummary;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final capabilities = ref.watch(releaseCapabilitiesProvider);
     final featured = ExerciseDemoData.featuredWorkout;
-    final recent = ExerciseDemoData.recentActivity;
     final bottomPad = MemyBottomNavigation.contentBottomInset(context);
 
     return Scaffold(
@@ -60,11 +61,15 @@ class ExerciseOverviewScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  WorkoutSummaryCard(summary: summary),
-                  const SizedBox(height: AppSpacing.lg),
+                  if (capabilities.exerciseSessions) ...[
+                    WorkoutSummaryCard(summary: ExerciseDemoData.weeklySummary),
+                    const SizedBox(height: AppSpacing.lg),
+                  ],
                   FeaturedWorkoutCard(
                     workout: featured,
-                    onStart: () => context.push(RoutePaths.workoutSession),
+                    onStart: capabilities.exerciseSessions
+                        ? () => context.push(RoutePaths.workoutSession)
+                        : null,
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   const SectionHeader(title: 'Categories'),
@@ -118,45 +123,63 @@ class ExerciseOverviewScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SectionHeader(title: 'Recent activity'),
-                  const SizedBox(height: AppSpacing.md),
-                  ...recent.map(
-                    (item) => Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                      child: Semantics(
-                        label:
-                            '${item.title}, ${item.completedLabel}, ${item.durationMinutes} minutes',
-                        child: ListTile(
-                          key: Key('recent_${item.id}'),
-                          enabled: false,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: AppRadii.controlRadius,
-                            side: BorderSide(color: AppColors.line),
-                          ),
-                          tileColor: AppColors.surface,
-                          leading: CircleAvatar(
-                            backgroundColor: AppColors.canvasDeep,
-                            child: Text(
-                              item.category.label.characters.first,
-                              style: AppTextStyles.titleSmall(),
+                  if (capabilities.exerciseSessions) ...[
+                    const SectionHeader(title: 'Recent activity'),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'Sample activity for internal previews only.',
+                      style: AppTextStyles.bodySmall(
+                        color: AppColors.faintText,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    ...ExerciseDemoData.recentActivity.map(
+                      (item) => Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                        child: Semantics(
+                          label:
+                              '${item.title}, ${item.completedLabel}, ${item.durationMinutes} minutes',
+                          child: ListTile(
+                            key: Key('recent_${item.id}'),
+                            enabled: false,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: AppRadii.controlRadius,
+                              side: BorderSide(color: AppColors.line),
                             ),
+                            tileColor: AppColors.surface,
+                            leading: CircleAvatar(
+                              backgroundColor: AppColors.canvasDeep,
+                              child: Text(
+                                item.category.label.characters.first,
+                                style: AppTextStyles.titleSmall(),
+                              ),
+                            ),
+                            title: Text(item.title),
+                            subtitle: Text(
+                              '${item.completedLabel} · ${item.durationMinutes} min',
+                            ),
+                            minVerticalPadding: 12,
                           ),
-                          title: Text(item.title),
-                          subtitle: Text(
-                            '${item.completedLabel} · ${item.durationMinutes} min',
-                          ),
-                          minVerticalPadding: 12,
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  MemyPrimaryButton(
-                    key: const Key('start_workout_button'),
-                    label: 'Start workout',
-                    onPressed: () => context.push(RoutePaths.workoutSession),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.xl),
+                    MemyPrimaryButton(
+                      key: const Key('start_workout_button'),
+                      label: 'Start workout',
+                      onPressed: () => context.push(RoutePaths.workoutSession),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                  ] else ...[
+                    Text(
+                      'Browse the library for movement ideas. Live workout '
+                      'tracking is not included in this release.',
+                      style: AppTextStyles.bodySmall(
+                        color: AppColors.secondaryText,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                  ],
                   OutlinedButton(
                     key: const Key('view_exercise_library_button'),
                     style: OutlinedButton.styleFrom(

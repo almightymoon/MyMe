@@ -9,14 +9,12 @@ import '../../domain/entities/featured_workout.dart';
 import 'exercise_artwork.dart';
 
 class FeaturedWorkoutCard extends StatelessWidget {
-  const FeaturedWorkoutCard({
-    super.key,
-    required this.workout,
-    required this.onStart,
-  });
+  const FeaturedWorkoutCard({super.key, required this.workout, this.onStart});
 
   final FeaturedWorkout workout;
-  final VoidCallback onStart;
+
+  /// When null, the Start control is hidden (no live workout session).
+  final VoidCallback? onStart;
 
   @override
   Widget build(BuildContext context) {
@@ -98,12 +96,14 @@ class FeaturedWorkoutCard extends StatelessWidget {
                       '${workout.durationMinutes} min · ${workout.focusAreas.join(' · ')}',
                       style: AppTextStyles.bodySmall(color: Colors.white70),
                     ),
-                    const SizedBox(height: AppSpacing.md),
-                    MemyPrimaryButton(
-                      key: const Key('featured_start_workout'),
-                      label: 'Start this workout',
-                      onPressed: onStart,
-                    ),
+                    if (onStart != null) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      MemyPrimaryButton(
+                        key: const Key('featured_start_workout'),
+                        label: 'Start this workout',
+                        onPressed: onStart!,
+                      ),
+                    ],
                   ],
                 ),
               ),

@@ -45,6 +45,17 @@ import '../../features/settings/presentation/integration_lab_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/shell/presentation/memy_app_shell.dart';
 import '../../features/today/presentation/today_screen.dart';
+import '../../features/trust/domain/entities/trust_document.dart';
+import '../../features/trust/presentation/about/about_memy_screen.dart';
+import '../../features/trust/presentation/appearance/appearance_accessibility_screen.dart';
+import '../../features/trust/presentation/appearance/notifications_reminders_screen.dart';
+import '../../features/trust/presentation/legal/legal_center_screen.dart';
+import '../../features/trust/presentation/privacy/ai_data_use_screen.dart';
+import '../../features/trust/presentation/privacy/deletion_screen.dart';
+import '../../features/trust/presentation/privacy/export_screen.dart';
+import '../../features/trust/presentation/privacy/privacy_data_center_screen.dart';
+import '../../features/trust/presentation/security/security_screen.dart';
+import '../../features/trust/presentation/support/help_support_screen.dart';
 import '../../features/wardrobe/presentation/wardrobe_placeholder_screen.dart';
 import '../../core/widgets/coming_soon_view.dart';
 import 'route_names.dart';
@@ -348,6 +359,111 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RoutePaths.profile,
         name: RouteNames.profile,
         builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.privacy,
+        name: RouteNames.privacy,
+        builder: (context, state) => const PrivacyDataCenterScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.privacyExport,
+        name: RouteNames.privacyExport,
+        builder: (context, state) => const PrivacyExportScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.privacyDeletion,
+        name: RouteNames.privacyDeletion,
+        builder: (context, state) => const PrivacyDeletionScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.privacyAiDataUse,
+        name: RouteNames.privacyAiDataUse,
+        builder: (context, state) => const AiDataUseScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.security,
+        name: RouteNames.security,
+        builder: (context, state) => const SecurityScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.support,
+        name: RouteNames.support,
+        builder: (context, state) => const HelpSupportScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.helpArticle,
+        name: RouteNames.helpArticle,
+        builder: (context, state) => SupportArticleDetailScreen(
+          articleId: state.pathParameters['articleId'] ?? '',
+        ),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.helpContact,
+        name: RouteNames.helpContact,
+        builder: (context, state) => const HelpContactScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.helpReportProblem,
+        name: RouteNames.helpReportProblem,
+        builder: (context, state) => const ReportProblemScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.helpFeatureRequest,
+        name: RouteNames.helpFeatureRequest,
+        builder: (context, state) => const FeatureRequestScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.legal,
+        name: RouteNames.legal,
+        builder: (context, state) => const LegalCenterScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.legalDocument,
+        name: RouteNames.legalDocument,
+        builder: (context, state) {
+          final raw = state.pathParameters['documentType'] ?? '';
+          final type = TrustDocumentType.values.firstWhere(
+            (t) => t.name == raw,
+            orElse: () => TrustDocumentType.privacyPolicy,
+          );
+          return LegalDocumentScreen(type: type);
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.about,
+        name: RouteNames.about,
+        builder: (context, state) => const AboutMemyScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.whatsNew,
+        name: RouteNames.whatsNew,
+        builder: (context, state) => const WhatsNewScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.appearance,
+        name: RouteNames.appearance,
+        builder: (context, state) => const AppearanceAccessibilityScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.notifications,
+        name: RouteNames.notifications,
+        builder: (context, state) => const NotificationsRemindersScreen(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

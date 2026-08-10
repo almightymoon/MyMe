@@ -39,7 +39,23 @@ abstract final class RouteNames {
   static const String connectedApps = 'connectedApps';
   static const String integrationDiagnostics = 'integrationDiagnostics';
   static const String integrationLab = 'integrationLab';
+  static const String notifications = 'notifications';
+  static const String appearance = 'appearance';
   static const String profile = 'profile';
+  static const String privacy = 'privacy';
+  static const String privacyExport = 'privacyExport';
+  static const String privacyDeletion = 'privacyDeletion';
+  static const String privacyAiDataUse = 'privacyAiDataUse';
+  static const String security = 'security';
+  static const String support = 'support';
+  static const String helpArticle = 'helpArticle';
+  static const String helpContact = 'helpContact';
+  static const String helpReportProblem = 'helpReportProblem';
+  static const String helpFeatureRequest = 'helpFeatureRequest';
+  static const String legal = 'legal';
+  static const String legalDocument = 'legalDocument';
+  static const String about = 'about';
+  static const String whatsNew = 'whatsNew';
   static const String nutritionComingSoon = 'nutritionComingSoon';
 }
 
@@ -85,7 +101,24 @@ abstract final class RoutePaths {
   static const String integrationDiagnostics =
       '/settings/connections/diagnostics';
   static const String integrationLab = '/settings/connections/lab';
+  static const String notifications = '/settings/notifications';
+  static const String appearance = '/settings/accessibility';
   static const String profile = '/profile';
+  static const String privacy = '/privacy';
+  static const String privacyExport = '/privacy/export';
+  static const String privacyDeletion = '/privacy/delete';
+  static const String privacyAiDataUse = '/privacy/ai';
+  static const String security = '/security';
+  static const String support = '/support';
+  static const String help = '/support';
+  static const String helpArticle = '/support/article/:articleId';
+  static const String helpContact = '/support/contact';
+  static const String helpReportProblem = '/support/report';
+  static const String helpFeatureRequest = '/support/feature';
+  static const String legal = '/legal';
+  static const String legalDocument = '/legal/:documentType';
+  static const String about = '/about';
+  static const String whatsNew = '/about/whats-new';
   static const String nutritionComingSoon = '/nutrition/coming-soon';
 
   static String eventDetailPath(String eventId) => '/calendar/event/$eventId';
@@ -109,4 +142,10 @@ abstract final class RoutePaths {
     if (categoryId == null || categoryId.isEmpty) return exerciseLibrary;
     return '$exerciseLibrary?category=$categoryId';
   }
+
+  static String helpArticlePath(String articleId) =>
+      '/support/article/$articleId';
+
+  static String legalDocumentPath(String documentType) =>
+      '/legal/$documentType';
 }

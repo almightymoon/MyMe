@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router/app_navigation.dart';
@@ -8,12 +9,18 @@ import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/widgets/memy_card.dart';
+import '../../trust/application/providers/trust_providers.dart';
+import '../../trust/domain/entities/trust_document.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final version = ref.watch(appVersionLabelProvider);
+    final themeMode = ref.watch(themeModePreferenceProvider);
+    final appearanceValue = themeMode == ThemeMode.light ? 'Light' : 'System';
+
     return Scaffold(
       backgroundColor: AppColors.canvas,
       body: SafeArea(
@@ -46,18 +53,24 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             _Section(
               title: 'Account',
-              rows: const [
+              rows: [
                 _SetRow(
                   icon: Icons.person_outline_rounded,
                   label: 'Profile Information',
                   isFirst: true,
+                  routePath: RoutePaths.profile,
                 ),
                 _SetRow(
                   icon: Icons.lock_outline_rounded,
                   label: 'Change Password',
+                  onTap: () => _showPasswordUnavailable(context),
                 ),
-                _SetRow(icon: Icons.shield_outlined, label: 'Security'),
-                _SetRow(
+                const _SetRow(
+                  icon: Icons.shield_outlined,
+                  label: 'Security',
+                  routePath: RoutePaths.security,
+                ),
+                const _SetRow(
                   key: Key('settings_connected_apps'),
                   icon: Icons.link_rounded,
                   label: 'Connected Apps',
@@ -69,53 +82,75 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             _Section(
               title: 'Preferences',
-              rows: const [
+              rows: [
                 _SetRow(
                   icon: Icons.wb_sunny_outlined,
                   label: 'Appearance',
-                  value: 'Light',
+                  value: appearanceValue,
                   isFirst: true,
+                  routePath: RoutePaths.appearance,
                 ),
-                _SetRow(
+                const _SetRow(
                   icon: Icons.straighten_rounded,
                   label: 'Units',
                   value: 'Metric',
+                  onTapMessage:
+                      'Units preference is planned for a later build.',
                 ),
-                _SetRow(
+                const _SetRow(
                   icon: Icons.language_rounded,
                   label: 'Language',
                   value: 'English',
+                  onTapMessage:
+                      'Language selection is planned for a later build.',
                 ),
-                _SetRow(
+                const _SetRow(
                   icon: Icons.notifications_none_rounded,
                   label: 'Notifications',
+                  routePath: RoutePaths.notifications,
                 ),
-                _SetRow(
+                const _SetRow(
                   icon: Icons.privacy_tip_outlined,
                   label: 'Privacy',
                   isLast: true,
+                  routePath: RoutePaths.privacy,
                 ),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
             _Section(
               title: 'More',
-              rows: const [
-                _SetRow(
+              rows: [
+                const _SetRow(
                   icon: Icons.help_outline_rounded,
                   label: 'Help & Support',
                   isFirst: true,
+                  routePath: RoutePaths.support,
                 ),
                 _SetRow(
                   icon: Icons.description_outlined,
                   label: 'Terms & Conditions',
+                  routePath: RoutePaths.legalDocumentPath(
+                    TrustDocumentType.termsOfUse.name,
+                  ),
                 ),
-                _SetRow(icon: Icons.policy_outlined, label: 'Privacy Policy'),
+                _SetRow(
+                  icon: Icons.policy_outlined,
+                  label: 'Privacy Policy',
+                  routePath: RoutePaths.legalDocumentPath(
+                    TrustDocumentType.privacyPolicy.name,
+                  ),
+                ),
                 _SetRow(
                   icon: Icons.info_outline_rounded,
                   label: 'About MeMy',
-                  value: 'v1.2.0',
+                  value: version.when(
+                    data: (v) => v,
+                    loading: () => '…',
+                    error: (_, _) => '',
+                  ),
                   isLast: true,
+                  routePath: RoutePaths.about,
                 ),
               ],
             ),
@@ -140,6 +175,25 @@ class SettingsScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showPasswordUnavailable(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Change Password'),
+        content: const Text(
+          'Password change is not available in this demo auth build. '
+          'A production authentication provider will unlock this later.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
       ),
     );
   }
@@ -184,6 +238,8 @@ class _SetRow extends StatelessWidget {
     this.isFirst = false,
     this.isLast = false,
     this.routePath,
+    this.onTap,
+    this.onTapMessage,
   });
 
   final IconData icon;
@@ -191,9 +247,9 @@ class _SetRow extends StatelessWidget {
   final String? value;
   final bool isFirst;
   final bool isLast;
-
-  /// When set, taps navigate here instead of showing the demo snackbar.
   final String? routePath;
+  final VoidCallback? onTap;
+  final String? onTapMessage;
 
   BorderRadius get _inkRadius {
     if (isFirst && isLast) return AppRadii.cardRadius;
@@ -214,14 +270,18 @@ class _SetRow extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
+          if (onTap != null) {
+            onTap!();
+            return;
+          }
           if (routePath != null) {
             context.push(routePath!);
             return;
           }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('$label — demo only'),
-              duration: const Duration(milliseconds: 900),
+              content: Text(onTapMessage ?? '$label — planned'),
+              duration: const Duration(milliseconds: 1200),
             ),
           );
         },

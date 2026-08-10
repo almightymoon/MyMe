@@ -51,6 +51,10 @@ dependencies:
   timezone: ^0.9.4
   permission_handler: ^11.4.0
   sqlite3_flutter_libs: ^0.5.28
+  package_info_plus: ^9.0.1
+  url_launcher: ^6.3.2
+  share_plus: ^12.0.2
+  flutter_markdown: ^0.7.7+1
 
 dev_dependencies:
   flutter_test:
@@ -82,6 +86,9 @@ flutter:
     - assets/images/exercise/cycling-cardio.webp
     - assets/images/exercise/hiit-bodyweight-squat.webp
     - assets/images/exercise/mobility-side-stretch.webp
+    - assets/trust/legal/
+    - assets/trust/support/
+    - assets/trust/changelog/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

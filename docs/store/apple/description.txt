@@ -1,0 +1,24 @@
+MeMy is your Personal Life Companion from MoonTech.
+
+Plan your day, track goals, log spending, build habits, and optionally bring in your device calendar and Health data—all designed to stay on your phone. There is no MeMy account and no cloud sync in this release. You are not asked to connect a bank, and MeMy does not run a live AI coach.
+
+WHAT YOU CAN DO
+• Today — see what matters for the day ahead
+• Goals — set milestones and watch progress locally
+• Finance — record income and expenses by hand, with simple summaries
+• Habits — check in and follow streaks on your device
+• Calendar — connect the calendars you choose on this device
+• Health — optionally view activity, heart rate, sleep, weight, and workouts from Apple Health (read-only)
+• Privacy & Data — export or delete what MeMy stores locally
+
+BUILT FOR PRIVACY
+MeMy is local-first. Goals, finance, and habits live on your device. Calendar and Health use Apple’s system stores only after you choose to connect them. MeMy does not write to Health. Permission prompts appear when you connect—not as a surprise at launch.
+
+WHAT THIS VERSION IS NOT
+• Not a medical device and not medical advice
+• Not a bank or investment product—no bank sync
+• Not a cloud backup service
+• Not a live AI assistant
+• Not a reminder or notification scheduler
+
+MeMy helps you organize personal life data you already own, with clear controls when you want to export or wipe it.

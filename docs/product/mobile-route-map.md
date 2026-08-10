@@ -1,16 +1,26 @@
 # MeMy mobile route map
 
-Audit of every navigable route and visible entry point in `/apps/mobile` as of the fake-repository MVP wiring milestone.
+Navigable routes in `/apps/mobile` for the **v1 feature freeze**.
 
-Back behavior: placeholder / feature routes use `context.pop()` when possible, otherwise `context.go('/today')`. Tab branches preserve stack via `StatefulShellRoute.indexedStack`.
+Production (`APP_ENV=production`): starts at `/onboarding` (first launch) or
+`/today` (returning). Demo auth routes are not the production entry and are
+redirected away. Coach, Wardrobe, Body, nutrition coming-soon, and Integration
+Lab are hidden or redirected.
+
+Development default: demo `/signin` remains for CI and internal demos.
+
+Back behavior: placeholder / feature routes use `context.pop()` when possible,
+otherwise `context.go('/today')`. Tab branches preserve stack via
+`StatefulShellRoute.indexedStack`.
 
 | Route | Entry point | Destination | Current implementation status | Back-navigation behavior |
 |------|-------------|-------------|-------------------------------|--------------------------|
-| `/signin` | App launch (`initialLocation`) | `SignInScreen` | Demo auth only | N/A (root) |
-| `/today` | Sign-in Continue; Today tab | `TodayScreen` | Wired to `TodayRepository` (fake) with loading / empty / error / populated | Tab root |
+| `/onboarding` | Production first launch | `OnboardingScreen` | Local setup (prefs + optional Calendar/Health) | Continues to Today |
+| `/signin` | Dev/demo launch (`AUTH_MODE=demo`) | `SignInScreen` | Demo auth only — blocked in production | N/A (root) |
+| `/today` | After onboarding / sign-in; Today tab | `TodayScreen` | Live local composition | Tab root |
 | `/plan` | Plan tab | `PlanScreen` | Wired to goals / habits / calendar repos independently | Tab root |
-| `/coach` | Coach tab | `CoachScreen` | Wired to `CoachRepository` + local conversation controller (demo responses) | Tab root |
-| `/more` | More tab | `MoreScreen` | Wired to `UserRepository` + module links | Tab root |
+| `/coach` | Coach tab (non-production) | `CoachScreen` | Local scripted preview — hidden/redirected in production | Tab root |
+| `/more` | More tab | `MoreScreen` | Insights hub + module links (no fake metrics) | Tab root |
 | `/goals` | Plan → Goals; Today → All | `GoalsListScreen` | Live — local persistence | Pop → previous (or Today) |
 | `/goals/new` | Quick Add → Add Goal; Goals + | `AddGoalScreen` | Live — create + validate | Pop → previous |
 | `/goals/:goalId` | Goals list / Today goal row | `GoalDetailScreen` | Live — detail, milestones, forecast | Pop or go `/goals` |

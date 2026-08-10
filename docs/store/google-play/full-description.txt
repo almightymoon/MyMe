@@ -1,0 +1,24 @@
+MeMy is your Personal Life Companion from MoonTech.
+
+Keep goals, spending, habits, and your day organized on your phone. MeMy is local-first: there is no MeMy account and no cloud sync in this release. You are not asked to link a bank, and MeMy does not include a live AI coach or reminder notifications.
+
+FEATURES
+• Today — a calm home for what matters now
+• Goals — milestones and progress stored on your device
+• Finance — manual income and expense tracking with simple summaries
+• Habits — check-ins and streaks without an account
+• Calendar — optionally connect device calendars you choose
+• Health — optionally view steps, distance, calories, heart rate, sleep, weight, and workouts from Health Connect (read-only)
+• Privacy & Data — export or delete local MeMy data when you want
+
+PRIVACY BY DESIGN
+Goals, finance, and habits stay on your device. Calendar and Health use Android system stores only after you connect them. MeMy never writes to Health Connect. Permission requests happen when you tap Connect—not automatically at every launch.
+
+NOT IN THIS VERSION
+• Medical advice or medical-device claims
+• Bank sync or investment trading
+• Cloud backup / multi-device MeMy sync
+• Live AI chat
+• Push reminder scheduling
+
+MeMy helps you run personal life tracking you control, with clear tools to export or wipe local data.

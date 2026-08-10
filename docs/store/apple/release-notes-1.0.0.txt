@@ -1,0 +1,1 @@
+MeMy 1.0.0 — Your Personal Life Companion. Local-first goals, finance, and habits on your device, with optional calendar and Apple Health (read-only). No account, no cloud sync, no live AI, no bank connections. First-run setup, Privacy & Data export/wipe, and a focused home for your day.

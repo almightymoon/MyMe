@@ -1,0 +1,1 @@
+MeMy 1.0.0 — Your Personal Life Companion. Local-first goals, finance, and habits on your device, with optional calendar and Health Connect (read-only). No account, no cloud sync, no live AI, no bank connections. Includes first-run setup and Privacy & Data export/wipe.

@@ -1,0 +1,23 @@
+Thank you for reviewing MeMy (com.moontech.memy) 1.0.0.
+
+PRODUCT SUMMARY
+MeMy is a local-first personal life companion. Production builds use APP_ENV=production with AUTH_MODE=none. There is no MeMy cloud account, no demo sign-in, no live AI, no bank sync, and no notification scheduler.
+
+HOW TO TEST
+1. Fresh install should open local onboarding (welcome → privacy → preferences → optional Calendar → optional Health → finish), then Today.
+2. Calendar and Health should NOT request permission until the user taps Connect on those steps or later in Connected Apps / module flows.
+3. Goals, Finance, and Habits use on-device storage only.
+4. Health is read-only (HealthKit share usage string present; no write usage string).
+5. Privacy & Data supports local export and deletion; a full wipe should return the app to onboarding on next launch.
+
+ACCOUNT / LOGIN
+None. If you see a sign-in screen, the binary is not a production configuration.
+
+SUPPORT
+SUPPORT_EMAIL may be empty in some builds; Help & Support will explain when mailto is unavailable. Owner will provide a contact email in App Store Connect.
+
+EXPORT COMPLIANCE
+Info.plist sets ITSAppUsesNonExemptEncryption=false based on an ordinary HTTPS / OS-crypto assumption. Legal confirmation is an owner action.
+
+PRIVACY POLICY URL
+Owner must host a public URL before submission; in-app legal markdown remains Draft pending counsel review.

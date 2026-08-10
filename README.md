@@ -1,14 +1,36 @@
 # MeMy
 
-MeMy is a personal life-operating system by **MoonTech** — goals, habits, calendar, finance, health, and an AI coach in one calm daily surface.
+MeMy is a **local-first personal life companion** by **MoonTech** — goals,
+habits, calendar, finance, health, and daily planning on your device.
+
+Tagline: **Your Personal Life Companion.**
 
 This repository currently holds:
 
 1. An approved **HTML/CSS/JavaScript visual prototype** (design reference)
-2. A **Flutter mobile application** under `apps/mobile`
-3. A **NestJS Goals API** under `apps/api` (PostgreSQL + Prisma)
+2. A **Flutter mobile application** under `apps/mobile` (MeMy v1 release candidate track)
+3. A **NestJS Goals API** under `apps/api` (optional for development; **not required for production mobile**)
 
 The HTML application is the design prototype. Do not convert it line-for-line into Flutter.
+
+## v1 release posture
+
+Production mobile (`--dart-define=APP_ENV=production`):
+
+- Local onboarding (no demo Sign In)
+- Local Goals, Finance, Habits
+- System Device Calendar and read-only HealthKit / Health Connect
+- Privacy export/deletion, Help, Legal drafts, About
+- **No** cloud account, cloud sync, live AI, Integration Lab, or fake repositories
+
+See:
+
+- `docs/product/v1-scope.md`
+- `docs/architecture/v1-release-configuration.md`
+- `docs/quality/v1-release-checklist.md`
+- `docs/quality/v1-release-blockers.md`
+- `docs/quality/v1-release-candidate-checklist.md`
+- `docs/release/owner-actions.md` — store / legal / signing / device QA (owner-only)
 
 ## Repository structure
 
@@ -18,7 +40,7 @@ The HTML application is the design prototype. Do not convert it line-for-line in
 ├── app/                       # Interactive web prototype (do not remove)
 ├── apps/
 │   ├── mobile/                # Flutter client (Android + iOS)
-│   └── api/                   # NestJS API (Goals vertical slice)
+│   └── api/                   # NestJS API (Goals vertical slice; optional)
 ├── docker-compose.yml         # Local PostgreSQL
 ├── docs/
 └── reference images/
@@ -29,14 +51,23 @@ The HTML application is the design prototype. Do not convert it line-for-line in
 | Area | Status |
 |------|--------|
 | Web prototype (`/app`) | Approved visual reference — keep intact |
-| Flutter mobile (`/apps/mobile`) | Goals · Finance · Habits · **Device Calendar sync** · **read-only HealthKit/Health Connect** · Today/Plan composition · Connected Apps · **Privacy & Data / Support / Legal / About** |
-| NestJS API (`/apps/api`) | Goals / milestones / progress / today summary · Nest validates `DATABASE_URL` only (Compose `POSTGRES_*` are infrastructure) |
-| Cloud calendar OAuth / vendor wearables / AI | Deferred — see `docs/product/integration-roadmap.md` |
-| Production auth | Not in this milestone |
+| Flutter mobile (`/apps/mobile`) | **v1 feature freeze** — local-first Goals · Finance · Habits · Device Calendar · Health · Exercise · Today/Plan · Privacy/Support/Legal |
+| NestJS API (`/apps/api`) | Optional Goals API for development; production mobile does not require it |
+| Cloud calendar OAuth / vendor wearables / live AI | Deferred — see `docs/product/v1-scope.md` |
+| Production auth | Not in v1 — local onboarding only |
 
-## Verified local development sequence
+## Run production-shaped mobile locally
 
-Run these steps from a clean checkout. Values below match `apps/api/.env.example`.
+```bash
+cd apps/mobile
+flutter pub get
+flutter run --dart-define=APP_ENV=production
+```
+
+## Verified local development sequence (optional API)
+
+Run these steps from a clean checkout when exercising the NestJS Goals API.
+Values below match `apps/api/.env.example`.
 
 ### 1. Start PostgreSQL
 

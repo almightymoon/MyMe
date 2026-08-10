@@ -26,10 +26,11 @@ android {
         versionName = flutter.versionName
     }
 
+    // TODO: Replace with a release signingConfig loaded from env / keystore
+    // properties. Debug signing is for local `flutter run --release` only —
+    // never upload a debug-signed AAB to Play. See docs/release/android-build.md.
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
     }

@@ -3,23 +3,43 @@
 `LocalDataExportService` builds a versioned JSON file and shares it through the
 system share sheet. Nothing is uploaded automatically.
 
-## Wrapper
+Temp files use `memy-data-export-<utcTimestamp>.json` (no user PII in the
+filename). Stale `memy-data-export-*.json` / legacy `memy-export-*.json` files
+older than 24 hours are cleaned on app startup.
+
+## Wrapper (exportVersion 2)
 ```json
 {
-  "exportVersion": 1,
-  "appVersion": "...",
-  "buildNumber": "...",
-  "createdAt": "...",
-  "modules": { }
+  "exportVersion": 2,
+  "app": {
+    "name": "MeMy",
+    "version": "...",
+    "buildNumber": "...",
+    "environment": "demo"
+  },
+  "createdAtUtc": "...",
+  "locale": "...",
+  "timezone": "...",
+  "dataSourceModes": {
+    "goals": "local|api|fake",
+    "finance": "local|fake",
+    "habits": "local|fake",
+    "calendar": "fake|system",
+    "health": "fake|system"
+  },
+  "selectedModules": [],
+  "recordCounts": {},
+  "modules": {},
+  "warnings": []
 }
 ```
 
 ## Included when selected
-- Profile / preferences metadata
-- Goals
+- Preferences metadata
+- Goals (API mode: local cache snapshot only, with an explicit warning)
 - Finance transactions (monetary minor units as strings) and categories
 - Habits and check-ins
-- MeMy-owned calendar events
+- MeMy-owned calendar events (optional)
 - Calendar / Health connection configuration summaries
 - App metadata
 
@@ -28,5 +48,8 @@ system share sheet. Nothing is uploaded automatically.
 - External Calendar titles, notes, locations, attendees (default)
 - Auth secrets, API tokens, passwords
 - Support message bodies / diagnostic logs
+
+Export failures surface a safe message (`ExportFailure`); the UI never shows
+raw exception text.
 
 Warn the user that the file may contain personal and financial information.

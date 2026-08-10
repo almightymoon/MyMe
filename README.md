@@ -163,7 +163,8 @@ GitHub Actions:
 
 Device Calendar + HealthKit/Health Connect integrations use fake gateways in CI.
 Physical-device matrices: `docs/quality/calendar-device-test-matrix.md`,
-`docs/quality/health-device-test-matrix.md` (unexecuted until hardware QA).
+`docs/quality/health-device-test-matrix.md`, and the release gate
+`docs/quality/integration-beta-release-gate.md` (unexecuted until hardware QA).
 
 ### Financial progress
 

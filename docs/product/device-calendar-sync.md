@@ -10,21 +10,24 @@
 
 ## Persistence
 
-Drift/SQLite schema **v2** (`calendar_database.dart`) — not SharedPreferences —
-for range queries, external IDs, links, conflicts, sync outbox, and migrations.
+Drift/SQLite schema **v3** (`calendar_database.dart`) — not SharedPreferences —
+for range queries, external IDs, links, conflicts, sync outbox, create-recovery
+cases, lookup dispositions, and migrations.
 
 Unique: `(externalCalendarId, externalEventId)`.
 
-### Config (v2)
+### Config (v3)
 
 - `readableCalendarIds` — multi-select import sources (may include read-only)
 - `defaultWritableCalendarId` — single write target (never inferred from list order)
 - `dedicatedMeMyCalendarId` — optional on-device MeMy calendar
 - Rolling windows: `syncPastWindowDays` (default 30) / `syncFutureWindowDays` (default 365)
 - `lastSuccessfulPullAt` / `lastSuccessfulPushAt` tracked independently
+- Lookup disposition columns on links; `calendar_create_recovery_cases` for
+  ambiguous create outcomes
 
 v1 `selectedCalendarIds` migrate to readable only; writable stays null until the
-user confirms a destination.
+user confirms a destination. v2→v3 adds recovery + lookup metadata.
 
 ## Sync window
 
@@ -35,29 +38,65 @@ user confirms a destination.
 Frozen connect-time anchors are deprecated and unused. Events outside the
 active window are **not** treated as deleted.
 
+## Typed direct lookup
+
+`DeviceCalendarGateway.getEventById` returns `CalendarEventLookupResult`:
+
+| Result | Meaning |
+|--------|---------|
+| `CalendarEventFound` | Present |
+| `CalendarEventNotFound` | Absence verified (complete batch / map miss) |
+| `CalendarEventLookupUnknown` | Provider failure / incomplete knowledge |
+| `CalendarEventLookupUnsupported` | Platform cannot verify (e.g. partial batch) |
+
+Unknown/unsupported **never** confirm deletion.
+
 ## Missing-event safety
 
 `CalendarReadBatch.completeness` must be `complete` before absence counting.
 
 1. First complete-batch miss → `suspectedMissing` (no hard delete)
-2. Second miss + failed `getEventById` → `confirmedMissing`
-3. Imported → soft-hide (`hidden`); MeMy-owned → `externallyMissing`
-4. Partial/unknown batches, permission failures, and out-of-range events never
+2. Second miss + typed `getEventById`:
+   - Found → back to `present`
+   - Unknown/Unsupported → stay suspected / `lookupUnknown` (no tombstone)
+   - NotFound → imported soft-hide; MeMy-owned → `externallyMissingMeMyOwned`
+3. Partial/unknown batches, permission failures, and out-of-range events never
    advance missing counts
+
+## Marker reconciliation & create recovery
+
+Marker search returns `CalendarMarkerSearchResult` (never `found.first`):
+
+| Matches | Outcome |
+|---------|---------|
+| 0 | `unknownOutcome` + recovery case `noMatchUnknownOutcome` |
+| 1 | Link + complete |
+| 2+ | `requiresUserAction` + recovery case `multipleMarkerMatches` |
+
+User recovery UI: `/calendar/recovery` (search again, link one candidate, keep
+local only, retry create after confirmation, dismiss, remove MeMy event).
+Deletion of device duplicates requires explicit confirmation.
 
 ## Push outbox / idempotency
 
-`CalendarSyncOperations` table: prepare → inFlight → completed.
+`CalendarSyncOperations` table for **create, update, and delete**:
+
+`prepared` → `inFlight` → `completed` | `retryableFailure` | `unknownOutcome` |
+`permanentlyFailed` | `requiresUserAction`.
 
 Creates carry `memy://calendar-event/<id>` markers. Unknown outcomes after
-inFlight do **not** auto-retry. Restart reconciles stuck `inFlight` creates via
-marker lookup.
+inFlight do **not** auto-retry creates. Restart reconciles stuck `inFlight`
+ops via marker lookup (create) or typed ID lookup (update/delete).
 
 ## Connection restore
 
 `CalendarIntegrationBootstrapService` runs after startup: reloads config,
 checks permission/calendars, hydrates `IntegrationConnectionRegistry`,
-reconciles in-flight creates. Users do not reconnect after every restart.
+reconciles in-flight ops.
+
+Hydration **never** reports healthy `connected` after a failed provider check.
+Degraded statuses include `staleCacheAvailable`, `partiallyConnected`,
+`permissionStatusUnknown`, `providerUnavailable`, `configurationInvalid`.
 
 ## Modes
 
@@ -74,7 +113,8 @@ Never local-midnight timestamps.
 ## Routes
 
 `/calendar`, `/calendar/new`, `/calendar/connect`, `/calendar/connect/select`,
-`/calendar/conflicts`, `/calendar/event/:id`, `/calendar/event/:id/edit`
+`/calendar/conflicts`, `/calendar/recovery`, `/calendar/event/:id`,
+`/calendar/event/:id/edit`
 
 Quick Add → `/calendar/new`.
 

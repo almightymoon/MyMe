@@ -35,9 +35,17 @@ MeMy does not request Health Connect background or extended-history permissions.
 | Disposition | Typical platform |
 |-------------|------------------|
 | `notRequested` | Never asked |
-| `requestCompletedUnverified` | **iOS** after permission sheet — Apple does not disclose READ grants |
+| `requestCompletedUnverified` | **iOS** after successful permission sheet — Apple does not disclose READ grants |
+| `requestCancelled` | **iOS** sheet dismissed / not authorized — **not** verified denial |
+| `requestFailed` | Authorization call threw — **not** verified denial |
 | `grantedVerified` / `deniedVerified` | **Android** Health Connect `hasPermissions` |
 | `unavailable` / `needsSystemSettings` | Modeled for recovery UX |
+
+Android refresh **rechecks** previously requested groups via `hasPermissions`
+before querying; revoked groups clear from the current summary immediately.
+
+Legacy permission JSON migration is **platform-aware** (`HealthPermissionMigrationService`):
+iOS legacy grants → `requestCompletedUnverified` (never `grantedVerified`).
 
 iOS copy must **not** say “access granted.” Prefer:
 
@@ -49,12 +57,22 @@ until the user opts in.
 
 ## Identity & aggregation
 
-- Samples carry `providerRecordId` when the plugin supplies a UUID
-- Deduplicate raw samples by stable provider ID (not timestamp+value alone)
-- Steps prefer platform aggregate totals (`getTotalStepsInInterval`); distance
-  and active energy use raw + dedupe when no aggregate is available
+- Composite identity: `sourcePlatform | metricType | providerRecordId`
+  (`HealthSampleIdentity`) — same provider ID across metrics or platforms stays distinct
+- Samples without a stable provider ID are kept but not treated as durable keys
+- Steps prefer platform aggregate totals (`getTotalStepsInInterval`)
+- Distance / active energy / exercise duration use typed aggregate APIs when
+  available; otherwise raw + composite dedupe (never silent overlapping inflation)
 - Source attribution via `SourceAttributionFormatter` — never invent “Apple
   Watch” without device-model metadata
+- Aggregates may be labeled “Combined by Apple Health / Health Connect”
+
+## Connection backup
+
+Primary + last-known-good backup prefs (`memy_health_connection_primary` /
+`memy_health_connection_backup`). Corrupt primary surfaces `recoveryNeeded`
+with optional Restore Backup — never auto-restores silently. No sample values
+in either payload.
 
 ## Sleep
 

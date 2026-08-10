@@ -28,6 +28,7 @@ Back behavior: placeholder / feature routes use `context.pop()` when possible, o
 | `/calendar/connect` | Calendar banner / Connections | `CalendarConnectionScreen` | Live — permission + connect | Pop |
 | `/calendar/connect/select` | After connect | `CalendarSelectionScreen` | Live — readable/writable selection | Pop |
 | `/calendar/conflicts` | Sync conflicts | `CalendarConflictScreen` | Live | Pop |
+| `/calendar/recovery` | Create recovery cases | `CalendarRecoveryScreen` | Live | Pop |
 | `/calendar/event/:eventId` | Agenda row | `CalendarEventDetailScreen` | Live | Pop |
 | `/calendar/event/:eventId/edit` | Detail → Edit (MeMy-owned) | `EditCalendarEventScreen` | Live | Pop |
 | `/health` | More → Health; Today CTA | `HealthOverviewScreen` | Live — fake/system Health | Pop → More |

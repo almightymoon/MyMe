@@ -6,7 +6,7 @@ HealthKit / Health Connect
         ▼
 PlatformHealthGateway (fake | system)
         │  normalize + aggregate in memory
-        │  (dedupe by providerRecordId; prefer step totals API when present)
+        │  (dedupe by composite HealthSampleIdentity; prefer platform aggregates)
         ▼
 HealthRepository → DailyHealthSummary
         │

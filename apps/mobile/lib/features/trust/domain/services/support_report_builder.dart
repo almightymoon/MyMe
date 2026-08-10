@@ -1,13 +1,15 @@
+import '../entities/support_diagnostics_report.dart';
+
 /// Allowlist-only support report for email / share.
 ///
 /// Never includes event titles, health sample values, passwords, tokens,
-/// or free-form exception text.
+/// or free-form exception text. Nested diagnostics are typed
+/// ([SupportDiagnosticsReport]) — no blacklist walk in production.
 class SupportReportBuilder {
   const SupportReportBuilder({this.diagnosticsProvider});
 
-  /// Optional callback that returns an already-redacted diagnostics map
-  /// (e.g. [IntegrationDiagnosticsReport.toJson]).
-  final Future<Map<String, Object?>?> Function()? diagnosticsProvider;
+  /// Optional callback that returns a typed diagnostics snapshot.
+  final Future<SupportDiagnosticsReport?> Function()? diagnosticsProvider;
 
   static const Set<String> allowedTopLevelKeys = {
     'generatedAtUtc',
@@ -68,7 +70,7 @@ class SupportReportBuilder {
 
     final diagnostics = await diagnosticsProvider?.call();
     if (diagnostics != null) {
-      report['diagnostics'] = _redactDiagnostics(diagnostics);
+      report['diagnostics'] = diagnostics.toJson();
     }
 
     return Map<String, Object?>.unmodifiable(
@@ -86,14 +88,28 @@ class SupportReportBuilder {
       final value = report[key];
       if (value is Map) {
         buffer.writeln('$key:');
-        value.forEach((k, v) {
-          buffer.writeln('  $k: $v');
-        });
+        _writeMap(buffer, value, indent: 2);
       } else {
         buffer.writeln('$key: $value');
       }
     }
     return buffer.toString();
+  }
+
+  static void _writeMap(
+    StringBuffer buffer,
+    Map<Object?, Object?> map, {
+    required int indent,
+  }) {
+    final pad = ' ' * indent;
+    map.forEach((k, v) {
+      if (v is Map) {
+        buffer.writeln('$pad$k:');
+        _writeMap(buffer, Map<Object?, Object?>.from(v), indent: indent + 2);
+      } else {
+        buffer.writeln('$pad$k: $v');
+      }
+    });
   }
 
   static String _sanitizeUserText(String input, {required int maxLength}) {
@@ -102,54 +118,5 @@ class SupportReportBuilder {
       text = text.substring(0, maxLength);
     }
     return text;
-  }
-
-  static Map<String, Object?> _redactDiagnostics(Map<String, Object?> raw) {
-    // Nested maps from IntegrationDiagnosticsReport are already redacted;
-    // still strip any unexpected keys that look like content fields.
-    const forbidden = {
-      'title',
-      'titles',
-      'notes',
-      'note',
-      'location',
-      'locations',
-      'value',
-      'values',
-      'steps',
-      'heartRate',
-      'weight',
-      'email',
-      'token',
-      'password',
-      'secret',
-      'sample',
-      'samples',
-    };
-
-    Map<String, Object?> walk(Map<Object?, Object?> map) {
-      final out = <String, Object?>{};
-      map.forEach((key, value) {
-        final k = key?.toString() ?? '';
-        if (forbidden.contains(k)) return;
-        if (value is Map) {
-          out[k] = walk(Map<Object?, Object?>.from(value));
-        } else if (value is List) {
-          out[k] = value
-              .map((item) {
-                if (item is Map) {
-                  return walk(Map<Object?, Object?>.from(item));
-                }
-                return item;
-              })
-              .toList(growable: false);
-        } else {
-          out[k] = value;
-        }
-      });
-      return out;
-    }
-
-    return walk(raw);
   }
 }

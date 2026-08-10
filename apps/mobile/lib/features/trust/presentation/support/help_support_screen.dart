@@ -59,7 +59,8 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
           Expanded(
             child: articlesAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Text('Could not load articles: $e'),
+              error: (e, _) =>
+                  const Text('Could not load articles. Please try again.'),
               data: (articles) {
                 return ListView(
                   children: [
@@ -173,7 +174,9 @@ class SupportArticleDetailScreen extends ConsumerWidget {
     return articlesAsync.when(
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Scaffold(body: Center(child: Text('$e'))),
+      error: (e, _) => const Scaffold(
+        body: Center(child: Text('Could not load this article.')),
+      ),
       data: (articles) {
         SupportArticle? article;
         for (final a in articles) {
@@ -310,21 +313,21 @@ class _ReportProblemScreenState extends ConsumerState<ReportProblemScreen> {
             packageName: info.packageName,
             platform: platform,
             locale: locale,
-            goalsDataSource: sources['goalsDataSource']!,
-            financeDataSource: sources['financeDataSource']!,
-            habitsDataSource: sources['habitsDataSource']!,
-            calendarDataSource: sources['calendarDataSource']!,
-            healthDataSource: sources['healthDataSource']!,
+            goalsDataSource: sources['goals']!,
+            financeDataSource: sources['finance']!,
+            habitsDataSource: sources['habits']!,
+            calendarDataSource: sources['calendar']!,
+            healthDataSource: sources['health']!,
             feature: 'report_problem',
             userMessage: _message.text,
           );
       final text = ref.read(supportReportBuilderProvider).toPlainText(report);
       await SharePlus.instance.share(ShareParams(text: text));
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not share: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not share. Please try again.')),
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }

@@ -17,7 +17,10 @@ import '../../domain/entities/changelog_entry.dart';
 import '../../domain/entities/data_catalog.dart';
 import '../../domain/entities/support_article.dart';
 import '../../domain/entities/trust_document.dart';
+import '../../domain/entities/support_diagnostics_report.dart';
 import '../../domain/repositories/trust_content_repository.dart';
+import '../../domain/services/data_module_registry.dart';
+import '../../domain/services/export_file_lifecycle_service.dart';
 import '../../domain/services/local_data_deletion_coordinator.dart';
 import '../../domain/services/local_data_export_service.dart';
 import '../../domain/services/privacy_data_catalog_service.dart';
@@ -37,7 +40,7 @@ final appVersionLabelProvider = Provider<AsyncValue<String>>((ref) {
 final privacyDataCatalogServiceProvider = Provider<PrivacyDataCatalogService>((
   ref,
 ) {
-  return const PrivacyDataCatalogService();
+  return PrivacyDataCatalogService(DataModuleRegistry.builtIn());
 });
 
 final dataCatalogEntriesProvider = Provider<List<DataCatalogEntry>>((ref) {
@@ -66,8 +69,21 @@ final changelogProvider = FutureProvider<List<ChangelogEntry>>((ref) {
   return ref.watch(trustContentRepositoryProvider).getChangelog();
 });
 
+final exportFileLifecycleServiceProvider = Provider<ExportFileLifecycleService>(
+  (ref) {
+    return ExportFileLifecycleService();
+  },
+);
+
+/// Runs once after providers exist — deletes stale export temp files.
+final exportTempCleanupProvider = FutureProvider<int>((ref) async {
+  return ref.watch(exportFileLifecycleServiceProvider).cleanupStaleExports();
+});
+
 final localDataExportServiceProvider = Provider<LocalDataExportService>((ref) {
   final prefs = ref.watch(sharedPreferencesProvider);
+  final lifecycle = ref.watch(exportFileLifecycleServiceProvider);
+  final packageInfo = ref.watch(packageInfoProvider);
   return MemyLocalDataExportService(
     goalRepository: ref.watch(goalRepositoryProvider),
     financeRepository: ref.watch(financeRepositoryProvider),
@@ -75,6 +91,11 @@ final localDataExportServiceProvider = Provider<LocalDataExportService>((ref) {
     calendarRepository: ref.watch(calendarRepositoryProvider),
     healthRepository: ref.watch(healthRepositoryProvider),
     preferencesReader: () async => AppearancePreferences.exportMap(prefs),
+    appVersionProvider: () => packageInfo.asData?.value.version ?? 'unknown',
+    buildNumberProvider: () =>
+        packageInfo.asData?.value.buildNumber ?? 'unknown',
+    dataSourceModesProvider: environmentDataSourceLabels,
+    fileLifecycle: lifecycle,
   );
 });
 
@@ -95,7 +116,7 @@ final supportReportBuilderProvider = Provider<SupportReportBuilder>((ref) {
     diagnosticsProvider: () async {
       try {
         final report = await ref.read(integrationDiagnosticsProvider.future);
-        return report.toJson();
+        return SupportDiagnosticsReport.fromIntegration(report: report);
       } catch (_) {
         return null;
       }
@@ -103,8 +124,7 @@ final supportReportBuilderProvider = Provider<SupportReportBuilder>((ref) {
   );
 });
 
-/// Theme mode preference (system / light). Dark is stored but falls back to
-/// system until a full dark theme ships.
+/// Theme mode preference (system / light / dark).
 final themeModePreferenceProvider =
     StateNotifierProvider<ThemeModePreferenceController, ThemeMode>((ref) {
       final prefs = ref.watch(sharedPreferencesProvider);
@@ -118,10 +138,8 @@ class ThemeModePreferenceController extends StateNotifier<ThemeMode> {
   final SharedPreferences _prefs;
 
   Future<void> setMode(ThemeMode mode) async {
-    // Only persist system/light as first-class; dark maps to system for now.
-    final effective = mode == ThemeMode.dark ? ThemeMode.system : mode;
-    await AppearancePreferences.writeThemeMode(_prefs, effective);
-    state = effective;
+    await AppearancePreferences.writeThemeMode(_prefs, mode);
+    state = mode;
   }
 }
 
@@ -145,10 +163,10 @@ class ReduceMotionPreferenceController extends StateNotifier<bool> {
 
 Map<String, String> environmentDataSourceLabels() {
   return {
-    'goalsDataSource': EnvironmentConfig.goalsDataSource.name,
-    'financeDataSource': EnvironmentConfig.financeDataSource.name,
-    'habitsDataSource': EnvironmentConfig.habitsDataSource.name,
-    'calendarDataSource': EnvironmentConfig.calendarDataSource.name,
-    'healthDataSource': EnvironmentConfig.healthDataSource.name,
+    'goals': EnvironmentConfig.goalsDataSource.name,
+    'finance': EnvironmentConfig.financeDataSource.name,
+    'habits': EnvironmentConfig.habitsDataSource.name,
+    'calendar': EnvironmentConfig.calendarDataSource.name,
+    'health': EnvironmentConfig.healthDataSource.name,
   };
 }

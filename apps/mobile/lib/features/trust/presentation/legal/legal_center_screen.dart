@@ -72,10 +72,7 @@ class _DocLink extends StatelessWidget {
         child: Row(
           children: [
             Expanded(child: Text(title, style: AppTextStyles.titleSmall())),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: AppColors.navInactive,
-            ),
+            Icon(Icons.chevron_right_rounded, color: AppColors.navInactive),
           ],
         ),
       ),
@@ -94,10 +91,10 @@ class LegalDocumentScreen extends ConsumerWidget {
     return docAsync.when(
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, _) => TrustScreenScaffold(
+      error: (error, stackTrace) => TrustScreenScaffold(
         title: 'Legal',
         fallbackPath: RoutePaths.legal,
-        child: Text('Could not load document: $e'),
+        child: const Text('Could not load document. Please try again.'),
       ),
       data: (doc) {
         return TrustScreenScaffold(

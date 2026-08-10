@@ -68,6 +68,16 @@ class AssetTrustContentRepository implements TrustContentRepository {
       tags: ['privacy', 'export', 'delete'],
     ),
     _ArticleMeta(
+      id: 'local-vs-backend-data',
+      title: 'Local data vs backend data',
+      category: SupportTopicCategory.privacy,
+      summary:
+          'Why Delete local data never removes backend Goals or Health '
+          'platform records.',
+      assetPath: 'assets/trust/support/local-vs-backend-data.md',
+      tags: ['privacy', 'delete', 'goals', 'api', 'export'],
+    ),
+    _ArticleMeta(
       id: 'goals-basics',
       title: 'Working with Goals',
       category: SupportTopicCategory.goals,

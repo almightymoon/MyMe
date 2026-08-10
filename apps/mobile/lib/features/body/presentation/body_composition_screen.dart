@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router/route_names.dart';
@@ -8,6 +9,8 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/widgets/memy_module_scaffold.dart';
 import '../../../core/widgets/memy_primary_button.dart';
+import '../../health/application/providers/health_providers.dart';
+import '../../health/presentation/widgets/health_format.dart';
 import '../data/body_seed.dart';
 import '../../../app/theme/app_radii.dart';
 
@@ -399,16 +402,44 @@ class _SparkPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-class _MetricsGrid extends StatelessWidget {
+/// Weight precedence: [BodySeed.weightKg] is the manually-entered/demo
+/// value and is the durable source of truth for this screen — Health is
+/// display-only here. When a live reading is available from
+/// [todayHealthSummaryProvider] we *show* it in place of the demo figure
+/// (clearly labeled "From Apple Health"/"From Health Connect" via
+/// [_MetricTile.status]) but we never write it back into [BodySeed] or any
+/// manual-entry field. If MeMy later adds manual weight logging, that
+/// manual entry must keep winning for anything persisted/edited — Health
+/// only ever supplies a read-only supplementary figure, never overwrites
+/// user-entered data.
+class _MetricsGrid extends ConsumerWidget {
   const _MetricsGrid();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final healthSummary = ref.watch(todayHealthSummaryProvider).valueOrNull;
+    final healthWeightKg = healthSummary?.weightKg;
+
+    final String weightValue;
+    final String weightStatus;
+    final Color weightStatusColor;
+    if (healthWeightKg != null) {
+      weightValue = HealthFormat.weightKg(healthWeightKg);
+      weightStatus = 'From Health';
+      weightStatusColor = AppColors.ember;
+    } else {
+      weightValue = BodySeed.weightKg.toStringAsFixed(1);
+      weightStatus =
+          '${BodySeed.weightDeltaKg <= 0 ? '↓' : '↑'} '
+          '${BodySeed.weightDeltaKg.abs().toStringAsFixed(1)} kg';
+      weightStatusColor = AppColors.finance;
+    }
+
     // Intrinsic 2×2 — avoids GridView aspect-ratio stretch / empty white bands.
     const gap = 10.0;
-    return const Column(
+    return Column(
       children: [
-        Row(
+        const Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
@@ -431,21 +462,22 @@ class _MetricsGrid extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(height: gap),
+        const SizedBox(height: gap),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: _MetricTile(
+                key: const Key('body_weight_tile'),
                 label: 'Weight',
-                value: '72.5',
+                value: weightValue,
                 unit: 'kg',
-                status: '↓ 0.5 kg',
-                statusColor: AppColors.finance,
+                status: weightStatus,
+                statusColor: weightStatusColor,
               ),
             ),
-            SizedBox(width: gap),
-            Expanded(
+            const SizedBox(width: gap),
+            const Expanded(
               child: _MetricTile(
                 label: 'Body Fat',
                 value: '18.6',
@@ -463,6 +495,7 @@ class _MetricsGrid extends StatelessWidget {
 
 class _MetricTile extends StatelessWidget {
   const _MetricTile({
+    super.key,
     required this.label,
     required this.value,
     required this.status,

@@ -17,6 +17,7 @@ void main() {
     DateTime? end,
     HealthRecordingMethod method = HealthRecordingMethod.automatic,
     HealthSampleSource source = HealthSampleSource.fake,
+    String? providerRecordId,
   }) {
     return NormalizedHealthSample(
       metricType: type,
@@ -26,6 +27,7 @@ void main() {
       endAt: end ?? start,
       source: source,
       recordingMethod: method,
+      providerRecordId: providerRecordId,
     );
   }
 
@@ -58,6 +60,74 @@ void main() {
       expect(summary.steps, 3500);
       expect(summary.distanceMeters, 1200);
       expect(summary.activeEnergyKcal, 180);
+    });
+
+    test('deduplicates by providerRecordId before summing', () {
+      final start = DateTime(2026, 6, 15, 8);
+      final summary = aggregation.summarizeDay(
+        date: day,
+        generatedAt: generatedAt,
+        samples: [
+          sample(
+            type: HealthMetricType.steps,
+            value: 1000,
+            start: start,
+            providerRecordId: 'rec-1',
+          ),
+          sample(
+            type: HealthMetricType.steps,
+            value: 1000,
+            start: start,
+            providerRecordId: 'rec-1',
+          ),
+          sample(
+            type: HealthMetricType.steps,
+            value: 500,
+            start: start.add(const Duration(hours: 1)),
+            providerRecordId: 'rec-2',
+          ),
+        ],
+      );
+
+      expect(summary.steps, 1500);
+    });
+
+    test(
+      'keeps id-less samples without treating them as stable duplicates',
+      () {
+        final start = DateTime(2026, 6, 15, 8);
+        final summary = aggregation.summarizeDay(
+          date: day,
+          generatedAt: generatedAt,
+          samples: [
+            sample(type: HealthMetricType.steps, value: 100, start: start),
+            sample(type: HealthMetricType.steps, value: 100, start: start),
+          ],
+        );
+
+        // Ephemeral / missing ids are not collapsed — both contribute.
+        expect(summary.steps, 200);
+      },
+    );
+
+    test('rejects NaN, infinity, and negative values', () {
+      final start = DateTime(2026, 6, 15, 8);
+      final summary = aggregation.summarizeDay(
+        date: day,
+        generatedAt: generatedAt,
+        samples: [
+          sample(type: HealthMetricType.steps, value: 40, start: start),
+          sample(type: HealthMetricType.steps, value: double.nan, start: start),
+          sample(
+            type: HealthMetricType.steps,
+            value: double.infinity,
+            start: start,
+          ),
+          sample(type: HealthMetricType.steps, value: -5, start: start),
+        ],
+      );
+
+      expect(summary.steps, 40);
     });
 
     test('uses the latest heart-rate reading, not an average', () {

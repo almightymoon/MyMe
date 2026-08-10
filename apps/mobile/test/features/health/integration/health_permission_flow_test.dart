@@ -57,7 +57,10 @@ void main() {
         HealthMetricGroup.heartRate,
         HealthMetricGroup.sleep,
       });
-      expect(granted.grantedGroups.contains(HealthMetricGroup.sleep), isFalse);
+      expect(
+        granted.isReadableForAggregation(HealthMetricGroup.sleep),
+        isFalse,
+      );
       expect(
         (await repository.getConnection()).status,
         IntegrationConnectionStatus.connected,

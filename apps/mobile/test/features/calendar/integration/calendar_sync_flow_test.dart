@@ -47,6 +47,7 @@ void main() {
       addTearDown(container.dispose);
 
       final gateway = FakeDeviceCalendarGateway();
+      gateway.nowUtc = () => clock.now().toUtc();
       var service = CalendarSyncService(
         gateway: gateway,
         repository: repository,
@@ -74,11 +75,18 @@ void main() {
       expect(calendars.map((c) => c.id), contains('cal_1'));
       expect(
         container.read(calendarConnectionProvider).status,
-        IntegrationConnectionStatus.connected,
+        IntegrationConnectionStatus.connecting,
       );
 
       // --- import (initial sync) -----------------------------------------
-      await service.confirmCalendarSelection(['cal_1']);
+      await service.confirmCalendarSelection(
+        readableIds: ['cal_1'],
+        writableId: 'cal_1',
+      );
+      expect(
+        container.read(calendarConnectionProvider).status,
+        IntegrationConnectionStatus.connected,
+      );
       final importResult = await service.performInitialSync();
       expect(importResult.pulledCount, 1);
 
@@ -124,16 +132,17 @@ void main() {
       );
 
       // --- concurrent local + external edit -> conflict on pull -----------
+      // Conflict requires a MeMy-owned linked event (imported remain read-only).
       await repository.updateEvent(
-        importedEvent.copyWith(
-          title: 'Dentist (moved to afternoon)',
+        pushedEvent.copyWith(
+          title: 'Write research draft (local edit)',
           syncStatus: CalendarEventSyncStatus.pendingPush,
         ),
       );
       gateway.simulateExternalEdit(
         calendarId: 'cal_1',
-        externalEventId: 'ext_dentist',
-        title: 'Dentist (renamed on phone)',
+        externalEventId: pushedEvent.externalEventId!,
+        title: 'Write research draft (phone edit)',
         lastModifiedUtc: clock.now().add(const Duration(minutes: 10)),
       );
 
@@ -142,8 +151,11 @@ void main() {
       final conflicts = await repository.getConflicts();
       expect(conflicts, hasLength(1));
       final conflict = conflicts.single;
-      expect(conflict.localSnapshot.title, 'Dentist (moved to afternoon)');
-      expect(conflict.externalSnapshot.title, 'Dentist (renamed on phone)');
+      expect(conflict.localSnapshot.title, 'Write research draft (local edit)');
+      expect(
+        conflict.externalSnapshot.title,
+        'Write research draft (phone edit)',
+      );
 
       // --- resolve with Keep Both ------------------------------------------
       await service.resolveConflict(
@@ -156,15 +168,14 @@ void main() {
         startUtc: DateTime.utc(2026, 1, 1),
         endUtc: DateTime.utc(2027, 1, 1),
       );
-      // Dentist (now renamed-from-external) + duplicate "moved" copy +
-      // the pushed research-draft event.
+      // Imported Dentist + phone-edited research draft + local-only duplicate.
       expect(afterResolution, hasLength(3));
       expect(
         afterResolution.map((e) => e.title),
         containsAll([
-          'Dentist (renamed on phone)',
-          'Dentist (moved to afternoon)',
-          'Write research draft (final pass)',
+          'Dentist',
+          'Write research draft (phone edit)',
+          'Write research draft (local edit)',
         ]),
       );
 
@@ -186,14 +197,15 @@ void main() {
       expect(
         reloadedEvents.map((e) => e.title),
         containsAll([
-          'Dentist (renamed on phone)',
-          'Dentist (moved to afternoon)',
-          'Write research draft (final pass)',
+          'Dentist',
+          'Write research draft (phone edit)',
+          'Write research draft (local edit)',
         ]),
       );
       expect(await repository.getConflicts(), isEmpty);
       final reloadedConfig = await repository.getConfig();
-      expect(reloadedConfig.selectedCalendarIds, ['cal_1']);
+      expect(reloadedConfig.readableCalendarIds, ['cal_1']);
+      expect(reloadedConfig.defaultWritableCalendarId, 'cal_1');
 
       await db.close();
     },

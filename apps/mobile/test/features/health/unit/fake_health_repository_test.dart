@@ -6,6 +6,7 @@ import 'package:memy/core/integrations/domain/integration_connection_status.dart
 import 'package:memy/features/health/data/gateways/fake_platform_health_gateway.dart';
 import 'package:memy/features/health/data/repositories/fake_health_repository.dart';
 import 'package:memy/features/health/domain/entities/health_metric_type.dart';
+import 'package:memy/features/health/domain/entities/health_permission_state.dart';
 import 'package:memy/features/health/domain/entities/normalized_health_sample.dart';
 
 void main() {
@@ -21,7 +22,7 @@ void main() {
 
   tearDown(() => repository.dispose());
 
-  NormalizedHealthSample steps(int value) {
+  NormalizedHealthSample steps(int value, {String? id}) {
     return NormalizedHealthSample(
       metricType: HealthMetricType.steps,
       value: value.toDouble(),
@@ -29,6 +30,7 @@ void main() {
       startAt: DateTime(2026, 6, 15, 10),
       endAt: DateTime(2026, 6, 15, 10),
       source: HealthSampleSource.fake,
+      providerRecordId: id,
     );
   }
 
@@ -73,34 +75,74 @@ void main() {
     );
   });
 
-  test('partial permission grants Activity+Heart but not Sleep', () async {
-    gateway.nextRequestGrantsOverride = {
-      HealthMetricGroup.activity,
-      HealthMetricGroup.heartRate,
-    };
-    gateway.seedSample(steps(4200));
-    gateway.seedSample(heart(78));
-    gateway.seedSample(sleepMinutes(420));
+  test(
+    'Android-style verified partial grant Activity+Heart but not Sleep',
+    () async {
+      gateway.nextRequestGrantsOverride = {
+        HealthMetricGroup.activity,
+        HealthMetricGroup.heartRate,
+      };
+      gateway.seedSample(steps(4200));
+      gateway.seedSample(heart(78));
+      gateway.seedSample(sleepMinutes(420));
+
+      final state = await repository.requestPermissions({
+        HealthMetricGroup.activity,
+        HealthMetricGroup.heartRate,
+        HealthMetricGroup.sleep,
+      });
+
+      expect(
+        state.dispositionOf(HealthMetricGroup.activity),
+        HealthPermissionDisposition.grantedVerified,
+      );
+      expect(
+        state.dispositionOf(HealthMetricGroup.heartRate),
+        HealthPermissionDisposition.grantedVerified,
+      );
+      expect(
+        state.dispositionOf(HealthMetricGroup.sleep),
+        HealthPermissionDisposition.deniedVerified,
+      );
+      expect(state.grantedGroups, {
+        HealthMetricGroup.activity,
+        HealthMetricGroup.heartRate,
+      });
+      expect(state.deniedGroups, {HealthMetricGroup.sleep});
+
+      final connection = await repository.getConnection();
+      expect(connection.status, IntegrationConnectionStatus.connected);
+
+      final summary = await repository.getDailySummary(today);
+      expect(summary.steps, 4200);
+      expect(summary.latestHeartRateBpm, 78);
+      expect(summary.sleepDuration, isNull);
+    },
+  );
+
+  test('iOS-style request marks groups unverified, still readable', () async {
+    gateway.treatRequestsAsUnverified = true;
+    gateway.seedSample(steps(2100));
 
     final state = await repository.requestPermissions({
       HealthMetricGroup.activity,
-      HealthMetricGroup.heartRate,
       HealthMetricGroup.sleep,
     });
 
-    expect(state.grantedGroups, {
-      HealthMetricGroup.activity,
-      HealthMetricGroup.heartRate,
-    });
-    expect(state.deniedGroups, {HealthMetricGroup.sleep});
-
-    final connection = await repository.getConnection();
-    expect(connection.status, IntegrationConnectionStatus.connected);
+    expect(
+      state.dispositionOf(HealthMetricGroup.activity),
+      HealthPermissionDisposition.requestCompletedUnverified,
+    );
+    expect(
+      state.dispositionOf(HealthMetricGroup.sleep),
+      HealthPermissionDisposition.requestCompletedUnverified,
+    );
+    expect(state.grantedGroups, isEmpty);
+    expect(state.hasUnverifiedDispositions, isTrue);
+    expect(state.isReadableForAggregation(HealthMetricGroup.activity), isTrue);
 
     final summary = await repository.getDailySummary(today);
-    expect(summary.steps, 4200);
-    expect(summary.latestHeartRateBpm, 78);
-    expect(summary.sleepDuration, isNull);
+    expect(summary.steps, 2100);
   });
 
   test('revoking heart permission removes heart data on refresh', () async {
@@ -133,7 +175,7 @@ void main() {
     await repository.disconnect();
     final connection = await repository.getConnection();
     expect(connection.status, IntegrationConnectionStatus.notConnected);
-    expect(connection.permissionState.grantedGroups, isEmpty);
+    expect(connection.permissionState.readableGroups, isEmpty);
 
     // After disconnect, no grants → empty summary even with seeded samples.
     final summary = await repository.getDailySummary(today, forceRefresh: true);

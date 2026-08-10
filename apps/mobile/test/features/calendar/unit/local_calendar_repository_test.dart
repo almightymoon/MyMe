@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:memy/core/domain/clock/app_clock.dart';
@@ -272,25 +273,45 @@ void main() {
   group('config', () {
     test('getConfig defaults to an empty config before any save', () async {
       final config = await repository.getConfig();
-      expect(config.selectedCalendarIds, isEmpty);
+      expect(config.readableCalendarIds, isEmpty);
       expect(config.lastFullSyncAt, isNull);
     });
 
     test('saveConfig then getConfig round-trips all fields', () async {
       await repository.saveConfig(
         CalendarConfig(
-          selectedCalendarIds: const ['cal_1', 'cal_2'],
+          readableCalendarIds: const ['cal_1', 'cal_2'],
+          defaultWritableCalendarId: 'cal_1',
           lastFullSyncAt: DateTime.utc(2026, 6, 1, 9),
-          initialSyncAnchorPast: DateTime.utc(2026, 5, 1),
-          initialSyncAnchorFuture: DateTime.utc(2027, 6, 1),
+          lastSuccessfulPullAt: DateTime.utc(2026, 6, 1, 8),
+          connectionConfiguredAt: DateTime.utc(2026, 6, 1, 7),
         ),
       );
 
       final config = await repository.getConfig();
-      expect(config.selectedCalendarIds, ['cal_1', 'cal_2']);
+      expect(config.readableCalendarIds, ['cal_1', 'cal_2']);
+      expect(config.defaultWritableCalendarId, 'cal_1');
       expect(config.lastFullSyncAt, DateTime.utc(2026, 6, 1, 9));
-      expect(config.initialSyncAnchorPast, DateTime.utc(2026, 5, 1));
-      expect(config.initialSyncAnchorFuture, DateTime.utc(2027, 6, 1));
+      expect(config.lastSuccessfulPullAt, DateTime.utc(2026, 6, 1, 8));
+      expect(config.connectionConfiguredAt, DateTime.utc(2026, 6, 1, 7));
+    });
+
+    test('migrates empty readable from legacy selected on read', () async {
+      // Simulate a partially-migrated row: selected filled, readable empty.
+      await db
+          .into(db.calendarConfigRows)
+          .insert(
+            CalendarConfigRowsCompanion.insert(
+              id: const Value(0),
+              selectedCalendarIdsJson: Value(
+                CalendarDatabase.encodeIdList(['legacy_1']),
+              ),
+              readableCalendarIdsJson: const Value('[]'),
+            ),
+          );
+
+      final config = await repository.getConfig();
+      expect(config.readableCalendarIds, ['legacy_1']);
     });
   });
 

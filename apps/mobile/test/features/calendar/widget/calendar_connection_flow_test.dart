@@ -65,7 +65,8 @@ void main() {
       expect(find.byKey(const Key('calendar_connection_banner')), findsNothing);
 
       final config = await repository.getConfig();
-      expect(config.selectedCalendarIds, ['cal_1']);
+      expect(config.readableCalendarIds, ['cal_1']);
+      expect(config.defaultWritableCalendarId, 'cal_1');
     },
   );
 }

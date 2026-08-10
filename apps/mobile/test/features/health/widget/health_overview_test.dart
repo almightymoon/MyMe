@@ -72,7 +72,10 @@ void main() {
       initialConnection: HealthConnectionConfig(
         status: IntegrationConnectionStatus.connected,
         permissionState: const HealthPermissionState(
-          grantedGroups: {HealthMetricGroup.activity},
+          dispositions: {
+            HealthMetricGroup.activity:
+                HealthPermissionDisposition.grantedVerified,
+          },
         ),
         connectedAt: clock.now(),
       ),

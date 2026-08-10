@@ -40,7 +40,8 @@ void main() {
     await tester.tap(find.byKey(const Key('nav_more')));
     await tester.pumpAndSettle();
     expect(find.text('Insights'), findsWidgets);
-    expect(find.text('Finance'), findsOneWidget);
+    expect(find.byKey(const Key('insights_saved')), findsOneWidget);
+    expect(find.byKey(const Key('insights_goals_track')), findsOneWidget);
     expect(find.text('Exercise'), findsOneWidget);
     expect(find.byKey(const Key('more_profile')), findsOneWidget);
     expect(find.byKey(const Key('insights_life_trend')), findsOneWidget);

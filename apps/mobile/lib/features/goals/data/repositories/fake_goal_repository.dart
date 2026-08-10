@@ -188,6 +188,12 @@ class FakeGoalRepository implements GoalRepository {
     return next;
   }
 
+  /// Wipes all in-memory goals.
+  Future<void> clearAllLocalData() async {
+    _goals.clear();
+    _emit();
+  }
+
   void dispose() {
     _controller.close();
   }

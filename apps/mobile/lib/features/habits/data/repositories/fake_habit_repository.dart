@@ -290,4 +290,12 @@ class FakeHabitRepository implements HabitRepository {
       ),
     ];
   }
+
+  /// Wipes all in-memory habits and check-ins.
+  Future<void> clearAllLocalData() async {
+    await _guard();
+    _habits.clear();
+    _checkIns.clear();
+    _emit();
+  }
 }

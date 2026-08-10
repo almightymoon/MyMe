@@ -684,6 +684,58 @@ class LocalCalendarRepository implements CalendarRepository {
     return recoveryCase;
   }
 
+  /// Clears MeMy's local calendar cache tables.
+  ///
+  /// Never touches the device calendar provider. When
+  /// [includeMeMyOwnedEvents] is false, MeMy-authored local events are kept.
+  Future<({int events, int links, int conflicts, int ops})> clearLocalCache({
+    required bool includeMeMyOwnedEvents,
+  }) async {
+    final eventsBefore = await database.select(database.calendarEvents).get();
+    final linksBefore = await database
+        .select(database.calendarEventLinks)
+        .get();
+    final conflictsBefore = await database
+        .select(database.calendarConflicts)
+        .get();
+    final opsBefore = await database
+        .select(database.calendarSyncOperations)
+        .get();
+
+    await database.transaction(() async {
+      if (includeMeMyOwnedEvents) {
+        await database.delete(database.calendarEvents).go();
+      } else {
+        await (database.delete(
+              database.calendarEvents,
+            )..where((t) => t.origin.equals(CalendarEventOrigin.external.name)))
+            .go();
+      }
+      await database.delete(database.calendarEventLinks).go();
+      await database.delete(database.calendarConflicts).go();
+      await database.delete(database.calendarSyncOperations).go();
+      await database.delete(database.calendarCreateRecoveryCases).go();
+      await database.delete(database.calendarConfigRows).go();
+      await saveConfig(const CalendarConfig());
+    });
+
+    final eventsAfter = await database.select(database.calendarEvents).get();
+    final linksAfter = await database.select(database.calendarEventLinks).get();
+    final conflictsAfter = await database
+        .select(database.calendarConflicts)
+        .get();
+    final opsAfter = await database
+        .select(database.calendarSyncOperations)
+        .get();
+
+    return (
+      events: eventsBefore.length - eventsAfter.length,
+      links: linksBefore.length - linksAfter.length,
+      conflicts: conflictsBefore.length - conflictsAfter.length,
+      ops: opsBefore.length - opsAfter.length,
+    );
+  }
+
   CalendarCreateRecoveryCase _recoveryFromRow(
     db.CalendarCreateRecoveryCase row,
   ) {

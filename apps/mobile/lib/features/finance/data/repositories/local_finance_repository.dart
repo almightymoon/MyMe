@@ -266,6 +266,14 @@ class LocalFinanceRepository implements FinanceRepository {
     }
   }
 
+  /// Wipes all local transactions. Keeps category catalog so the form still
+  /// works; does not reseed demo transactions.
+  Future<void> clearAllLocalData() async {
+    await _requireReady();
+    _transactions = const [];
+    await _persist();
+  }
+
   void dispose() {
     _controller.close();
   }

@@ -605,4 +605,14 @@ class LocalHabitRepository implements HabitRepository {
       _checkInController.add(List.unmodifiable(_checkIns));
     }
   }
+
+  /// Wipes all local habits, check-ins, and history. Does not reseed.
+  Future<void> clearAllLocalData() async {
+    await ensureInitialized();
+    _habits = const [];
+    _checkIns = const [];
+    _scheduleRevisions = const [];
+    _statusPeriods = const [];
+    await _persist();
+  }
 }

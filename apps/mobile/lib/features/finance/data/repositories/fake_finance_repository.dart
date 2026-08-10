@@ -125,6 +125,12 @@ class FakeFinanceRepository implements FinanceRepository {
     _emit();
   }
 
+  /// Wipes all in-memory transactions (categories retained).
+  Future<void> clearAllLocalData() async {
+    _transactions.clear();
+    _emit();
+  }
+
   void dispose() {
     _controller.close();
   }

@@ -316,6 +316,12 @@ class LocalGoalRepository implements GoalRepository {
     return next;
   }
 
+  /// Wipes all local goals. Does not reseed demo data.
+  Future<void> clearAllLocalData() async {
+    await ensureInitialized();
+    await _persist(const []);
+  }
+
   void dispose() {
     _controller.close();
   }

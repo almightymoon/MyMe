@@ -424,4 +424,36 @@ class FakeCalendarRepository implements CalendarRepository {
     _recoveryById[recoveryCase.id] = recoveryCase;
     return recoveryCase;
   }
+
+  /// Clears in-memory calendar cache. Never touches a device gateway.
+  Future<({int events, int links, int conflicts, int ops})> clearLocalCache({
+    required bool includeMeMyOwnedEvents,
+  }) async {
+    final eventsBefore = _events.length;
+    final linksBefore = _linksByEventId.length;
+    final conflictsBefore = _conflicts.length;
+    final opsBefore = _opsById.length;
+
+    if (includeMeMyOwnedEvents) {
+      _events.clear();
+    } else {
+      _events.removeWhere((e) => e.origin == CalendarEventOrigin.external);
+    }
+
+    _linksByEventId.clear();
+    _conflicts.clear();
+    _opsById.clear();
+    _recoveryById.clear();
+    _configRow = const CalendarConfig();
+
+    _emitEvents();
+    _emitConflicts();
+
+    return (
+      events: eventsBefore - _events.length,
+      links: linksBefore,
+      conflicts: conflictsBefore,
+      ops: opsBefore,
+    );
+  }
 }

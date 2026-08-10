@@ -111,7 +111,7 @@ void main() {
       expect(state.deniedGroups, {HealthMetricGroup.sleep});
 
       final connection = await repository.getConnection();
-      expect(connection.status, IntegrationConnectionStatus.connected);
+      expect(connection.status, IntegrationConnectionStatus.partiallyConnected);
 
       final summary = await repository.getDailySummary(today);
       expect(summary.steps, 4200);
@@ -145,7 +145,7 @@ void main() {
     expect(summary.steps, 2100);
   });
 
-  test('revoking heart permission removes heart data on refresh', () async {
+  test('refresh updates permission state when heart rate revoked', () async {
     gateway.grantGroups({
       HealthMetricGroup.activity,
       HealthMetricGroup.heartRate,
@@ -161,6 +161,13 @@ void main() {
 
     gateway.revokeGroups({HealthMetricGroup.heartRate});
     await repository.refresh();
+
+    final connection = await repository.getConnection();
+    expect(
+      connection.permissionState.dispositionOf(HealthMetricGroup.heartRate),
+      HealthPermissionDisposition.deniedVerified,
+    );
+
     final after = await repository.getDailySummary(today, forceRefresh: true);
     expect(after.steps, 1000);
     expect(after.latestHeartRateBpm, isNull);

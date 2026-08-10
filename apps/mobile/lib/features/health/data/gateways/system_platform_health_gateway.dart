@@ -6,6 +6,7 @@ import '../../../../core/integrations/domain/integration_availability.dart';
 import '../../../../core/integrations/domain/integration_error.dart';
 import '../../../../core/integrations/domain/integration_provider.dart';
 import '../../../../core/integrations/privacy/integration_redaction.dart';
+import '../../domain/entities/health_aggregate_result.dart';
 import '../../domain/entities/health_metric_type.dart';
 import '../../domain/entities/health_permission_state.dart';
 import '../../domain/entities/health_workout.dart';
@@ -124,6 +125,11 @@ class SystemPlatformHealthGateway implements PlatformHealthGateway {
     } catch (e) {
       // Plugin exceptions may echo requested values back in their message —
       // never store/log the raw object, only its type (IntegrationLogSanitizer).
+      if (Platform.isIOS) {
+        return {
+          for (final g in groups) g: HealthPermissionDisposition.requestFailed,
+        };
+      }
       throw IntegrationError.unknown(
         IntegrationProvider.health,
         'Could not request Health permissions.',
@@ -135,10 +141,11 @@ class SystemPlatformHealthGateway implements PlatformHealthGateway {
       // HealthKit never discloses per-type READ grants (privacy by design):
       // a successful requestAuthorization only means the permission sheet
       // was shown without error, not that every type was switched on.
-      // Mark as requestCompletedUnverified — NOT grantedVerified.
+      // Do NOT map !authorized to deniedVerified — that is not verifiable.
       if (!authorized) {
         return {
-          for (final g in groups) g: HealthPermissionDisposition.deniedVerified,
+          for (final g in groups)
+            g: HealthPermissionDisposition.requestCancelled,
         };
       }
       return {
@@ -279,26 +286,69 @@ class SystemPlatformHealthGateway implements PlatformHealthGateway {
     return workouts;
   }
 
-  /// health 13.3.1 exposes [hp.Health.getTotalStepsInInterval] for step
-  /// totals. There is no equivalent daily total for distance or active
-  /// energy — those fall back to raw samples + [HealthAggregationService]
-  /// dedupe (see [readDailyDistanceTotal] / [readDailyActiveEnergyTotal]).
   @override
   Future<int?> readDailyStepTotal({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async {
+    final result = await aggregateSteps(startUtc: startUtc, endUtc: endUtc);
+    return result.intValue;
+  }
+
+  @override
+  Future<double?> readDailyDistanceTotal({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async {
+    final result = await aggregateDistance(startUtc: startUtc, endUtc: endUtc);
+    return result.numericValue;
+  }
+
+  @override
+  Future<double?> readDailyActiveEnergyTotal({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async {
+    final result = await aggregateActiveEnergy(
+      startUtc: startUtc,
+      endUtc: endUtc,
+    );
+    return result.numericValue;
+  }
+
+  @override
+  Future<HealthAggregateResult> aggregateSteps({
     required DateTime startUtc,
     required DateTime endUtc,
   }) async {
     try {
       await _ensureConfigured();
       final total = await _health.getTotalStepsInInterval(startUtc, endUtc);
-      if (total != null) return total;
+      if (total != null) {
+        return HealthAggregateResult(
+          metricType: HealthMetricType.steps,
+          strategy: HealthAggregateStrategy.platformTotal,
+          numericValue: total.toDouble(),
+        );
+      }
     } catch (_) {
       // Fall through to raw + dedupe.
     }
-    return _sumDedupedInt(
+    final fallback = await _sumDeduped(
       metricType: HealthMetricType.steps,
       startUtc: startUtc,
       endUtc: endUtc,
+    );
+    if (fallback == null) {
+      return const HealthAggregateResult(
+        metricType: HealthMetricType.steps,
+        strategy: HealthAggregateStrategy.unavailable,
+      );
+    }
+    return HealthAggregateResult(
+      metricType: HealthMetricType.steps,
+      strategy: HealthAggregateStrategy.rawDeduplicatedFallback,
+      numericValue: fallback,
     );
   }
 
@@ -307,28 +357,73 @@ class SystemPlatformHealthGateway implements PlatformHealthGateway {
   /// [hp.Health.getTotalStepsInInterval]. Fall back to raw samples +
   /// dedupe to avoid double-counting overlapping records.
   @override
-  Future<double?> readDailyDistanceTotal({
+  Future<HealthAggregateResult> aggregateDistance({
     required DateTime startUtc,
     required DateTime endUtc,
   }) async {
-    return _sumDeduped(
+    final fallback = await _sumDeduped(
       metricType: HealthMetricType.distanceWalkingRunning,
       startUtc: startUtc,
       endUtc: endUtc,
     );
+    if (fallback == null) {
+      return const HealthAggregateResult(
+        metricType: HealthMetricType.distanceWalkingRunning,
+        strategy: HealthAggregateStrategy.unavailable,
+      );
+    }
+    return HealthAggregateResult(
+      metricType: HealthMetricType.distanceWalkingRunning,
+      strategy: HealthAggregateStrategy.rawDeduplicatedFallback,
+      numericValue: fallback,
+    );
   }
 
-  /// Same limitation as [readDailyDistanceTotal] — no plugin daily energy
-  /// total; use raw + dedupe.
+  /// Same limitation as [aggregateDistance] — no plugin daily energy total.
   @override
-  Future<double?> readDailyActiveEnergyTotal({
+  Future<HealthAggregateResult> aggregateActiveEnergy({
     required DateTime startUtc,
     required DateTime endUtc,
   }) async {
-    return _sumDeduped(
+    final fallback = await _sumDeduped(
       metricType: HealthMetricType.activeEnergyBurned,
       startUtc: startUtc,
       endUtc: endUtc,
+    );
+    if (fallback == null) {
+      return const HealthAggregateResult(
+        metricType: HealthMetricType.activeEnergyBurned,
+        strategy: HealthAggregateStrategy.unavailable,
+      );
+    }
+    return HealthAggregateResult(
+      metricType: HealthMetricType.activeEnergyBurned,
+      strategy: HealthAggregateStrategy.rawDeduplicatedFallback,
+      numericValue: fallback,
+    );
+  }
+
+  /// health 13.3.1 has no daily exercise-duration aggregate — raw + dedupe.
+  @override
+  Future<HealthAggregateResult> aggregateExerciseDuration({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async {
+    final fallback = await _sumDeduped(
+      metricType: HealthMetricType.exerciseMinutes,
+      startUtc: startUtc,
+      endUtc: endUtc,
+    );
+    if (fallback == null) {
+      return const HealthAggregateResult(
+        metricType: HealthMetricType.exerciseMinutes,
+        strategy: HealthAggregateStrategy.unavailable,
+      );
+    }
+    return HealthAggregateResult(
+      metricType: HealthMetricType.exerciseMinutes,
+      strategy: HealthAggregateStrategy.rawDeduplicatedFallback,
+      numericValue: fallback,
     );
   }
 
@@ -345,19 +440,6 @@ class SystemPlatformHealthGateway implements PlatformHealthGateway {
     final deduped = _aggregation.dedupeSamples(samples);
     if (deduped.isEmpty) return null;
     return deduped.fold<double>(0, (acc, s) => acc + s.value);
-  }
-
-  Future<int?> _sumDedupedInt({
-    required HealthMetricType metricType,
-    required DateTime startUtc,
-    required DateTime endUtc,
-  }) async {
-    final total = await _sumDeduped(
-      metricType: metricType,
-      startUtc: startUtc,
-      endUtc: endUtc,
-    );
-    return total?.round();
   }
 
   HealthSampleSource _sourceFor(hp.HealthPlatformType platform) {

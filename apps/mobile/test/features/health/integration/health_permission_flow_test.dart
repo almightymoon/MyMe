@@ -63,7 +63,7 @@ void main() {
       );
       expect(
         (await repository.getConnection()).status,
-        IntegrationConnectionStatus.connected,
+        IntegrationConnectionStatus.partiallyConnected,
       );
 
       var summary = await repository.getDailySummary(today);

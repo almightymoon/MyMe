@@ -1,4 +1,6 @@
 import '../../../../core/domain/value_objects/local_date.dart';
+import '../../../../core/integrations/domain/integration_connection_status.dart';
+import '../../data/gateways/fake_platform_health_gateway.dart';
 import '../../domain/entities/daily_health_summary.dart';
 import '../../domain/entities/health_metric_type.dart';
 import '../../domain/entities/health_permission_state.dart';
@@ -16,7 +18,7 @@ import '../../domain/services/health_aggregation_service.dart';
 /// then aggregates only the metric types the user may read per
 /// [HealthPermissionState.isReadableForAggregation].
 ///
-/// Prefers gateway daily totals for steps / distance / active energy when
+/// Prefers gateway aggregates for steps / distance / active energy when
 /// available (avoids double-counting overlapping raw samples).
 Future<DailyHealthSummary> buildDailySummary({
   required PlatformHealthGateway gateway,
@@ -62,19 +64,31 @@ Future<DailyHealthSummary> buildDailySummary({
   int? stepsOverride;
   double? distanceOverride;
   double? energyOverride;
+  double? exerciseOverride;
   if (permissionState.isReadableForAggregation(HealthMetricGroup.activity)) {
-    stepsOverride = await gateway.readDailyStepTotal(
+    final stepsResult = await gateway.aggregateSteps(
       startUtc: dayStart,
       endUtc: dayEnd,
     );
-    distanceOverride = await gateway.readDailyDistanceTotal(
+    stepsOverride = stepsResult.intValue;
+
+    final distanceResult = await gateway.aggregateDistance(
       startUtc: dayStart,
       endUtc: dayEnd,
     );
-    energyOverride = await gateway.readDailyActiveEnergyTotal(
+    distanceOverride = distanceResult.numericValue;
+
+    final energyResult = await gateway.aggregateActiveEnergy(
       startUtc: dayStart,
       endUtc: dayEnd,
     );
+    energyOverride = energyResult.numericValue;
+
+    final exerciseResult = await gateway.aggregateExerciseDuration(
+      startUtc: dayStart,
+      endUtc: dayEnd,
+    );
+    exerciseOverride = exerciseResult.numericValue;
   }
 
   return aggregation.summarizeDay(
@@ -86,5 +100,93 @@ Future<DailyHealthSummary> buildDailySummary({
     stepsOverride: stepsOverride,
     distanceMetersOverride: distanceOverride,
     activeEnergyKcalOverride: energyOverride,
+    exerciseMinutesOverride: exerciseOverride,
   );
+}
+
+/// Re-checks verified permission groups via [gateway.hasPermissions].
+///
+/// Used on Android refresh (and fake verified mode) to detect mid-session
+/// revocations. iOS / unverified fake mode returns [current] unchanged when
+/// `hasPermissions` is `null`.
+Future<HealthPermissionState> recheckPermissions({
+  required PlatformHealthGateway gateway,
+  required HealthPermissionState current,
+  required bool shouldRecheck,
+}) async {
+  if (!shouldRecheck) return current;
+
+  final configuredGroups = current.dispositions.keys.toSet();
+  if (configuredGroups.isEmpty) return current;
+
+  final updates = <HealthMetricGroup, HealthPermissionDisposition>{};
+  for (final group in configuredGroups) {
+    final previous = current.dispositionOf(group);
+    if (previous == HealthPermissionDisposition.notRequested ||
+        previous == HealthPermissionDisposition.requestCancelled ||
+        previous == HealthPermissionDisposition.requestFailed ||
+        previous == HealthPermissionDisposition.unavailable) {
+      continue;
+    }
+
+    final hasGroup = await gateway.hasPermissions({group});
+    if (hasGroup == null) continue;
+
+    if (hasGroup) {
+      updates[group] = HealthPermissionDisposition.grantedVerified;
+    } else {
+      updates[group] = HealthPermissionDisposition.deniedVerified;
+    }
+  }
+
+  if (updates.isEmpty) return current;
+  return current.merging(updates);
+}
+
+/// Derives connection [IntegrationConnectionStatus] after a permission update.
+IntegrationConnectionStatus connectionStatusFor(
+  HealthPermissionState permissionState,
+) {
+  if (permissionState.hasAnyReadable) {
+    final allRequestedReadable = permissionState.dispositions.entries
+        .where(
+          (e) =>
+              e.value != HealthPermissionDisposition.notRequested &&
+              e.value != HealthPermissionDisposition.unavailable,
+        )
+        .every((e) => permissionState.isReadableForAggregation(e.key));
+    return allRequestedReadable
+        ? IntegrationConnectionStatus.connected
+        : IntegrationConnectionStatus.partiallyConnected;
+  }
+  if (permissionState.hasCancelledDispositions ||
+      permissionState.hasFailedDispositions) {
+    return IntegrationConnectionStatus.notConnected;
+  }
+  return IntegrationConnectionStatus.error;
+}
+
+/// Clears in-memory summary cache when any group was revoked.
+void clearCacheForRevokedGroups({
+  required Map<LocalDate, DailyHealthSummary> cache,
+  required HealthPermissionState before,
+  required HealthPermissionState after,
+}) {
+  final revokedGroups = <HealthMetricGroup>{};
+  for (final group in before.dispositions.keys) {
+    if (before.isReadableForAggregation(group) &&
+        !after.isReadableForAggregation(group)) {
+      revokedGroups.add(group);
+    }
+  }
+  if (revokedGroups.isEmpty) return;
+  cache.clear();
+}
+
+/// Whether this gateway mode supports verified permission recheck on refresh.
+bool gatewaySupportsPermissionRecheck(PlatformHealthGateway gateway) {
+  if (gateway is FakePlatformHealthGateway) {
+    return !gateway.treatRequestsAsUnverified;
+  }
+  return true;
 }

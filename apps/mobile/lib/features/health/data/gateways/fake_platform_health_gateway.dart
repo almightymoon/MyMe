@@ -1,6 +1,7 @@
 import '../../../../core/integrations/domain/integration_availability.dart';
 import '../../../../core/integrations/domain/integration_error.dart';
 import '../../../../core/integrations/domain/integration_provider.dart';
+import '../../domain/entities/health_aggregate_result.dart';
 import '../../domain/entities/health_metric_type.dart';
 import '../../domain/entities/health_permission_state.dart';
 import '../../domain/entities/health_workout.dart';
@@ -28,6 +29,10 @@ class FakePlatformHealthGateway implements PlatformHealthGateway {
   /// [HealthPermissionDisposition.requestCompletedUnverified] (HealthKit-
   /// style) instead of verified grant/deny.
   bool treatRequestsAsUnverified;
+
+  /// When set, the next [requestPermissions] call returns this outcome
+  /// instead of the default verified grant/deny flow.
+  FakePermissionRequestOutcome? nextRequestOutcome;
 
   /// Groups the next [requestPermissions] call should grant. Defaults to
   /// "grant everything requested" — set to a subset to simulate a partial
@@ -64,6 +69,11 @@ class FakePlatformHealthGateway implements PlatformHealthGateway {
     _grantedGroups.removeAll(groups);
   }
 
+  /// Simulates mid-session permission revocation for refresh-recheck tests.
+  void simulatePermissionRevocation(Set<HealthMetricGroup> groups) {
+    revokeGroups(groups);
+  }
+
   Set<HealthMetricGroup> get grantedGroups => Set.unmodifiable(_grantedGroups);
 
   @override
@@ -80,6 +90,20 @@ class FakePlatformHealthGateway implements PlatformHealthGateway {
   requestPermissions(Set<HealthMetricGroup> groups) async {
     if (_availability != IntegrationAvailability.available) {
       throw IntegrationError.unavailable(IntegrationProvider.health);
+    }
+
+    final outcome = nextRequestOutcome;
+    nextRequestOutcome = null;
+
+    if (outcome == FakePermissionRequestOutcome.cancelled) {
+      return {
+        for (final g in groups) g: HealthPermissionDisposition.requestCancelled,
+      };
+    }
+    if (outcome == FakePermissionRequestOutcome.failed) {
+      return {
+        for (final g in groups) g: HealthPermissionDisposition.requestFailed,
+      };
     }
 
     if (treatRequestsAsUnverified) {
@@ -139,15 +163,8 @@ class FakePlatformHealthGateway implements PlatformHealthGateway {
     required DateTime startUtc,
     required DateTime endUtc,
   }) async {
-    if (!_grantedGroups.contains(HealthMetricGroup.activity)) return null;
-    final samples = await readSamples(
-      metricTypes: {HealthMetricType.steps},
-      startUtc: startUtc,
-      endUtc: endUtc,
-    );
-    final deduped = _aggregation.dedupeSamples(samples);
-    if (deduped.isEmpty) return null;
-    return deduped.fold<double>(0, (acc, s) => acc + s.value).round();
+    final result = await aggregateSteps(startUtc: startUtc, endUtc: endUtc);
+    return result.intValue;
   }
 
   @override
@@ -155,15 +172,8 @@ class FakePlatformHealthGateway implements PlatformHealthGateway {
     required DateTime startUtc,
     required DateTime endUtc,
   }) async {
-    if (!_grantedGroups.contains(HealthMetricGroup.activity)) return null;
-    final samples = await readSamples(
-      metricTypes: {HealthMetricType.distanceWalkingRunning},
-      startUtc: startUtc,
-      endUtc: endUtc,
-    );
-    final deduped = _aggregation.dedupeSamples(samples);
-    if (deduped.isEmpty) return null;
-    return deduped.fold<double>(0, (acc, s) => acc + s.value);
+    final result = await aggregateDistance(startUtc: startUtc, endUtc: endUtc);
+    return result.numericValue;
   }
 
   @override
@@ -171,14 +181,99 @@ class FakePlatformHealthGateway implements PlatformHealthGateway {
     required DateTime startUtc,
     required DateTime endUtc,
   }) async {
-    if (!_grantedGroups.contains(HealthMetricGroup.activity)) return null;
+    final result = await aggregateActiveEnergy(
+      startUtc: startUtc,
+      endUtc: endUtc,
+    );
+    return result.numericValue;
+  }
+
+  @override
+  Future<HealthAggregateResult> aggregateSteps({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async {
+    return _aggregate(
+      metricType: HealthMetricType.steps,
+      startUtc: startUtc,
+      endUtc: endUtc,
+      strategy: treatRequestsAsUnverified
+          ? HealthAggregateStrategy.rawDeduplicatedFallback
+          : HealthAggregateStrategy.platformTotal,
+    );
+  }
+
+  @override
+  Future<HealthAggregateResult> aggregateDistance({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async {
+    return _aggregate(
+      metricType: HealthMetricType.distanceWalkingRunning,
+      startUtc: startUtc,
+      endUtc: endUtc,
+      strategy: HealthAggregateStrategy.rawDeduplicatedFallback,
+    );
+  }
+
+  @override
+  Future<HealthAggregateResult> aggregateActiveEnergy({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async {
+    return _aggregate(
+      metricType: HealthMetricType.activeEnergyBurned,
+      startUtc: startUtc,
+      endUtc: endUtc,
+      strategy: HealthAggregateStrategy.rawDeduplicatedFallback,
+    );
+  }
+
+  @override
+  Future<HealthAggregateResult> aggregateExerciseDuration({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async {
+    return _aggregate(
+      metricType: HealthMetricType.exerciseMinutes,
+      startUtc: startUtc,
+      endUtc: endUtc,
+      strategy: HealthAggregateStrategy.rawDeduplicatedFallback,
+    );
+  }
+
+  Future<HealthAggregateResult> _aggregate({
+    required HealthMetricType metricType,
+    required DateTime startUtc,
+    required DateTime endUtc,
+    required HealthAggregateStrategy strategy,
+  }) async {
+    if (!_grantedGroups.contains(HealthMetricGroup.activity)) {
+      return HealthAggregateResult(
+        metricType: metricType,
+        strategy: HealthAggregateStrategy.unavailable,
+      );
+    }
     final samples = await readSamples(
-      metricTypes: {HealthMetricType.activeEnergyBurned},
+      metricTypes: {metricType},
       startUtc: startUtc,
       endUtc: endUtc,
     );
     final deduped = _aggregation.dedupeSamples(samples);
-    if (deduped.isEmpty) return null;
-    return deduped.fold<double>(0, (acc, s) => acc + s.value);
+    if (deduped.isEmpty) {
+      return HealthAggregateResult(
+        metricType: metricType,
+        strategy: HealthAggregateStrategy.unavailable,
+      );
+    }
+    final total = deduped.fold<double>(0, (acc, s) => acc + s.value);
+    return HealthAggregateResult(
+      metricType: metricType,
+      strategy: strategy,
+      numericValue: total,
+    );
   }
 }
+
+/// Outcome override for the next fake permission request (iOS-style tests).
+enum FakePermissionRequestOutcome { cancelled, failed }

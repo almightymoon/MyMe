@@ -84,31 +84,28 @@ void main() {
   });
 
   group('HealthPermissionState schema migration', () {
-    test('migrates v1 granted/denied JSON to verified dispositions', () {
-      final state = HealthPermissionState.fromJson({
+    test('migrates v1 granted/denied JSON with platform awareness', () {
+      final ios = HealthPermissionState.fromJson({
         'grantedGroups': ['activity', 'sleep'],
         'deniedGroups': ['heartRate'],
-      });
+      }, platform: 'ios');
 
-      expect(state.schemaVersion, HealthPermissionState.currentSchemaVersion);
+      expect(ios.schemaVersion, HealthPermissionState.currentSchemaVersion);
       expect(
-        state.dispositionOf(HealthMetricGroup.activity),
-        HealthPermissionDisposition.grantedVerified,
+        ios.dispositionOf(HealthMetricGroup.activity),
+        HealthPermissionDisposition.requestCompletedUnverified,
       );
       expect(
-        state.dispositionOf(HealthMetricGroup.sleep),
-        HealthPermissionDisposition.grantedVerified,
+        ios.dispositionOf(HealthMetricGroup.sleep),
+        HealthPermissionDisposition.requestCompletedUnverified,
       );
       expect(
-        state.dispositionOf(HealthMetricGroup.heartRate),
+        ios.dispositionOf(HealthMetricGroup.heartRate),
         HealthPermissionDisposition.deniedVerified,
       );
+      expect(ios.isReadableForAggregation(HealthMetricGroup.activity), isTrue);
       expect(
-        state.isReadableForAggregation(HealthMetricGroup.activity),
-        isTrue,
-      );
-      expect(
-        state.isReadableForAggregation(HealthMetricGroup.heartRate),
+        ios.isReadableForAggregation(HealthMetricGroup.heartRate),
         isFalse,
       );
     });

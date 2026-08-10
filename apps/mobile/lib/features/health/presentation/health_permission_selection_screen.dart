@@ -86,10 +86,26 @@ class _HealthPermissionSelectionScreenState
         if (connection.recoveryNeeded) ...[
           Text(
             key: const Key('health_prefs_recovery'),
-            'Saved Health connection settings looked damaged. Reconnect to '
-            'restore access — MeMy did not assume you were disconnected.',
+            connection.backupAvailable
+                ? 'Saved Health connection settings looked damaged. '
+                      'Restore from backup or reconnect — MeMy did not assume '
+                      'you were disconnected.'
+                : 'Saved Health connection settings looked damaged. Reconnect '
+                      'to restore access — MeMy did not assume you were '
+                      'disconnected.',
             style: AppTextStyles.bodyMedium(color: AppColors.emberDark),
           ),
+          if (connection.backupAvailable) ...[
+            const SizedBox(height: AppSpacing.sm),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                key: const Key('health_restore_backup_button'),
+                onPressed: _isRequesting ? null : _restoreBackup,
+                child: const Text('Restore from backup'),
+              ),
+            ),
+          ],
           const SizedBox(height: AppSpacing.md),
         ],
         Text(
@@ -103,7 +119,8 @@ class _HealthPermissionSelectionScreenState
             key: Key('health_group_${group.name}'),
             group: group,
             isSelected: selected.contains(group),
-            isDenied: connection.permissionState.deniedGroups.contains(group),
+            isDenied: _isDeniedGroup(connection.permissionState, group),
+            disposition: connection.permissionState.dispositionOf(group),
             onChanged: (value) {
               setState(() {
                 if (value) {
@@ -190,6 +207,13 @@ class _HealthPermissionSelectionScreenState
   }
 
   String _successMessage(HealthPermissionState state, int requestedCount) {
+    if (state.hasFailedDispositions) {
+      return "Couldn't complete the Health permission request. Try again.";
+    }
+    if (state.hasCancelledDispositions) {
+      return 'Permission request was cancelled. Nothing was changed — tap '
+          'Grant access when you are ready.';
+    }
     if (state.hasUnverifiedDispositions) {
       return "Apple Health doesn't tell apps which categories you approved. "
           'MeMy will show data for anything you allowed — check Settings → '
@@ -216,6 +240,43 @@ class _HealthPermissionSelectionScreenState
       if (mounted) setState(() => _isRequesting = false);
     }
   }
+
+  Future<void> _restoreBackup() async {
+    setState(() => _isRequesting = true);
+    try {
+      await ref.read(healthConnectionControllerProvider).restoreBackup();
+      if (!mounted) return;
+      setState(() {
+        _resultMessage = 'Restored your last saved Health connection settings.';
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _resultMessage = "Couldn't restore backup. Try reconnecting instead.";
+      });
+    } finally {
+      if (mounted) setState(() => _isRequesting = false);
+    }
+  }
+}
+
+bool _isDeniedGroup(HealthPermissionState state, HealthMetricGroup group) {
+  final d = state.dispositionOf(group);
+  return d == HealthPermissionDisposition.deniedVerified ||
+      d == HealthPermissionDisposition.needsSystemSettings;
+}
+
+String? _dispositionSubtitle(HealthPermissionDisposition disposition) {
+  return switch (disposition) {
+    HealthPermissionDisposition.deniedVerified => 'Previously declined',
+    HealthPermissionDisposition.needsSystemSettings =>
+      'Change in system Health settings',
+    HealthPermissionDisposition.requestCancelled => 'Request cancelled',
+    HealthPermissionDisposition.requestFailed => 'Request failed',
+    HealthPermissionDisposition.requestCompletedUnverified =>
+      'Access unverified — data may still appear',
+    _ => null,
+  };
 }
 
 class _GroupTile extends StatelessWidget {
@@ -224,12 +285,14 @@ class _GroupTile extends StatelessWidget {
     required this.group,
     required this.isSelected,
     required this.isDenied,
+    required this.disposition,
     required this.onChanged,
   });
 
   final HealthMetricGroup group;
   final bool isSelected;
   final bool isDenied;
+  final HealthPermissionDisposition disposition;
   final ValueChanged<bool> onChanged;
 
   @override
@@ -252,10 +315,14 @@ class _GroupTile extends StatelessWidget {
           group.label,
           style: AppTextStyles.bodyMedium(color: AppColors.primaryText),
         ),
-        subtitle: isDenied
+        subtitle: _dispositionSubtitle(disposition) != null
             ? Text(
-                'Previously declined',
-                style: AppTextStyles.labelSmall(color: AppColors.faintText),
+                _dispositionSubtitle(disposition)!,
+                style: AppTextStyles.labelSmall(
+                  color: isDenied
+                      ? AppColors.faintText
+                      : AppColors.secondaryText,
+                ),
               )
             : null,
       ),

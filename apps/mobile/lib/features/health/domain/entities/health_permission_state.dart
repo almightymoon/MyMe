@@ -1,4 +1,5 @@
 import 'health_metric_type.dart';
+import '../services/health_permission_migration_service.dart';
 
 /// Per-group read-permission outcome for the Health integration.
 ///
@@ -12,6 +13,12 @@ enum HealthPermissionDisposition {
   /// Permission sheet completed, but the OS does not disclose READ grants
   /// (HealthKit). MeMy may attempt reads; empty results are ambiguous.
   requestCompletedUnverified,
+
+  /// User dismissed the permission sheet without completing it (HealthKit).
+  requestCancelled,
+
+  /// Permission request failed due to a platform/plugin error.
+  requestFailed,
 
   /// Platform confirmed read access (Health Connect / fake verified mode).
   grantedVerified,
@@ -94,6 +101,14 @@ class HealthPermissionState {
     (d) => d == HealthPermissionDisposition.requestCompletedUnverified,
   );
 
+  bool get hasCancelledDispositions => dispositions.values.any(
+    (d) => d == HealthPermissionDisposition.requestCancelled,
+  );
+
+  bool get hasFailedDispositions => dispositions.values.any(
+    (d) => d == HealthPermissionDisposition.requestFailed,
+  );
+
   int get verifiedGrantedCount => grantedGroups.length;
 
   HealthPermissionState copyWith({
@@ -116,7 +131,10 @@ class HealthPermissionState {
     );
   }
 
-  factory HealthPermissionState.fromJson(Map<String, dynamic>? json) {
+  factory HealthPermissionState.fromJson(
+    Map<String, dynamic>? json, {
+    String? platform,
+  }) {
     if (json == null) return const HealthPermissionState();
     final version = _readSchemaVersion(json);
 
@@ -127,19 +145,10 @@ class HealthPermissionState {
       );
     }
 
-    // Schema v1: grantedGroups / deniedGroups → verified dispositions.
-    final granted = _parseGroups(json['grantedGroups']);
-    final denied = _parseGroups(json['deniedGroups']);
-    final migrated = <HealthMetricGroup, HealthPermissionDisposition>{};
-    for (final g in granted) {
-      migrated[g] = HealthPermissionDisposition.grantedVerified;
-    }
-    for (final g in denied) {
-      migrated[g] = HealthPermissionDisposition.deniedVerified;
-    }
-    return HealthPermissionState(
-      dispositions: migrated,
-      schemaVersion: currentSchemaVersion,
+    // Schema v1: platform-aware migration (never grantedVerified on iOS).
+    return const HealthPermissionMigrationService().migrateLegacy(
+      json: json,
+      platform: platform ?? 'unknown',
     );
   }
 
@@ -174,16 +183,6 @@ class HealthPermissionState {
         result[group] = disposition;
       }
     });
-    return result;
-  }
-
-  static Set<HealthMetricGroup> _parseGroups(Object? raw) {
-    if (raw is! List) return const {};
-    final result = <HealthMetricGroup>{};
-    for (final item in raw) {
-      final group = _groupNamed(item?.toString());
-      if (group != null) result.add(group);
-    }
     return result;
   }
 

@@ -46,12 +46,15 @@ class HealthOverviewScreen extends ConsumerWidget {
       trailing: MemyIconPlain(
         icon: Icons.refresh_rounded,
         showBadge: false,
-        onPressed: () {
+        onPressed: () async {
+          await ref.read(healthConnectionControllerProvider).refresh();
           ref.invalidate(dailyHealthSummaryProvider);
           ref.invalidate(healthConnectionProvider);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Refreshing Health data…')),
-          );
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Refreshing Health data…')),
+            );
+          }
         },
       ),
       child: connectionAsync.when(
@@ -190,6 +193,26 @@ class _ConnectedContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (connection.permissionState.hasUnverifiedDispositions)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+            child: Text(
+              key: const Key('health_unverified_notice'),
+              'Some categories have unverified access — Apple Health does not '
+              'confirm which reads were approved.',
+              style: AppTextStyles.bodySmall(color: AppColors.secondaryText),
+            ),
+          ),
+        if (connection.permissionState.deniedGroups.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+            child: Text(
+              key: const Key('health_revoked_notice'),
+              'Some categories were declined or revoked — open Manage access to '
+              'change permissions.',
+              style: AppTextStyles.bodySmall(color: AppColors.secondaryText),
+            ),
+          ),
         Row(
           children: [
             Expanded(

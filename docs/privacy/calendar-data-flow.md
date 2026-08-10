@@ -17,6 +17,14 @@ CalendarSyncService ⇄ Drift local DB (events, links, conflicts, config)
 
 Personal schedule metadata (titles, times, locations). Treated as sensitive in logs (redacted).
 
+## Sync safety
+
+- Rolling window (default past 30 / future 365 days) — not frozen connect-time anchors
+- Missing events require **complete** read batches + multi-observation presence state
+- Partial/unknown batches and permission failures never delete
+- Push uses durable outbox; unknown create outcomes do not auto-retry
+- Readable vs writable calendars are configured separately
+
 ## Cloud OAuth?
 
 **Not in this phase.** No Google/Outlook tokens.

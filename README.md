@@ -158,7 +158,12 @@ Real `.env` / `.env.test` files stay gitignored; only `.env.example` and `.env.t
 GitHub Actions:
 
 - `.github/workflows/mobile-ci.yml` — format, analyze, test, debug APK
+- `.github/workflows/mobile-ios-ci.yml` — format, analyze, test, iOS simulator build (fake gateways)
 - `.github/workflows/api-ci.yml` — format:check, lint:check, unit, Prisma, build, E2E on `memy_test`
+
+Device Calendar + HealthKit/Health Connect integrations use fake gateways in CI.
+Physical-device matrices: `docs/quality/calendar-device-test-matrix.md`,
+`docs/quality/health-device-test-matrix.md` (unexecuted until hardware QA).
 
 ### Financial progress
 

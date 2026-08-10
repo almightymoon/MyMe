@@ -35,6 +35,8 @@ Back behavior: placeholder / feature routes use `context.pop()` when possible, o
 | `/health/permissions` | Connect flow | `HealthPermissionSelectionScreen` | Live — granular groups | Pop |
 | `/health/workouts` | Health overview | `HealthWorkoutsScreen` | Live | Pop |
 | `/settings/connections` | Settings | `ConnectedAppsScreen` | Live — Calendar + Health + planned | Pop |
+| `/settings/connections/diagnostics` | Connected Apps | `IntegrationDiagnosticsScreen` | Live — redacted ops metadata | Pop |
+| `/settings/connections/lab` | Connected Apps (debug) | `IntegrationLabScreen` | Debug only | Pop |
 | `/exercise` | More → Exercise | `ExercisePlaceholderScreen` | Explicit Coming Soon placeholder | Pop → More (or Today) |
 | `/wardrobe` | More → Wardrobe | `WardrobePlaceholderScreen` | Explicit Coming Soon placeholder | Pop → More (or Today) |
 | `/settings` | More → Settings | `SettingsScreen` | Explicit Coming Soon placeholder | Pop → More (or Today) |

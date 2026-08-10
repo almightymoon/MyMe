@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/config/release_capabilities.dart';
 import '../../../../core/data/fake_repository_config.dart';
 import '../../../calendar/application/providers/calendar_providers.dart';
 import '../../../calendar/data/mappers/schedule_item_mapper.dart';
@@ -10,6 +11,7 @@ import '../../../goals/domain/entities/goal_enums.dart';
 import '../../../goals/domain/entities/goal_summary.dart';
 import '../../../habits/application/providers/habit_providers.dart';
 import '../../../habits/domain/entities/habit_progress.dart';
+import '../../../user/application/providers/user_providers.dart';
 import '../../data/repositories/fake_today_repository.dart';
 import '../../domain/entities/today_summary.dart';
 import '../../domain/repositories/today_repository.dart';
@@ -18,10 +20,20 @@ final todayRepositoryProvider = Provider<TodayRepository>((ref) {
   return FakeTodayRepository(config: ref.watch(fakeRepositoryConfigProvider));
 });
 
-/// Base Today payload without goals/finance/habits/calendar (fake async
-/// section — focus, greeting, coach recommendation).
+/// Base Today payload without goals/finance/habits/calendar.
+///
+/// Demo auth may still use the scripted focus card. Production / local
+/// onboarding never invents a greeting or daily focus from seed data.
 final todayBaseProvider = FutureProvider.autoDispose<TodaySummary>((ref) async {
-  return ref.watch(todayRepositoryProvider).fetchTodaySummary();
+  final capabilities = ref.watch(releaseCapabilitiesProvider);
+  final greetingName = ref.watch(displayNameProvider);
+
+  if (!capabilities.demoAuth) {
+    return TodaySummary.empty(greetingName: greetingName);
+  }
+
+  final seeded = await ref.watch(todayRepositoryProvider).fetchTodaySummary();
+  return seeded.copyWith(greetingName: greetingName);
 });
 
 /// Live Habit rows for Today. Habit failures surface here without wiping
@@ -90,13 +102,19 @@ final todaySummaryProvider = Provider.autoDispose<AsyncValue<TodaySummary>>((
   final habitItems = ref.watch(todayHabitsProvider).valueOrNull ?? const [];
   final schedule =
       ref.watch(todayCalendarEventsProvider).valueOrNull ?? const [];
+  final capabilities = ref.watch(releaseCapabilitiesProvider);
 
   return AsyncValue.data(
-    base.copyWith(
-      goals: activeSummaries,
-      finance: finance,
-      habits: habitItems,
+    TodaySummary(
+      greetingName: base.greetingName,
+      focus: capabilities.demoAuth ? base.focus : null,
       schedule: schedule,
+      goals: activeSummaries,
+      habits: habitItems,
+      finance: finance,
+      coachRecommendation: capabilities.coachPreview
+          ? base.coachRecommendation
+          : null,
     ),
   );
 });

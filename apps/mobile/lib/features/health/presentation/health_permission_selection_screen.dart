@@ -299,32 +299,37 @@ class _GroupTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppRadii.chipRadius,
         boxShadow: AppColors.softShadow,
       ),
-      child: CheckboxListTile(
-        value: isSelected,
-        onChanged: (value) => onChanged(value ?? false),
-        activeColor: AppColors.ember,
-        contentPadding: EdgeInsets.zero,
-        controlAffinity: ListTileControlAffinity.leading,
-        title: Text(
-          group.label,
-          style: AppTextStyles.bodyMedium(color: AppColors.primaryText),
+      child: Material(
+        type: MaterialType.transparency,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          child: CheckboxListTile(
+            value: isSelected,
+            onChanged: (value) => onChanged(value ?? false),
+            activeColor: AppColors.ember,
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            title: Text(
+              group.label,
+              style: AppTextStyles.bodyMedium(color: AppColors.primaryText),
+            ),
+            subtitle: _dispositionSubtitle(disposition) != null
+                ? Text(
+                    _dispositionSubtitle(disposition)!,
+                    style: AppTextStyles.labelSmall(
+                      color: isDenied
+                          ? AppColors.faintText
+                          : AppColors.secondaryText,
+                    ),
+                  )
+                : null,
+          ),
         ),
-        subtitle: _dispositionSubtitle(disposition) != null
-            ? Text(
-                _dispositionSubtitle(disposition)!,
-                style: AppTextStyles.labelSmall(
-                  color: isDenied
-                      ? AppColors.faintText
-                      : AppColors.secondaryText,
-                ),
-              )
-            : null,
       ),
     );
   }

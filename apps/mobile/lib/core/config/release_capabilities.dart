@@ -32,6 +32,7 @@ class ReleaseCapabilities {
     required this.body,
     required this.nutritionQuickAdd,
     required this.plannedSidebarItems,
+    required this.exerciseSessions,
   });
 
   factory ReleaseCapabilities.fromEnvironment() {
@@ -63,6 +64,8 @@ class ReleaseCapabilities {
       body: !isProduction,
       nutritionQuickAdd: !isProduction,
       plannedSidebarItems: showPlanned,
+      // No live workout-session tracker in v1 — hide Start Workout in prod.
+      exerciseSessions: !isProduction,
     );
   }
 
@@ -90,6 +93,7 @@ class ReleaseCapabilities {
       body: false,
       nutritionQuickAdd: false,
       plannedSidebarItems: false,
+      exerciseSessions: false,
     );
   }
 
@@ -123,6 +127,9 @@ class ReleaseCapabilities {
 
   /// Whether "Planned" placeholder rows/badges are shown at all.
   final bool plannedSidebarItems;
+
+  /// Live workout-session flow. Off in production until a real tracker ships.
+  final bool exerciseSessions;
 
   bool get isProduction => environment == AppEnvironment.production;
 

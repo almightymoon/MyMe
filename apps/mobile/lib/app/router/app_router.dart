@@ -121,6 +121,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           path == RoutePaths.nutritionComingSoon) {
         return RoutePaths.today;
       }
+      if (!capabilities.notifications && path == RoutePaths.notifications) {
+        return RoutePaths.settings;
+      }
+      if (!capabilities.exerciseSessions && path == RoutePaths.workoutSession) {
+        return RoutePaths.exercise;
+      }
       if (demoAuth || onboardingComplete()) return null;
       if (path == RoutePaths.onboarding) return null;
       if (_onboardingEscapes.any(

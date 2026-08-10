@@ -7,22 +7,28 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
+import '../../../core/config/release_capabilities.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/domain/services/money_format.dart';
 import '../../../core/widgets/memy_card.dart';
 import '../../../core/widgets/memy_chrome.dart';
+import '../../calendar/domain/entities/schedule_item.dart';
 import '../../finance/application/providers/finance_providers.dart';
 import '../../goals/application/providers/goal_providers.dart';
 import '../../goals/domain/entities/goal.dart';
 import '../../goals/domain/entities/goal_enums.dart';
 import '../../habits/application/providers/habit_providers.dart';
+import '../../health/application/providers/health_providers.dart';
+import '../../health/domain/entities/daily_health_summary.dart';
 import '../../shell/presentation/memy_bottom_navigation.dart';
+import '../../today/application/providers/today_providers.dart';
 
 class PlanScreen extends ConsumerWidget {
   const PlanScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final capabilities = ref.watch(releaseCapabilitiesProvider);
     final goalsAsync = ref.watch(goalsProvider);
     final goals = goalsAsync.asData?.value ?? const <Goal>[];
     final activeGoals = goals
@@ -38,6 +44,8 @@ class PlanScreen extends ConsumerWidget {
 
     final financeAsync = ref.watch(todayFinanceSummaryProvider);
     final habitsOverview = ref.watch(habitsOverviewProvider).valueOrNull;
+    final healthAsync = ref.watch(todayHealthSummaryProvider);
+    final calendarAsync = ref.watch(todayCalendarEventsProvider);
 
     final modules = <_DashModule>[
       _DashModule(
@@ -95,62 +103,57 @@ class PlanScreen extends ConsumerWidget {
         title: 'Health',
         imageAsset: 'assets/images/modules/heart.png',
         path: RoutePaths.health,
-        builder: (context) => const _StaticModuleCopy(
-          stat: 'Heart rate',
-          big: '95 bpm',
-          sub: '◆ Stable',
-          subColor: AppColors.finance,
-        ),
+        builder: (context) =>
+            _HealthModuleCopy(summary: healthAsync.valueOrNull),
       ),
       _DashModule(
         keyName: 'dashboard_module_calendar',
         title: 'Calendar',
         imageAsset: 'assets/images/modules/mod-calendar.png',
         path: RoutePaths.calendar,
-        builder: (context) => const _StaticModuleCopy(
-          stat: 'Next up',
-          big: 'Team Meeting',
-          sub: '10:00 AM · Today',
-          bigSmall: true,
-        ),
+        builder: (context) =>
+            _CalendarModuleCopy(events: calendarAsync.valueOrNull),
       ),
-      _DashModule(
-        keyName: 'dashboard_module_wardrobe',
-        title: 'Wardrobe',
-        imageAsset: 'assets/images/modules/mod-wardrobe.png',
-        path: RoutePaths.wardrobe,
-        builder: (context) => const _StaticModuleCopy(
-          stat: 'Today',
-          big: 'Business Casual',
-          sub: '● Recommended',
-          subColor: AppColors.ember,
-          bigSmall: true,
+      if (capabilities.wardrobe)
+        _DashModule(
+          keyName: 'dashboard_module_wardrobe',
+          title: 'Wardrobe',
+          imageAsset: 'assets/images/modules/mod-wardrobe.png',
+          path: RoutePaths.wardrobe,
+          builder: (context) => const _StaticModuleCopy(
+            stat: 'Preview',
+            big: 'Not shipping',
+            sub: 'Internal only',
+            subColor: AppColors.ember,
+            bigSmall: true,
+          ),
         ),
-      ),
-      _DashModule(
-        keyName: 'dashboard_module_nutrition',
-        title: 'Nutrition',
-        imageAsset: 'assets/images/modules/mod-nutrition.png',
-        path: RoutePaths.nutritionComingSoon,
-        builder: (context) => const _StaticModuleCopy(
-          stat: 'Today',
-          big: '1,650',
-          sub: 'kcal · 60% of goal',
-          subColor: AppColors.ember,
+      if (capabilities.nutritionQuickAdd)
+        _DashModule(
+          keyName: 'dashboard_module_nutrition',
+          title: 'Nutrition',
+          imageAsset: 'assets/images/modules/mod-nutrition.png',
+          path: RoutePaths.nutritionComingSoon,
+          builder: (context) => const _StaticModuleCopy(
+            stat: 'Preview',
+            big: 'Coming later',
+            sub: 'Not in v1',
+            subColor: AppColors.ember,
+          ),
         ),
-      ),
-      _DashModule(
-        keyName: 'dashboard_module_body',
-        title: 'Body',
-        imageAsset: 'assets/images/modules/body.png',
-        path: RoutePaths.body,
-        builder: (context) => const _StaticModuleCopy(
-          stat: 'BMI',
-          big: '22.4',
-          sub: 'Normal',
-          subColor: AppColors.finance,
+      if (capabilities.body)
+        _DashModule(
+          keyName: 'dashboard_module_body',
+          title: 'Body',
+          imageAsset: 'assets/images/modules/body.png',
+          path: RoutePaths.body,
+          builder: (context) => const _StaticModuleCopy(
+            stat: 'Preview',
+            big: 'Demo only',
+            sub: 'Not in v1',
+            subColor: AppColors.finance,
+          ),
         ),
-      ),
       _DashModule(
         keyName: 'dashboard_module_insights',
         title: 'Insights',
@@ -197,8 +200,10 @@ class PlanScreen extends ConsumerWidget {
                 );
               },
             ),
-            const SizedBox(height: AppSpacing.md),
-            const _CoachStrip(),
+            if (capabilities.coachPreview) ...[
+              const SizedBox(height: AppSpacing.md),
+              const _CoachStrip(),
+            ],
           ],
         ),
       ),
@@ -443,6 +448,82 @@ class _HabitsModuleCopy extends StatelessWidget {
   }
 }
 
+class _HealthModuleCopy extends StatelessWidget {
+  const _HealthModuleCopy({required this.summary});
+
+  final DailyHealthSummary? summary;
+
+  @override
+  Widget build(BuildContext context) {
+    if (summary == null) {
+      return const _StaticModuleCopy(stat: 'Health', big: '—', sub: 'Loading…');
+    }
+    if (summary!.steps != null) {
+      return _StaticModuleCopy(
+        stat: 'Steps',
+        big: '${summary!.steps}',
+        sub: 'Today',
+        subColor: AppColors.finance,
+      );
+    }
+    if (summary!.latestHeartRateBpm != null) {
+      return _StaticModuleCopy(
+        stat: 'Heart rate',
+        big: '${summary!.latestHeartRateBpm!.round()} bpm',
+        sub: 'Latest reading',
+        subColor: AppColors.finance,
+      );
+    }
+    if (summary!.hasAnyData) {
+      return const _StaticModuleCopy(
+        stat: 'Health',
+        big: 'Available',
+        sub: 'Open for details',
+        subColor: AppColors.finance,
+      );
+    }
+    return const _StaticModuleCopy(
+      stat: 'Health',
+      big: 'No data',
+      sub: 'Connect or refresh',
+      bigSmall: true,
+    );
+  }
+}
+
+class _CalendarModuleCopy extends StatelessWidget {
+  const _CalendarModuleCopy({required this.events});
+
+  final List<ScheduleItem>? events;
+
+  @override
+  Widget build(BuildContext context) {
+    if (events == null) {
+      return const _StaticModuleCopy(
+        stat: 'Next up',
+        big: '—',
+        sub: 'Loading…',
+        bigSmall: true,
+      );
+    }
+    if (events!.isEmpty) {
+      return const _StaticModuleCopy(
+        stat: 'Next up',
+        big: 'No events',
+        sub: 'Today',
+        bigSmall: true,
+      );
+    }
+    final next = events!.first;
+    return _StaticModuleCopy(
+      stat: 'Next up',
+      big: next.title,
+      sub: '${next.timeLabel} · Today',
+      bigSmall: true,
+    );
+  }
+}
+
 class _StaticModuleCopy extends StatelessWidget {
   const _StaticModuleCopy({
     required this.stat,
@@ -518,7 +599,7 @@ class _CoachStrip extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "You're 8% ahead of your monthly savings goal. Great job!",
+                  AppStrings.liveAiNotConnected,
                   style: AppTextStyles.bodySmall().copyWith(
                     fontWeight: FontWeight.w500,
                     color: AppColors.secondaryText,

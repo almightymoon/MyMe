@@ -122,6 +122,11 @@ class FakeHealthRepository implements HealthRepository {
   }
 
   @override
+  Future<void> clearDerivedCache() async {
+    _cache.clear();
+  }
+
+  @override
   Future<DailyHealthSummary> getDailySummary(
     LocalDate date, {
     bool forceRefresh = false,

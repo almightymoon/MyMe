@@ -32,6 +32,10 @@ abstract class HealthRepository {
   /// Clears connection status, permission grants, and any cached summary.
   Future<void> disconnect();
 
+  /// Clears in-memory derived summaries only. Does not touch connection prefs.
+  /// Idempotent — safe to call when the cache is already empty.
+  Future<void> clearDerivedCache();
+
   /// Aggregated metrics for [date]. Returns a summary with every metric in
   /// [DailyHealthSummary.unavailableMetrics] when not connected/permitted —
   /// never throws for "no permission"/"no data".

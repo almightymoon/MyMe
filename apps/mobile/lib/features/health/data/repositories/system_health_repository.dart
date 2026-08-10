@@ -174,8 +174,14 @@ class SystemHealthRepository implements HealthRepository {
     _cache.clear();
     await prefs.remove(HealthConnectionStorageKeys.primary);
     await prefs.remove(HealthConnectionStorageKeys.backup);
+    await prefs.remove(HealthConnectionStorageKeys.legacy);
     _connection = const HealthConnectionConfig();
     _connectionController.add(_connection!);
+  }
+
+  @override
+  Future<void> clearDerivedCache() async {
+    _cache.clear();
   }
 
   @override

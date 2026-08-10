@@ -89,6 +89,19 @@ class LocalCalendarRepository implements CalendarRepository {
   }
 
   @override
+  Future<List<MemyCalendarEvent>> getAllMeMyOwnedEvents() async {
+    final query = database.select(database.calendarEvents)
+      ..where(
+        (t) =>
+            t.deletedAtUtc.isNull() &
+            t.origin.equals(CalendarEventOrigin.local.name),
+      )
+      ..orderBy([(t) => OrderingTerm.asc(t.startUtc)]);
+    final rows = await query.get();
+    return rows.map(_eventFromRow).toList(growable: false);
+  }
+
+  @override
   Future<MemyCalendarEvent?> getEvent(String id) async {
     final row = await (database.select(
       database.calendarEvents,
@@ -687,11 +700,37 @@ class LocalCalendarRepository implements CalendarRepository {
   /// Clears MeMy's local calendar cache tables.
   ///
   /// Never touches the device calendar provider. When
-  /// [includeMeMyOwnedEvents] is false, MeMy-authored local events are kept.
+  /// [includeMeMyOwnedEvents] is false, only external-origin events and
+  /// their related links are removed — connection config is preserved.
+  /// When true, clears both imported and MeMy-owned events (and related
+  /// sync metadata) but still does **not** wipe [calendarConfigRows]; use
+  /// [resetIntegrationConfig] for that.
   Future<({int events, int links, int conflicts, int ops})> clearLocalCache({
     required bool includeMeMyOwnedEvents,
   }) async {
+    if (includeMeMyOwnedEvents) {
+      final imported = await clearImportedCache();
+      final owned = await clearMeMyLocalRecords();
+      return (
+        events: imported.events + owned.events,
+        links: imported.links + owned.links,
+        conflicts: imported.conflicts + owned.conflicts,
+        ops: imported.ops + owned.ops,
+      );
+    }
+    return clearImportedCache();
+  }
+
+  /// Deletes imported external-origin events and links for those events.
+  /// Preserves MeMy-authored local events and calendar connection config.
+  Future<({int events, int links, int conflicts, int ops})>
+  clearImportedCache() async {
     final eventsBefore = await database.select(database.calendarEvents).get();
+    final externalIds = eventsBefore
+        .where((e) => e.origin == CalendarEventOrigin.external.name)
+        .map((e) => e.id)
+        .toSet();
+
     final linksBefore = await database
         .select(database.calendarEventLinks)
         .get();
@@ -703,20 +742,23 @@ class LocalCalendarRepository implements CalendarRepository {
         .get();
 
     await database.transaction(() async {
-      if (includeMeMyOwnedEvents) {
-        await database.delete(database.calendarEvents).go();
-      } else {
+      await (database.delete(
+        database.calendarEvents,
+      )..where((t) => t.origin.equals(CalendarEventOrigin.external.name))).go();
+      if (externalIds.isNotEmpty) {
         await (database.delete(
-              database.calendarEvents,
-            )..where((t) => t.origin.equals(CalendarEventOrigin.external.name)))
-            .go();
+          database.calendarEventLinks,
+        )..where((t) => t.memyEventId.isIn(externalIds))).go();
+        await (database.delete(
+          database.calendarConflicts,
+        )..where((t) => t.memyEventId.isIn(externalIds))).go();
+        await (database.delete(
+          database.calendarSyncOperations,
+        )..where((t) => t.memyEventId.isIn(externalIds))).go();
+        await (database.delete(
+          database.calendarCreateRecoveryCases,
+        )..where((t) => t.memyEventId.isIn(externalIds))).go();
       }
-      await database.delete(database.calendarEventLinks).go();
-      await database.delete(database.calendarConflicts).go();
-      await database.delete(database.calendarSyncOperations).go();
-      await database.delete(database.calendarCreateRecoveryCases).go();
-      await database.delete(database.calendarConfigRows).go();
-      await saveConfig(const CalendarConfig());
     });
 
     final eventsAfter = await database.select(database.calendarEvents).get();
@@ -734,6 +776,70 @@ class LocalCalendarRepository implements CalendarRepository {
       conflicts: conflictsBefore.length - conflictsAfter.length,
       ops: opsBefore.length - opsAfter.length,
     );
+  }
+
+  /// Deletes MeMy-authored local events and related sync metadata.
+  /// Preserves imported external events and calendar connection config.
+  Future<({int events, int links, int conflicts, int ops})>
+  clearMeMyLocalRecords() async {
+    final eventsBefore = await database.select(database.calendarEvents).get();
+    final localIds = eventsBefore
+        .where((e) => e.origin == CalendarEventOrigin.local.name)
+        .map((e) => e.id)
+        .toSet();
+
+    final linksBefore = await database
+        .select(database.calendarEventLinks)
+        .get();
+    final conflictsBefore = await database
+        .select(database.calendarConflicts)
+        .get();
+    final opsBefore = await database
+        .select(database.calendarSyncOperations)
+        .get();
+
+    await database.transaction(() async {
+      await (database.delete(
+        database.calendarEvents,
+      )..where((t) => t.origin.equals(CalendarEventOrigin.local.name))).go();
+      if (localIds.isNotEmpty) {
+        await (database.delete(
+          database.calendarEventLinks,
+        )..where((t) => t.memyEventId.isIn(localIds))).go();
+        await (database.delete(
+          database.calendarConflicts,
+        )..where((t) => t.memyEventId.isIn(localIds))).go();
+        await (database.delete(
+          database.calendarSyncOperations,
+        )..where((t) => t.memyEventId.isIn(localIds))).go();
+        await (database.delete(
+          database.calendarCreateRecoveryCases,
+        )..where((t) => t.memyEventId.isIn(localIds))).go();
+      }
+    });
+
+    final eventsAfter = await database.select(database.calendarEvents).get();
+    final linksAfter = await database.select(database.calendarEventLinks).get();
+    final conflictsAfter = await database
+        .select(database.calendarConflicts)
+        .get();
+    final opsAfter = await database
+        .select(database.calendarSyncOperations)
+        .get();
+
+    return (
+      events: eventsBefore.length - eventsAfter.length,
+      links: linksBefore.length - linksAfter.length,
+      conflicts: conflictsBefore.length - conflictsAfter.length,
+      ops: opsBefore.length - opsAfter.length,
+    );
+  }
+
+  /// Resets calendar integration / connection configuration only.
+  Future<int> resetIntegrationConfig() async {
+    await database.delete(database.calendarConfigRows).go();
+    await saveConfig(const CalendarConfig());
+    return 1;
   }
 
   CalendarCreateRecoveryCase _recoveryFromRow(

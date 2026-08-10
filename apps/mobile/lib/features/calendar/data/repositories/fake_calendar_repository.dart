@@ -115,6 +115,17 @@ class FakeCalendarRepository implements CalendarRepository {
   }
 
   @override
+  Future<List<MemyCalendarEvent>> getAllMeMyOwnedEvents() async {
+    await _maybeFail();
+    return _events
+        .where(
+          (e) => e.origin == CalendarEventOrigin.local && e.deletedAt == null,
+        )
+        .toList(growable: false)
+      ..sort((a, b) => a.time.startUtc.compareTo(b.time.startUtc));
+  }
+
+  @override
   Future<MemyCalendarEvent?> getEvent(String id) async {
     for (final e in _events) {
       if (e.id == id) return e;
@@ -426,34 +437,86 @@ class FakeCalendarRepository implements CalendarRepository {
   }
 
   /// Clears in-memory calendar cache. Never touches a device gateway.
+  ///
+  /// When [includeMeMyOwnedEvents] is false, only external-origin events and
+  /// related links are removed — connection config is preserved.
   Future<({int events, int links, int conflicts, int ops})> clearLocalCache({
     required bool includeMeMyOwnedEvents,
   }) async {
+    if (includeMeMyOwnedEvents) {
+      final imported = await clearImportedCache();
+      final owned = await clearMeMyLocalRecords();
+      return (
+        events: imported.events + owned.events,
+        links: imported.links + owned.links,
+        conflicts: imported.conflicts + owned.conflicts,
+        ops: imported.ops + owned.ops,
+      );
+    }
+    return clearImportedCache();
+  }
+
+  /// Deletes imported external-origin events and links for those events.
+  Future<({int events, int links, int conflicts, int ops})>
+  clearImportedCache() async {
     final eventsBefore = _events.length;
+    final externalIds = _events
+        .where((e) => e.origin == CalendarEventOrigin.external)
+        .map((e) => e.id)
+        .toSet();
     final linksBefore = _linksByEventId.length;
     final conflictsBefore = _conflicts.length;
     final opsBefore = _opsById.length;
 
-    if (includeMeMyOwnedEvents) {
-      _events.clear();
-    } else {
-      _events.removeWhere((e) => e.origin == CalendarEventOrigin.external);
-    }
-
-    _linksByEventId.clear();
-    _conflicts.clear();
-    _opsById.clear();
-    _recoveryById.clear();
-    _configRow = const CalendarConfig();
+    _events.removeWhere((e) => e.origin == CalendarEventOrigin.external);
+    _linksByEventId.removeWhere((id, _) => externalIds.contains(id));
+    _conflicts.removeWhere((c) => externalIds.contains(c.memyEventId));
+    _opsById.removeWhere((_, op) => externalIds.contains(op.memyEventId));
+    _recoveryById.removeWhere((_, r) => externalIds.contains(r.memyEventId));
 
     _emitEvents();
     _emitConflicts();
 
     return (
       events: eventsBefore - _events.length,
-      links: linksBefore,
-      conflicts: conflictsBefore,
-      ops: opsBefore,
+      links: linksBefore - _linksByEventId.length,
+      conflicts: conflictsBefore - _conflicts.length,
+      ops: opsBefore - _opsById.length,
     );
+  }
+
+  /// Deletes MeMy-authored local events and related sync metadata.
+  Future<({int events, int links, int conflicts, int ops})>
+  clearMeMyLocalRecords() async {
+    final eventsBefore = _events.length;
+    final localIds = _events
+        .where((e) => e.origin == CalendarEventOrigin.local)
+        .map((e) => e.id)
+        .toSet();
+    final linksBefore = _linksByEventId.length;
+    final conflictsBefore = _conflicts.length;
+    final opsBefore = _opsById.length;
+
+    _events.removeWhere((e) => e.origin == CalendarEventOrigin.local);
+    _linksByEventId.removeWhere((id, _) => localIds.contains(id));
+    _conflicts.removeWhere((c) => localIds.contains(c.memyEventId));
+    _opsById.removeWhere((_, op) => localIds.contains(op.memyEventId));
+    _recoveryById.removeWhere((_, r) => localIds.contains(r.memyEventId));
+
+    _emitEvents();
+    _emitConflicts();
+
+    return (
+      events: eventsBefore - _events.length,
+      links: linksBefore - _linksByEventId.length,
+      conflicts: conflictsBefore - _conflicts.length,
+      ops: opsBefore - _opsById.length,
+    );
+  }
+
+  /// Resets calendar integration / connection configuration only.
+  Future<int> resetIntegrationConfig() async {
+    _configRow = const CalendarConfig();
+    return 1;
   }
 }

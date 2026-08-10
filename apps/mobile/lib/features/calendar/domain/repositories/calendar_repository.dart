@@ -24,6 +24,9 @@ abstract class CalendarRepository {
     bool includeHidden = false,
   });
 
+  /// All MeMy-authored local events (never external device payloads).
+  Future<List<MemyCalendarEvent>> getAllMeMyOwnedEvents();
+
   Future<MemyCalendarEvent?> getEvent(String id);
 
   /// Events awaiting a push (or delete) to their external calendar,

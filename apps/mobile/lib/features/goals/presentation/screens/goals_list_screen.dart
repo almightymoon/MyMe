@@ -15,9 +15,12 @@ import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/inline_error_card.dart';
 import '../../../../core/widgets/loading_card_skeleton.dart';
 import '../../../../core/widgets/memy_card.dart';
+import '../../../../core/widgets/memy_chrome.dart';
+import '../../../../core/widgets/memy_module_scaffold.dart';
 import '../../../../core/widgets/memy_page_header.dart';
 import '../../../../core/widgets/memy_primary_button.dart';
 import '../../../shell/presentation/memy_bottom_navigation.dart';
+import '../../../shell/presentation/memy_drawer.dart';
 import '../../../shell/presentation/quick_add_sheet.dart';
 import '../../application/providers/goal_providers.dart';
 import '../../domain/entities/goal.dart';
@@ -37,6 +40,7 @@ class GoalsListScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.canvas,
       extendBody: true,
+      endDrawer: const MemyDrawer(activeShellIndex: 1),
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -50,11 +54,16 @@ class GoalsListScreen extends ConsumerWidget {
                 onPressed: () => memyBack(context, fallback: RoutePaths.plan),
                 icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
               ),
-              trailing: IconButton(
-                key: const Key('goals_add_button'),
-                tooltip: AppStrings.addGoal,
-                onPressed: () => context.push(RoutePaths.addGoal),
-                icon: const Icon(Icons.add_rounded),
+              trailing: MemyHeaderActions(
+                showAvatar: false,
+                menuKey: const Key('goals_open_drawer'),
+                leading: [
+                  MemyIconPlain(
+                    key: const Key('goals_add_button'),
+                    icon: Icons.add_rounded,
+                    onPressed: () => context.push(RoutePaths.addGoal),
+                  ),
+                ],
               ),
             ),
             Padding(

@@ -12,6 +12,7 @@ import '../../../core/widgets/inline_error_card.dart';
 import '../../../core/widgets/life_score_ring.dart';
 import '../../../core/widgets/loading_card_skeleton.dart';
 import '../../../core/widgets/memy_card.dart';
+import '../../../core/widgets/memy_chrome.dart';
 import '../../shell/presentation/memy_bottom_navigation.dart';
 import '../../user/application/providers/user_providers.dart';
 import '../../user/domain/entities/user_profile.dart';
@@ -37,17 +38,33 @@ class MoreScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'This week',
-              style: AppTextStyles.bodySmall().copyWith(
-                color: AppColors.faintText,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              AppStrings.insightsTitle,
-              style: AppTextStyles.displayMedium().copyWith(fontSize: 28),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'This week',
+                        style: AppTextStyles.bodySmall().copyWith(
+                          color: AppColors.faintText,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        AppStrings.insightsTitle,
+                        style: AppTextStyles.displayMedium().copyWith(
+                          fontSize: 28,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const MemyMenuButton(key: Key('insights_open_drawer')),
+              ],
             ),
             const SizedBox(height: AppSpacing.md),
             MemyCard(

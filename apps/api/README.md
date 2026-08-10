@@ -115,6 +115,13 @@ Never run E2E against the development `memy` database. Never commit real `.env.t
 
 ## Environment
 
+NestJS runtime configuration validates **only** values the application consumes:
+
+- `DATABASE_URL` (Prisma / Nest)
+- `DEV_USER_*`, `API_PORT`, `API_GLOBAL_PREFIX`, `CORS_ORIGINS`, `NODE_ENV`
+
+Docker Compose `POSTGRES_*` variables initialize the Postgres container; they are **not** required by Nest ConfigModule. Prefer composing `DATABASE_URL` for application connectivity.
+
 See `.env.example` and `.env.test.example`. Never commit real credentials. `.env` and `.env.test` are gitignored; the `*.example` files are allowed.
 
 ## Docs

@@ -29,8 +29,8 @@ The HTML application is the design prototype. Do not convert it line-for-line in
 | Area | Status |
 |------|--------|
 | Web prototype (`/app`) | Approved visual reference — keep intact |
-| Flutter mobile (`/apps/mobile`) | Goals local + API repository modes |
-| NestJS API (`/apps/api`) | Goals / milestones / progress / today summary |
+| Flutter mobile (`/apps/mobile`) | Goals (fake/local/API) · Finance (fake/local) · Habits (fake/local) · Today/Plan live summaries |
+| NestJS API (`/apps/api`) | Goals / milestones / progress / today summary · Nest validates `DATABASE_URL` only (Compose `POSTGRES_*` are infrastructure) |
 | Production auth / AI / sensors | Not in this milestone |
 
 ## Verified local development sequence

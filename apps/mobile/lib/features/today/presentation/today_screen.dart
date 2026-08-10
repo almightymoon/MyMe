@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../app/router/app_navigation.dart';
 import '../../../app/router/route_names.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/constants/app_strings.dart';
@@ -15,18 +15,21 @@ import '../../../core/widgets/inline_error_card.dart';
 import '../../../core/widgets/life_score_ring.dart';
 import '../../../core/widgets/loading_card_skeleton.dart';
 import '../../../core/widgets/memy_card.dart';
+import '../../../core/widgets/memy_chrome.dart';
 import '../../calendar/domain/entities/schedule_item.dart';
 import '../../finance/application/providers/finance_providers.dart';
 import '../../finance/domain/entities/finance_summary.dart';
 import '../../goals/application/providers/goal_providers.dart';
 import '../../goals/domain/entities/goal_summary.dart';
+import '../../habits/application/providers/habit_providers.dart';
+import '../../habits/domain/entities/habit_enums.dart';
+import '../../habits/domain/entities/habit_progress.dart';
 import '../../shell/presentation/memy_bottom_navigation.dart';
 import '../application/providers/today_providers.dart';
 import '../application/providers/today_tasks_provider.dart';
 import '../domain/entities/daily_focus.dart';
 import '../domain/entities/today_summary.dart';
 import '../domain/entities/today_task.dart';
-import '../../../app/theme/app_radii.dart';
 
 /// Home screen aligned to prototype `data-screen="home"`:
 /// greeting → Life Score → Focus → shortcuts → Glance → Today's Tasks.
@@ -119,84 +122,49 @@ class _TodayScaffold extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      key: const Key('home_open_drawer'),
-                      borderRadius: AppRadii.thumbRadius,
-                      onTap: () => openMemyDrawer(context),
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 8, bottom: 4),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Hi, $greetingName!',
-                              style: AppTextStyles.bodyMedium().copyWith(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.faintText,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text.rich(
-                              TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: _dayPart,
-                                    style: AppTextStyles.displayMedium()
-                                        .copyWith(
-                                          fontSize: 26,
-                                          fontWeight: FontWeight.w700,
-                                          letterSpacing: -0.9,
-                                          height: 1.15,
-                                        ),
-                                  ),
-                                  TextSpan(
-                                    text: ' $_dayEmoji',
-                                    style: AppTextStyles.displayMedium()
-                                        .copyWith(fontSize: 22),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 12, bottom: 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Hi, $greetingName!',
+                          style: AppTextStyles.bodyMedium().copyWith(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.faintText,
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 2),
+                        Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: _dayPart,
+                                style: AppTextStyles.displayMedium().copyWith(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: -0.9,
+                                  height: 1.15,
+                                ),
+                              ),
+                              TextSpan(
+                                text: ' $_dayEmoji',
+                                style: AppTextStyles.displayMedium().copyWith(
+                                  fontSize: 22,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                Material(
-                  color: Colors.transparent,
-                  shape: const CircleBorder(),
-                  clipBehavior: Clip.antiAlias,
-                  child: InkWell(
-                    key: const Key('home_avatar'),
-                    customBorder: const CircleBorder(),
-                    onTap: () => openMemyProfile(context),
-                    child: Container(
-                      width: 48,
-                      height: 48,
-                      margin: const EdgeInsets.only(top: 2),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x1A000000),
-                            blurRadius: 14,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                        image: const DecorationImage(
-                          image: AssetImage(
-                            'assets/images/branding/avatar.png',
-                          ),
-                          fit: BoxFit.cover,
-                        ),
-                        color: AppColors.orangeSoft,
-                      ),
-                    ),
-                  ),
+                const MemyHeaderActions(
+                  avatarSize: 44,
+                  avatarKey: Key('home_avatar'),
+                  menuKey: Key('home_open_drawer'),
                 ),
               ],
             ),
@@ -261,6 +229,10 @@ class _TodayPopulatedBody extends StatelessWidget {
         ],
         if (summary.finance != null) ...[
           _TodayFinanceCard(summary: summary.finance!),
+          const SizedBox(height: 12),
+        ],
+        if (summary.habits.isNotEmpty) ...[
+          _TodayHabitsCard(items: summary.habits),
           const SizedBox(height: 12),
         ],
         _GlanceSection(items: summary.schedule),
@@ -344,6 +316,8 @@ class _TodayGoalsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final visible = goals.take(3).toList();
+
     return MemyCard(
       key: const Key('today_goals_card'),
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
@@ -351,30 +325,248 @@ class _TodayGoalsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Goals',
-            style: AppTextStyles.titleSmall().copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Goals',
+                  style: AppTextStyles.titleSmall().copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Text(
+                'See all',
+                style: AppTextStyles.bodySmall(
+                  color: AppColors.ember,
+                ).copyWith(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(width: 2),
+              const Icon(
+                Icons.chevron_right_rounded,
+                size: 18,
+                color: AppColors.ember,
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
-          for (var i = 0; i < goals.length && i < 3; i++) ...[
-            if (i > 0) const SizedBox(height: 8),
-            Text(
-              goals[i].title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.bodyMedium().copyWith(
-                fontWeight: FontWeight.w600,
+          const SizedBox(height: 12),
+          for (var i = 0; i < visible.length; i++) ...[
+            if (i > 0) const SizedBox(height: 12),
+            _TodayGoalRow(goal: visible[i]),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _TodayGoalRow extends StatelessWidget {
+  const _TodayGoalRow({required this.goal});
+
+  final GoalSummary goal;
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = goal.progressPercent.clamp(0.0, 100.0) / 100.0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                goal.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.bodyMedium().copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
+            const SizedBox(width: 8),
             Text(
-              goals[i].subtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.bodySmall(color: AppColors.faintText),
+              '${goal.progressPercent.round()}%',
+              style: AppTextStyles.bodySmall().copyWith(
+                fontWeight: FontWeight.w700,
+                color: AppColors.ember,
+              ),
             ),
           ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          goal.subtitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppTextStyles.bodySmall(color: AppColors.faintText),
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: LinearProgressIndicator(
+            value: progress,
+            minHeight: 6,
+            backgroundColor: const Color(0xFFECECEE),
+            color: AppColors.ember,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TodayHabitsCard extends ConsumerWidget {
+  const _TodayHabitsCard({required this.items});
+
+  final List<HabitTodayItem> items;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final visible = items.take(3).toList();
+
+    return MemyCard(
+      key: const Key('today_habits_card'),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Habits',
+                  style: AppTextStyles.titleSmall().copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              TextButton(
+                key: const Key('today_habits_see_all'),
+                onPressed: () => context.push(RoutePaths.habits),
+                child: const Text('See all'),
+              ),
+            ],
+          ),
+          for (var i = 0; i < visible.length; i++) ...[
+            if (i > 0) const SizedBox(height: 8),
+            _TodayHabitRow(item: visible[i]),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _TodayHabitRow extends ConsumerStatefulWidget {
+  const _TodayHabitRow({required this.item});
+
+  final HabitTodayItem item;
+
+  @override
+  ConsumerState<_TodayHabitRow> createState() => _TodayHabitRowState();
+}
+
+class _TodayHabitRowState extends ConsumerState<_TodayHabitRow> {
+  var _busy = false;
+
+  Future<void> _toggleBinary() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      final repo = ref.read(habitRepositoryProvider);
+      final date = widget.item.date;
+      if (widget.item.isCompleted) {
+        await repo.removeCheckIn(
+          habitId: widget.item.habit.id,
+          localDate: date,
+        );
+      } else {
+        await repo.upsertCheckIn(
+          HabitCheckInDraft(
+            habitId: widget.item.habit.id,
+            localDate: date,
+            value: 1,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _bumpValue() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      final next = widget.item.value + 1;
+      await ref
+          .read(habitRepositoryProvider)
+          .upsertCheckIn(
+            HabitCheckInDraft(
+              habitId: widget.item.habit.id,
+              localDate: widget.item.date,
+              value: next,
+            ),
+          );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final habit = widget.item.habit;
+    final label = habit.goalType == HabitGoalType.binary
+        ? (widget.item.isCompleted ? 'Done' : 'Todo')
+        : '${widget.item.value}/${widget.item.targetValue}'
+              '${habit.unitLabel == null ? '' : ' ${habit.unitLabel}'}';
+
+    return Semantics(
+      label: '${habit.name}, $label, streak ${widget.item.currentStreak}',
+      child: Row(
+        children: [
+          Expanded(
+            child: InkWell(
+              onTap: () => context.push(RoutePaths.habitDetailPath(habit.id)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    habit.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.bodyMedium().copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    label,
+                    style: AppTextStyles.bodySmall(color: AppColors.faintText),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (habit.goalType == HabitGoalType.binary)
+            IconButton(
+              key: Key('today_habit_toggle_${habit.id}'),
+              onPressed: _busy ? null : _toggleBinary,
+              icon: Icon(
+                widget.item.isCompleted
+                    ? Icons.check_circle_rounded
+                    : Icons.circle_outlined,
+                color: widget.item.isCompleted
+                    ? AppColors.ember
+                    : AppColors.faintText,
+              ),
+            )
+          else
+            IconButton(
+              key: Key('today_habit_inc_${habit.id}'),
+              onPressed: _busy ? null : _bumpValue,
+              icon: const Icon(Icons.add_circle_outline_rounded),
+            ),
         ],
       ),
     );

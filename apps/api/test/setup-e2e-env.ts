@@ -1,38 +1,9 @@
-import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
+import { loadEnvTestFile } from '../src/common/testing/load-env-test';
 
 /**
  * Load apps/api/.env.test into process.env before the Nest app boots.
  * Fail fast if the file is missing — never silently use the development DB.
+ * Does not rewrite NODE_ENV.
  */
-function loadEnvTest(): void {
-  const path = resolve(__dirname, '../.env.test');
-  if (!existsSync(path)) {
-    throw new Error(
-      'Missing apps/api/.env.test. Copy .env.test.example to .env.test and create the memy_test database before running E2E tests.',
-    );
-  }
-  const raw = readFileSync(path, 'utf8');
-  for (const line of raw.split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) continue;
-    const eq = trimmed.indexOf('=');
-    if (eq <= 0) continue;
-    const key = trimmed.slice(0, eq).trim();
-    let value = trimmed.slice(eq + 1).trim();
-    if (
-      (value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))
-    ) {
-      value = value.slice(1, -1);
-    }
-    // Prefer explicit shell / CI overrides; otherwise set from file.
-    if (process.env[key] === undefined) {
-      process.env[key] = value;
-    }
-  }
-  // Do not overwrite NODE_ENV — .env.test (or CI) must already set NODE_ENV=test.
-  // Forcing it here would hide unsafe environments from assertSafeE2eDatabase.
-}
-
-loadEnvTest();
+loadEnvTestFile(resolve(__dirname, '../.env.test'));

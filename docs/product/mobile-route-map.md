@@ -14,8 +14,10 @@ Back behavior: placeholder / feature routes use `context.pop()` when possible, o
 | `/goals` | Plan → Goals; Today → All | `GoalsListScreen` | Live — local persistence | Pop → previous (or Today) |
 | `/goals/new` | Quick Add → Add Goal; Goals + | `AddGoalScreen` | Live — create + validate | Pop → previous |
 | `/goals/:goalId` | Goals list / Today goal row | `GoalDetailScreen` | Live — detail, milestones, forecast | Pop or go `/goals` |
-| `/habits` | Plan → Habits card | `HabitsPlaceholderScreen` | Explicit Coming Soon placeholder | Pop → Plan (or Today) |
-| `/habits/new` | Quick Add → Add Habit | `AddHabitPlaceholderScreen` | Explicit Coming Soon placeholder | Pop → previous |
+| `/habits` | Plan → Habits; Today → See all | `HabitsOverviewScreen` | Live — local/fake persistence | Pop → Plan (or Today) |
+| `/habits/new` | Quick Add → Add Habit; Habits + | `AddHabitScreen` | Live — create + validate | Pop → previous |
+| `/habits/:habitId` | Habits list / Today habit row | `HabitDetailScreen` | Live — detail, check-ins, status | Pop or go `/habits` |
+| `/habits/:habitId/edit` | Detail → Edit | `EditHabitScreen` | Live — update + validate | Pop → detail |
 | `/finance` | More → Finance; Today shortcut | `FinanceOverviewScreen` | Live — local/fake persistence | Pop → More (or Today) |
 | `/finance/new` | Quick Add → Add Transaction; Finance + | `AddTransactionScreen` | Live — create + validate | Pop → previous |
 | `/finance/history` | Finance → See All | `TransactionHistoryScreen` | Live — chronological list | Pop → Finance |
@@ -42,7 +44,7 @@ Back behavior: placeholder / feature routes use `context.pop()` when possible, o
 | Quick Add → Add Goal | `/goals/new` live form | Wired |
 | Quick Add → Add Transaction | `/finance/new` live form | Wired |
 | Quick Add → Add Event | `/calendar/new` placeholder | Wired |
-| Quick Add → Add Habit | `/habits/new` placeholder | Wired |
+| Quick Add → Add Habit | `/habits/new` live form | Wired |
 | Quick Add → Log Meal | `/nutrition/coming-soon` placeholder | Wired |
 | Plan Goals / Habits / Calendar cards | Push feature routes | Wired |
 | Plan section Retry | Invalidate that section’s provider | Wired |

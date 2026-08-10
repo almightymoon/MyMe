@@ -2,18 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../app/router/app_navigation.dart';
 import '../../../app/router/route_names.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/domain/services/money_format.dart';
 import '../../../core/widgets/memy_card.dart';
-import '../../../core/widgets/memy_module_scaffold.dart';
+import '../../../core/widgets/memy_chrome.dart';
+import '../../finance/application/providers/finance_providers.dart';
 import '../../goals/application/providers/goal_providers.dart';
 import '../../goals/domain/entities/goal.dart';
 import '../../goals/domain/entities/goal_enums.dart';
+import '../../habits/application/providers/habit_providers.dart';
 import '../../shell/presentation/memy_bottom_navigation.dart';
 
 class PlanScreen extends ConsumerWidget {
@@ -34,6 +36,9 @@ class PlanScreen extends ConsumerWidget {
                   activeGoals.length)
               .round();
 
+    final financeAsync = ref.watch(todayFinanceSummaryProvider);
+    final habitsOverview = ref.watch(habitsOverviewProvider).valueOrNull;
+
     final modules = <_DashModule>[
       _DashModule(
         keyName: 'dashboard_module_goals',
@@ -46,16 +51,44 @@ class PlanScreen extends ConsumerWidget {
         ),
       ),
       _DashModule(
+        keyName: 'dashboard_module_habits',
+        title: 'Habits',
+        imageAsset: 'assets/images/modules/mod-goals.png',
+        path: RoutePaths.habits,
+        builder: (context) => _HabitsModuleCopy(
+          activeCount: habitsOverview?.activeCount ?? 0,
+          completedToday: habitsOverview?.completedToday ?? 0,
+          scheduledToday: habitsOverview?.scheduledToday ?? 0,
+          weekPercent: habitsOverview?.week.completionPercent ?? 0,
+          bestStreak: habitsOverview?.bestCurrentStreak ?? 0,
+        ),
+      ),
+      _DashModule(
         keyName: 'dashboard_module_finance',
         title: 'Finance',
         imageAsset: 'assets/images/modules/mod-finance.png',
         path: RoutePaths.finance,
-        builder: (context) => const _StaticModuleCopy(
-          stat: 'Balance',
-          big: 'PKR 245K',
-          sub: '↑ 12% this month',
-          subColor: AppColors.finance,
-        ),
+        builder: (context) {
+          final summary = financeAsync.valueOrNull;
+          if (summary == null) {
+            return const _StaticModuleCopy(
+              stat: 'Balance',
+              big: '—',
+              sub: 'Open Finance',
+              subColor: AppColors.finance,
+            );
+          }
+          return _StaticModuleCopy(
+            stat: 'Balance',
+            big: MoneyFormat.formatSignedMinor(
+              summary.currentBalanceMinor,
+              summary.currencyCode,
+            ),
+            sub:
+                'Today ${MoneyFormat.formatMinor(summary.spentTodayMinor, summary.currencyCode)}',
+            subColor: AppColors.finance,
+          );
+        },
       ),
       _DashModule(
         keyName: 'dashboard_module_health',
@@ -200,40 +233,9 @@ class _DashboardHeader extends StatelessWidget {
             ],
           ),
         ),
-        Material(
-          color: Colors.transparent,
-          shape: const CircleBorder(),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            key: const Key('dashboard_avatar'),
-            customBorder: const CircleBorder(),
-            onTap: () => openMemyProfile(context),
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x1A000000),
-                    blurRadius: 14,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-                image: const DecorationImage(
-                  image: AssetImage('assets/images/branding/avatar.png'),
-                  fit: BoxFit.cover,
-                ),
-                color: AppColors.orangeSoft,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 4),
-        MemyIconPlain(
-          key: const Key('dashboard_open_drawer'),
-          icon: Icons.menu_rounded,
-          onPressed: () => openMemyDrawer(context),
+        const MemyHeaderActions(
+          avatarKey: Key('dashboard_avatar'),
+          menuKey: Key('dashboard_open_drawer'),
         ),
       ],
     );
@@ -385,6 +387,55 @@ class _GoalsModuleCopy extends StatelessWidget {
             minHeight: 6,
             backgroundColor: AppColors.progressTrack,
             color: AppColors.ember,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HabitsModuleCopy extends StatelessWidget {
+  const _HabitsModuleCopy({
+    required this.activeCount,
+    required this.completedToday,
+    required this.scheduledToday,
+    required this.weekPercent,
+    required this.bestStreak,
+  });
+
+  final int activeCount;
+  final int completedToday;
+  final int scheduledToday;
+  final int weekPercent;
+  final int bestStreak;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$activeCount active',
+          style: AppTextStyles.bodySmall().copyWith(
+            fontWeight: FontWeight.w500,
+            color: AppColors.faintText,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          '$completedToday/$scheduledToday',
+          style: AppTextStyles.mono(
+            fontSize: 26,
+          ).copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.5),
+        ),
+        Text(
+          'today · $weekPercent% week · streak $bestStreak',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: AppTextStyles.bodySmall().copyWith(
+            fontSize: 12,
+            color: AppColors.habits,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],

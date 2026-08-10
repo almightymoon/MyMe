@@ -34,7 +34,7 @@ class MemyPageHeader extends StatelessWidget {
             child: Row(
               children: [
                 SizedBox(
-                  width: 48,
+                  width: 40,
                   child: leading != null
                       ? Align(alignment: Alignment.centerLeft, child: leading)
                       : null,
@@ -46,12 +46,7 @@ class MemyPageHeader extends StatelessWidget {
                     style: AppTextStyles.titleLarge(),
                   ),
                 ),
-                SizedBox(
-                  width: 48,
-                  child: trailing != null
-                      ? Align(alignment: Alignment.centerRight, child: trailing)
-                      : null,
-                ),
+                if (trailing != null) trailing! else const SizedBox(width: 40),
               ],
             ),
           ),

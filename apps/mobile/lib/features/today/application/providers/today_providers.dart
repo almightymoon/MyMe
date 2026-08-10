@@ -5,6 +5,8 @@ import '../../../finance/application/providers/finance_providers.dart';
 import '../../../goals/application/providers/goal_providers.dart';
 import '../../../goals/domain/entities/goal_enums.dart';
 import '../../../goals/domain/entities/goal_summary.dart';
+import '../../../habits/application/providers/habit_providers.dart';
+import '../../../habits/domain/entities/habit_progress.dart';
 import '../../data/repositories/fake_today_repository.dart';
 import '../../domain/entities/today_summary.dart';
 import '../../domain/repositories/today_repository.dart';
@@ -13,12 +15,19 @@ final todayRepositoryProvider = Provider<TodayRepository>((ref) {
   return FakeTodayRepository(config: ref.watch(fakeRepositoryConfigProvider));
 });
 
-/// Base Today payload without goals/finance (fake async sections).
+/// Base Today payload without goals/finance/habits (fake async sections).
 final todayBaseProvider = FutureProvider.autoDispose<TodaySummary>((ref) async {
   return ref.watch(todayRepositoryProvider).fetchTodaySummary();
 });
 
-/// Composes Today with live active goals and finance summary.
+/// Live Habit rows for Today. Habit failures surface here without wiping
+/// Goals/Finance content on the composed summary.
+final todayHabitsProvider =
+    Provider.autoDispose<AsyncValue<List<HabitTodayItem>>>((ref) {
+      return ref.watch(todayHabitItemsProvider);
+    });
+
+/// Composes Today with live active goals, finance, and scheduled habits.
 final todaySummaryProvider = Provider.autoDispose<AsyncValue<TodaySummary>>((
   ref,
 ) {
@@ -46,7 +55,10 @@ final todaySummaryProvider = Provider.autoDispose<AsyncValue<TodaySummary>>((
   final txs = ref.watch(financeTransactionsProvider).valueOrNull ?? const [];
   final finance = txs.isEmpty ? null : financeAsync.valueOrNull;
 
+  // Habits are optional for emptiness; failures do not fail the whole Today.
+  final habitItems = ref.watch(todayHabitsProvider).valueOrNull ?? const [];
+
   return AsyncValue.data(
-    base.copyWith(goals: activeSummaries, finance: finance),
+    base.copyWith(goals: activeSummaries, finance: finance, habits: habitItems),
   );
 });

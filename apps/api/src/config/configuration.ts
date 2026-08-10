@@ -1,5 +1,12 @@
 import * as Joi from 'joi';
 
+/**
+ * NestJS ConfigModule validation — only variables the application runtime
+ * actually consumes. Database connectivity uses DATABASE_URL (Prisma).
+ *
+ * Docker Compose POSTGRES_* variables are infrastructure concerns and must
+ * not be required here.
+ */
 export const envValidationSchema = Joi.object({
   NODE_ENV: Joi.string()
     .valid('development', 'test', 'production')
@@ -8,11 +15,6 @@ export const envValidationSchema = Joi.object({
   API_GLOBAL_PREFIX: Joi.string().default('api/v1'),
   CORS_ORIGINS: Joi.string().allow('').default('*'),
   DATABASE_URL: Joi.string().uri().required(),
-  POSTGRES_HOST: Joi.string().default('localhost'),
-  POSTGRES_PORT: Joi.number().port().default(5432),
-  POSTGRES_DB: Joi.string().default('memy'),
-  POSTGRES_USER: Joi.string().default('memy'),
-  POSTGRES_PASSWORD: Joi.string().required(),
   DEV_USER_ID: Joi.string().uuid().required(),
   DEV_USER_EMAIL: Joi.string().email().optional(),
   DEV_USER_DISPLAY_NAME: Joi.string().default('Dev User'),

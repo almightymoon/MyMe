@@ -20,8 +20,10 @@ import '../../features/finance/presentation/screens/transaction_history_screen.d
 import '../../features/goals/presentation/screens/add_goal_screen.dart';
 import '../../features/goals/presentation/screens/goal_detail_screen.dart';
 import '../../features/goals/presentation/screens/goals_list_screen.dart';
-import '../../features/habits/presentation/add_habit_placeholder_screen.dart';
-import '../../features/habits/presentation/habits_placeholder_screen.dart';
+import '../../features/habits/presentation/screens/add_habit_screen.dart';
+import '../../features/habits/presentation/screens/edit_habit_screen.dart';
+import '../../features/habits/presentation/screens/habit_detail_screen.dart';
+import '../../features/habits/presentation/screens/habits_overview_screen.dart';
 import '../../features/health/presentation/health_placeholder_screen.dart';
 import '../../features/more/presentation/more_screen.dart';
 import '../../features/plan/presentation/plan_screen.dart';
@@ -131,13 +133,31 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         path: RoutePaths.habits,
         name: RouteNames.habits,
-        builder: (context, state) => const HabitsPlaceholderScreen(),
+        builder: (context, state) => const HabitsOverviewScreen(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: RoutePaths.addHabit,
         name: RouteNames.addHabit,
-        builder: (context, state) => const AddHabitPlaceholderScreen(),
+        builder: (context, state) => const AddHabitScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.habitDetail,
+        name: RouteNames.habitDetail,
+        builder: (context, state) {
+          final habitId = state.pathParameters['habitId'] ?? '';
+          return HabitDetailScreen(habitId: habitId);
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.editHabit,
+        name: RouteNames.editHabit,
+        builder: (context, state) {
+          final habitId = state.pathParameters['habitId'] ?? '';
+          return EditHabitScreen(habitId: habitId);
+        },
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

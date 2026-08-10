@@ -54,6 +54,15 @@ Selected via `goalRepositoryProvider` / `goalsDataSourceProvider`. Widgets depen
 
 Selected via `financeRepositoryProvider` / `financeDataSourceProvider`. No Finance API yet. Summary math is pure (`FinanceSummaryService`). Today composes live finance when the ledger is non-empty.
 
+### Habits repositories
+
+| Mode | Class |
+|------|--------|
+| `fake` | `FakeHabitRepository` |
+| `local` | `LocalHabitRepository` (default) |
+
+Selected via `habitRepositoryProvider` / `habitsDataSourceProvider`. Scheduling and streaks are pure (`HabitScheduleService`, `HabitProgressService`) over `LocalDate` + `AppClock`. No Habits API yet. See `docs/product/habits-feature.md`.
+
 ## Navigation
 
 - **go_router** with `StatefulShellRoute.indexedStack` for Today / Plan / Coach / More
@@ -64,6 +73,7 @@ Selected via `financeRepositoryProvider` / `financeDataSourceProvider`. No Finan
 - **flutter_riverpod**
 - Goals: stream providers over `GoalRepository.watchGoals()` so list, detail, Plan, and Today stay in sync after mutations
 - Finance: stream providers over `FinanceRepository.watchTransactions()` so overview, history, detail, and Today stay in sync
+- Habits: stream providers over `HabitRepository.watchHabits()` / `watchCheckIns()` so overview, detail, Today, and Plan stay in sync
 
 ## Run with API mode
 

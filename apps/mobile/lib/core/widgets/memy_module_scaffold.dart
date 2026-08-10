@@ -8,6 +8,7 @@ import '../../app/theme/app_text_styles.dart';
 import '../../features/shell/presentation/memy_bottom_navigation.dart';
 import '../../features/shell/presentation/memy_drawer.dart';
 import '../../features/shell/presentation/quick_add_sheet.dart';
+import 'memy_chrome.dart';
 
 /// Prototype `.icon-plain` — no tooltip pill, no grey filled circle.
 class MemyIconPlain extends StatelessWidget {
@@ -123,7 +124,14 @@ class MemyModuleScaffold extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(width: 36, child: trailing ?? const SizedBox.shrink()),
+          if (trailing != null) ...[
+            trailing!,
+            if (showBottomNav) const SizedBox(width: 6),
+          ],
+          if (showBottomNav)
+            const MemyMenuButton(key: Key('module_open_drawer'))
+          else if (trailing == null)
+            const SizedBox(width: 36),
         ],
       ),
     );

@@ -10,7 +10,11 @@ import 'package:memy/features/finance/data/repositories/local_finance_repository
 import 'package:memy/features/finance/data/seed/finance_seed.dart';
 import 'package:memy/features/goals/application/controllers/add_goal_controller.dart';
 import 'package:memy/features/goals/application/providers/goal_providers.dart';
+import 'package:memy/core/config/environment_config.dart';
+import 'package:memy/core/domain/clock/app_clock.dart';
 import 'package:memy/features/goals/data/repositories/local_goal_repository.dart';
+import 'package:memy/features/habits/application/providers/habit_providers.dart';
+import 'package:memy/features/habits/data/repositories/local_habit_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 FakeRepositoryConfig createTestFakeConfig({
@@ -30,9 +34,13 @@ FakeRepositoryConfig createTestFakeConfig({
 ///
 /// [seedFinance]: when true (default), first launch seeds demo finance.
 /// When false, marks storage initialized with an empty finance ledger.
+///
+/// [seedHabits]: when true (default), first launch seeds demo habits.
+/// When false, marks storage initialized with an empty habits ledger.
 Future<SharedPreferences> setupTestPreferences({
   bool seedGoals = true,
   bool seedFinance = true,
+  bool seedHabits = true,
 }) async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
@@ -58,7 +66,27 @@ Future<SharedPreferences> setupTestPreferences({
       }),
     );
   }
+  if (!seedHabits) {
+    await prefs.setBool(LocalHabitRepository.initializedKey, true);
+    await prefs.setString(
+      LocalHabitRepository.storageKey,
+      '{"schemaVersion":1,"habits":[],"checkIns":[]}',
+    );
+  }
   return prefs;
+}
+
+/// Common overrides for deterministic Habits widget/integration tests.
+List<Override> habitTestOverrides({
+  required SharedPreferences prefs,
+  DateTime? fixedNow,
+}) {
+  final clock = FixedAppClock(fixedNow ?? DateTime(2026, 8, 9, 12));
+  return [
+    sharedPreferencesProvider.overrideWithValue(prefs),
+    habitsDataSourceProvider.overrideWithValue(HabitsDataSource.local),
+    appClockProvider.overrideWithValue(clock),
+  ];
 }
 
 Future<void> pumpMemyApp(
@@ -67,6 +95,7 @@ Future<void> pumpMemyApp(
   List<Override> overrides = const [],
   bool seedGoals = true,
   bool seedFinance = true,
+  bool seedHabits = true,
   SharedPreferences? prefs,
 }) async {
   GoogleFonts.config.allowRuntimeFetching = false;
@@ -75,6 +104,7 @@ Future<void> pumpMemyApp(
       await setupTestPreferences(
         seedGoals: seedGoals,
         seedFinance: seedFinance,
+        seedHabits: seedHabits,
       );
   await tester.pumpWidget(
     ProviderScope(

@@ -9,6 +9,9 @@
 /// # Finance data source: fake | local  (default: local)
 /// --dart-define=FINANCE_DATA_SOURCE=fake
 ///
+/// # Habits data source: fake | local  (default: local)
+/// --dart-define=HABITS_DATA_SOURCE=fake
+///
 /// # API base including version prefix
 /// # iOS simulator / desktop:
 /// --dart-define=API_BASE_URL=http://127.0.0.1:3000/api/v1
@@ -23,6 +26,8 @@
 enum GoalsDataSource { fake, local, api }
 
 enum FinanceDataSource { fake, local }
+
+enum HabitsDataSource { fake, local }
 
 class EnvironmentConfig {
   const EnvironmentConfig._();
@@ -42,6 +47,12 @@ class EnvironmentConfig {
   /// `fake` | `local` — defaults to local offline persistence.
   static const String financeDataSourceRaw = String.fromEnvironment(
     'FINANCE_DATA_SOURCE',
+    defaultValue: 'local',
+  );
+
+  /// `fake` | `local` — defaults to local offline persistence.
+  static const String habitsDataSourceRaw = String.fromEnvironment(
+    'HABITS_DATA_SOURCE',
     defaultValue: 'local',
   );
 
@@ -74,6 +85,16 @@ class EnvironmentConfig {
       case 'local':
       default:
         return FinanceDataSource.local;
+    }
+  }
+
+  static HabitsDataSource get habitsDataSource {
+    switch (habitsDataSourceRaw.trim().toLowerCase()) {
+      case 'fake':
+        return HabitsDataSource.fake;
+      case 'local':
+      default:
+        return HabitsDataSource.local;
     }
   }
 }

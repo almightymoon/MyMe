@@ -63,7 +63,8 @@ void main() {
     expect(find.byKey(const Key('today_goals_card')), findsOneWidget);
     expect(find.byKey(const Key('today_finance_card')), findsOneWidget);
     expect(find.textContaining('Spent today'), findsOneWidget);
-    expect(find.text(AppStrings.habitPreview), findsNothing);
+    expect(find.byKey(const Key('today_habits_card')), findsOneWidget);
+    expect(find.text('Morning Walk'), findsWidgets);
   });
 
   testWidgets('Today tasks checklist toggles and updates count', (
@@ -111,6 +112,7 @@ void main() {
       config: createTestFakeConfig(forceEmpty: true),
       seedGoals: false,
       seedFinance: false,
+      seedHabits: false,
     );
     await signInToToday(tester);
 

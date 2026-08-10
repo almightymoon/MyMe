@@ -6,10 +6,12 @@ import '../../../../app/router/route_names.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
+import '../../../../core/widgets/memy_chrome.dart';
 import '../../../../core/widgets/memy_page_header.dart';
 import '../../../../core/widgets/memy_primary_button.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../shell/presentation/memy_bottom_navigation.dart';
+import '../../../shell/presentation/memy_drawer.dart';
 import '../../../shell/presentation/quick_add_sheet.dart';
 import '../../data/exercise_demo_data.dart';
 import '../../domain/entities/exercise_category.dart';
@@ -31,6 +33,7 @@ class ExerciseOverviewScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.canvas,
       extendBody: true,
+      endDrawer: const MemyDrawer(activeShellIndex: 1),
       body: SafeArea(
         bottom: false,
         child: ListView(
@@ -46,6 +49,10 @@ class ExerciseOverviewScreen extends StatelessWidget {
                 tooltip: 'Back',
                 onPressed: () => memyBack(context, fallback: RoutePaths.more),
                 icon: const Icon(Icons.arrow_back_rounded),
+              ),
+              trailing: const MemyHeaderActions(
+                showAvatar: false,
+                menuKey: Key('exercise_open_drawer'),
               ),
             ),
             Padding(

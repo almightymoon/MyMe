@@ -14,11 +14,13 @@ class InlineErrorCard extends StatelessWidget {
     required this.onRetry,
     this.title = AppStrings.couldNotLoad,
     this.message,
+    this.retryButtonKey,
   });
 
   final VoidCallback onRetry;
   final String title;
   final String? message;
+  final Key? retryButtonKey;
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +45,7 @@ class InlineErrorCard extends StatelessWidget {
                   style: AppTextStyles.bodySmall(),
                 ),
               ),
-              RetryButton(onPressed: onRetry),
+              RetryButton(key: retryButtonKey, onPressed: onRetry),
             ],
           ),
         ],

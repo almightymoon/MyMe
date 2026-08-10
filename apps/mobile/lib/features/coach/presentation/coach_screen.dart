@@ -10,7 +10,7 @@ import '../../../core/errors/app_exception.dart';
 import '../../../core/widgets/empty_feature_card.dart';
 import '../../../core/widgets/inline_error_card.dart';
 import '../../../core/widgets/loading_card_skeleton.dart';
-import '../../../core/widgets/memy_page_header.dart';
+import '../../../core/widgets/memy_chrome.dart';
 import '../../shell/presentation/memy_bottom_navigation.dart';
 import '../../user/application/providers/user_providers.dart';
 import '../application/providers/coach_providers.dart';
@@ -51,9 +51,40 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
       bottom: false,
       child: Column(
         children: [
-          const MemyPageHeader(
-            title: 'AI Coach',
-            subtitle: AppStrings.liveAiNotConnected,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.page,
+              AppSpacing.sm,
+              AppSpacing.page,
+              AppSpacing.md,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'AI Coach',
+                        style: AppTextStyles.displayMedium().copyWith(
+                          fontSize: 28,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        AppStrings.liveAiNotConnected,
+                        style: AppTextStyles.bodySmall(
+                          color: AppColors.faintText,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const MemyMenuButton(key: Key('coach_open_drawer')),
+              ],
+            ),
           ),
           Expanded(
             child: ListView(

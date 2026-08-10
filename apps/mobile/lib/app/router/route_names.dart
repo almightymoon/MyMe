@@ -11,6 +11,8 @@ abstract final class RouteNames {
   static const String goalDetail = 'goalDetail';
   static const String habits = 'habits';
   static const String addHabit = 'addHabit';
+  static const String habitDetail = 'habitDetail';
+  static const String editHabit = 'editHabit';
   static const String finance = 'finance';
   static const String addTransaction = 'addTransaction';
   static const String transactionHistory = 'transactionHistory';
@@ -42,6 +44,8 @@ abstract final class RoutePaths {
   static const String goalDetail = '/goals/:goalId';
   static const String habits = '/habits';
   static const String addHabit = '/habits/new';
+  static const String habitDetail = '/habits/:habitId';
+  static const String editHabit = '/habits/:habitId/edit';
   static const String finance = '/finance';
   static const String addTransaction = '/finance/new';
   static const String transactionHistory = '/finance/history';
@@ -60,6 +64,10 @@ abstract final class RoutePaths {
   static const String nutritionComingSoon = '/nutrition/coming-soon';
 
   static String goalDetailPath(String goalId) => '/goals/$goalId';
+
+  static String habitDetailPath(String habitId) => '/habits/$habitId';
+
+  static String editHabitPath(String habitId) => '/habits/$habitId/edit';
 
   static String transactionDetailPath(String transactionId) =>
       '/finance/tx/$transactionId';

@@ -31,10 +31,10 @@ void main() {
     await signInToToday(tester);
 
     final comingSoonRoutes = <String, Finder>{
-      RoutePaths.habits: find.text('Habits'),
       RoutePaths.nutritionComingSoon: find.text('Nutrition logging'),
     };
     final liveModuleRoutes = <String, Finder>{
+      RoutePaths.habits: find.byKey(const Key('habits_overview')),
       RoutePaths.finance: find.byKey(const Key('finance_overview')),
       RoutePaths.calendar: find.byKey(const Key('calendar_overview')),
       RoutePaths.health: find.byKey(const Key('health_overview')),
@@ -105,6 +105,41 @@ void main() {
     router.go(RoutePaths.addGoal);
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('add_goal_form')), findsOneWidget);
+  });
+
+  testWidgets('Habits routes are live (not placeholders)', (tester) async {
+    await pumpMemyApp(tester);
+    await signInToToday(tester);
+    final router = GoRouter.of(tester.element(find.textContaining('Hi,')));
+
+    router.go(RoutePaths.habits);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('habits_overview')), findsOneWidget);
+    expect(find.text(AppStrings.comingSoon), findsNothing);
+
+    router.go(RoutePaths.addHabit);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('add_habit_screen')), findsOneWidget);
+
+    final habits = find.byKey(const Key('habit_tile_habit_morning_walk'));
+    if (habits.evaluate().isEmpty) {
+      router.go(RoutePaths.habits);
+      await tester.pumpAndSettle();
+    }
+    if (find
+        .byKey(const Key('habit_tile_habit_morning_walk'))
+        .evaluate()
+        .isNotEmpty) {
+      await tester.tap(find.byKey(const Key('habit_tile_habit_morning_walk')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('habit_detail')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('habit_detail_menu')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Edit'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('edit_habit_screen')), findsOneWidget);
+    }
   });
 
   testWidgets('Quick Add Add Goal maps to /goals/new', (tester) async {

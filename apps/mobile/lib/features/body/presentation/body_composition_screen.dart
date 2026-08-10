@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../app/router/app_navigation.dart';
 import '../../../app/router/route_names.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_text_styles.dart';
@@ -45,13 +44,6 @@ class _BodyCompositionScreenState extends State<BodyCompositionScreen> {
     return MemyModuleScaffold(
       key: const Key('body_composition'),
       title: 'BMI & Body Composition',
-      trailing: Builder(
-        builder: (menuContext) => MemyIconPlain(
-          key: const Key('body_open_drawer'),
-          icon: Icons.more_horiz_rounded,
-          onPressed: () => openMemyDrawer(menuContext),
-        ),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

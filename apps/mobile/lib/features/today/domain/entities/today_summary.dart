@@ -2,7 +2,7 @@ import '../../../calendar/domain/entities/schedule_item.dart';
 import '../../../coach/domain/entities/coach_suggestion.dart';
 import '../../../finance/domain/entities/finance_summary.dart';
 import '../../../goals/domain/entities/goal_summary.dart';
-import '../../../habits/domain/entities/habit_summary.dart';
+import '../../../habits/domain/entities/habit_progress.dart';
 import 'daily_focus.dart';
 
 class TodaySummary {
@@ -20,7 +20,9 @@ class TodaySummary {
   final DailyFocus? focus;
   final List<ScheduleItem> schedule;
   final List<GoalSummary> goals;
-  final List<HabitSummary> habits;
+
+  /// Scheduled Habit rows for the current local day (live from HabitRepository).
+  final List<HabitTodayItem> habits;
   final FinanceSummary? finance;
   final CoachSuggestion? coachRecommendation;
 
@@ -41,7 +43,7 @@ class TodaySummary {
     DailyFocus? focus,
     List<ScheduleItem>? schedule,
     List<GoalSummary>? goals,
-    List<HabitSummary>? habits,
+    List<HabitTodayItem>? habits,
     FinanceSummary? finance,
     CoachSuggestion? coachRecommendation,
   }) {

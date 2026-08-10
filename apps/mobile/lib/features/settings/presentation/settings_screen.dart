@@ -58,9 +58,11 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 _SetRow(icon: Icons.shield_outlined, label: 'Security'),
                 _SetRow(
+                  key: Key('settings_connected_apps'),
                   icon: Icons.link_rounded,
-                  label: 'Connected Accounts',
+                  label: 'Connected Apps',
                   isLast: true,
+                  routePath: RoutePaths.connectedApps,
                 ),
               ],
             ),
@@ -175,11 +177,13 @@ class _Section extends StatelessWidget {
 
 class _SetRow extends StatelessWidget {
   const _SetRow({
+    super.key,
     required this.icon,
     required this.label,
     this.value,
     this.isFirst = false,
     this.isLast = false,
+    this.routePath,
   });
 
   final IconData icon;
@@ -187,6 +191,9 @@ class _SetRow extends StatelessWidget {
   final String? value;
   final bool isFirst;
   final bool isLast;
+
+  /// When set, taps navigate here instead of showing the demo snackbar.
+  final String? routePath;
 
   BorderRadius get _inkRadius {
     if (isFirst && isLast) return AppRadii.cardRadius;
@@ -207,6 +214,10 @@ class _SetRow extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
+          if (routePath != null) {
+            context.push(routePath!);
+            return;
+          }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('$label — demo only'),

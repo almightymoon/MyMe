@@ -7,9 +7,11 @@ import '../../../../core/integrations/domain/integration_error.dart';
 import '../../../../core/integrations/domain/integration_provider.dart';
 import '../../../../core/integrations/privacy/integration_redaction.dart';
 import '../../domain/entities/health_metric_type.dart';
+import '../../domain/entities/health_permission_state.dart';
 import '../../domain/entities/health_workout.dart';
 import '../../domain/entities/normalized_health_sample.dart';
 import '../../domain/gateways/platform_health_gateway.dart';
+import '../../domain/services/health_aggregation_service.dart';
 
 /// [PlatformHealthGateway] backed by the real `health` plugin (Apple
 /// HealthKit / Google Health Connect).
@@ -21,16 +23,19 @@ import '../../domain/gateways/platform_health_gateway.dart';
 /// `writeHealthData`/`writeWorkoutData`/etc. on the plugin, and never
 /// requests `HealthDataAccess.WRITE`.
 ///
-/// Only requests [_metricTypePlugin]/[_workoutTypes] — i.e. exactly the MVP
+/// Only requests [_metricTypePlugin]/[_workoutType] — i.e. exactly the MVP
 /// metrics (steps, distance, active energy, heart rate, resting heart rate,
 /// sleep, exercise minutes, weight, workouts). Never ECG, blood pressure,
 /// glucose, SpO2, clinical records, medications, reproductive, or nutrition
 /// types, even though the plugin supports requesting them.
+///
+/// Sleep uses `SLEEP_ASLEEP` only (total asleep minutes) — no stage types.
 class SystemPlatformHealthGateway implements PlatformHealthGateway {
   SystemPlatformHealthGateway({hp.Health? health})
     : _health = health ?? hp.Health();
 
   final hp.Health _health;
+  final _aggregation = const HealthAggregationService();
   bool _configured = false;
 
   static const Map<HealthMetricType, hp.HealthDataType> _metricTypePlugin = {
@@ -40,6 +45,7 @@ class SystemPlatformHealthGateway implements PlatformHealthGateway {
     HealthMetricType.activeEnergyBurned: hp.HealthDataType.ACTIVE_ENERGY_BURNED,
     HealthMetricType.heartRate: hp.HealthDataType.HEART_RATE,
     HealthMetricType.restingHeartRate: hp.HealthDataType.RESTING_HEART_RATE,
+    // Total asleep only — do not request SLEEP_LIGHT / DEEP / REM / etc.
     HealthMetricType.sleep: hp.HealthDataType.SLEEP_ASLEEP,
     HealthMetricType.exerciseMinutes: hp.HealthDataType.EXERCISE_TIME,
     HealthMetricType.weight: hp.HealthDataType.WEIGHT,
@@ -104,9 +110,8 @@ class SystemPlatformHealthGateway implements PlatformHealthGateway {
   }
 
   @override
-  Future<Set<HealthMetricGroup>> requestPermissions(
-    Set<HealthMetricGroup> groups,
-  ) async {
+  Future<Map<HealthMetricGroup, HealthPermissionDisposition>>
+  requestPermissions(Set<HealthMetricGroup> groups) async {
     final types = _pluginTypesFor(groups).toList();
     if (types.isEmpty) return const {};
     await _ensureConfigured();
@@ -125,24 +130,42 @@ class SystemPlatformHealthGateway implements PlatformHealthGateway {
         IntegrationLogSanitizer.describeException(e),
       );
     }
-    if (!authorized) return const {};
 
     if (Platform.isIOS) {
       // HealthKit never discloses per-type READ grants (privacy by design):
       // a successful requestAuthorization only means the permission sheet
       // was shown without error, not that every type was switched on.
-      // Treat every requested group as "asked about"; readSamples simply
-      // returns no data for anything the user actually declined.
-      return groups;
+      // Mark as requestCompletedUnverified — NOT grantedVerified.
+      if (!authorized) {
+        return {
+          for (final g in groups) g: HealthPermissionDisposition.deniedVerified,
+        };
+      }
+      return {
+        for (final g in groups)
+          g: HealthPermissionDisposition.requestCompletedUnverified,
+      };
     }
 
     // Android/Health Connect reports real per-type grants — verify.
-    final granted = <HealthMetricGroup>{};
-    for (final group in groups) {
-      final hasGroup = await hasPermissions({group}) ?? false;
-      if (hasGroup) granted.add(group);
+    if (!authorized) {
+      return {
+        for (final g in groups) g: HealthPermissionDisposition.deniedVerified,
+      };
     }
-    return granted;
+    final result = <HealthMetricGroup, HealthPermissionDisposition>{};
+    for (final group in groups) {
+      final hasGroup = await hasPermissions({group});
+      if (hasGroup == true) {
+        result[group] = HealthPermissionDisposition.grantedVerified;
+      } else if (hasGroup == false) {
+        result[group] = HealthPermissionDisposition.deniedVerified;
+      } else {
+        // Unexpected null on Android — treat as unverified attempt.
+        result[group] = HealthPermissionDisposition.requestCompletedUnverified;
+      }
+    }
+    return result;
   }
 
   @override
@@ -174,6 +197,7 @@ class SystemPlatformHealthGateway implements PlatformHealthGateway {
       );
     }
 
+    final fetchedAt = DateTime.now().toUtc();
     final samples = <NormalizedHealthSample>[];
     for (final point in points) {
       final metricType = _pluginToMetricType[point.type];
@@ -189,6 +213,16 @@ class SystemPlatformHealthGateway implements PlatformHealthGateway {
           endAt: point.dateTo.toUtc(),
           source: _sourceFor(point.sourcePlatform),
           recordingMethod: _recordingMethodFor(point.recordingMethod),
+          providerRecordId: point.uuid.isEmpty ? null : point.uuid,
+          sourceApplicationId: point.sourceId.isEmpty ? null : point.sourceId,
+          sourceApplicationName: point.sourceName.isEmpty
+              ? null
+              : point.sourceName,
+          sourceDeviceId: point.sourceDeviceId.isEmpty
+              ? null
+              : point.sourceDeviceId,
+          sourceDeviceModel: point.deviceModel,
+          fetchedAt: fetchedAt,
         ),
       );
     }
@@ -216,6 +250,7 @@ class SystemPlatformHealthGateway implements PlatformHealthGateway {
       );
     }
 
+    final fetchedAt = DateTime.now().toUtc();
     final workouts = <HealthWorkout>[];
     for (final point in points) {
       final value = point.value;
@@ -229,10 +264,100 @@ class SystemPlatformHealthGateway implements PlatformHealthGateway {
           energyBurnedKcal: value.totalEnergyBurned?.toDouble(),
           distanceMeters: value.totalDistance?.toDouble(),
           source: _sourceFor(point.sourcePlatform),
+          sourceApplicationId: point.sourceId.isEmpty ? null : point.sourceId,
+          sourceApplicationName: point.sourceName.isEmpty
+              ? null
+              : point.sourceName,
+          sourceDeviceId: point.sourceDeviceId.isEmpty
+              ? null
+              : point.sourceDeviceId,
+          sourceDeviceModel: point.deviceModel,
+          fetchedAt: fetchedAt,
         ),
       );
     }
     return workouts;
+  }
+
+  /// health 13.3.1 exposes [hp.Health.getTotalStepsInInterval] for step
+  /// totals. There is no equivalent daily total for distance or active
+  /// energy — those fall back to raw samples + [HealthAggregationService]
+  /// dedupe (see [readDailyDistanceTotal] / [readDailyActiveEnergyTotal]).
+  @override
+  Future<int?> readDailyStepTotal({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async {
+    try {
+      await _ensureConfigured();
+      final total = await _health.getTotalStepsInInterval(startUtc, endUtc);
+      if (total != null) return total;
+    } catch (_) {
+      // Fall through to raw + dedupe.
+    }
+    return _sumDedupedInt(
+      metricType: HealthMetricType.steps,
+      startUtc: startUtc,
+      endUtc: endUtc,
+    );
+  }
+
+  /// health 13.3.1 has `getHealthIntervalDataFromTypes` for interval
+  /// aggregates, but no dedicated daily distance total API analogous to
+  /// [hp.Health.getTotalStepsInInterval]. Fall back to raw samples +
+  /// dedupe to avoid double-counting overlapping records.
+  @override
+  Future<double?> readDailyDistanceTotal({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async {
+    return _sumDeduped(
+      metricType: HealthMetricType.distanceWalkingRunning,
+      startUtc: startUtc,
+      endUtc: endUtc,
+    );
+  }
+
+  /// Same limitation as [readDailyDistanceTotal] — no plugin daily energy
+  /// total; use raw + dedupe.
+  @override
+  Future<double?> readDailyActiveEnergyTotal({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async {
+    return _sumDeduped(
+      metricType: HealthMetricType.activeEnergyBurned,
+      startUtc: startUtc,
+      endUtc: endUtc,
+    );
+  }
+
+  Future<double?> _sumDeduped({
+    required HealthMetricType metricType,
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async {
+    final samples = await readSamples(
+      metricTypes: {metricType},
+      startUtc: startUtc,
+      endUtc: endUtc,
+    );
+    final deduped = _aggregation.dedupeSamples(samples);
+    if (deduped.isEmpty) return null;
+    return deduped.fold<double>(0, (acc, s) => acc + s.value);
+  }
+
+  Future<int?> _sumDedupedInt({
+    required HealthMetricType metricType,
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async {
+    final total = await _sumDeduped(
+      metricType: metricType,
+      startUtc: startUtc,
+      endUtc: endUtc,
+    );
+    return total?.round();
   }
 
   HealthSampleSource _sourceFor(hp.HealthPlatformType platform) {

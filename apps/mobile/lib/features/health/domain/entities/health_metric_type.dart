@@ -66,7 +66,7 @@ extension HealthMetricGroupX on HealthMetricGroup {
     HealthMetricGroup.activity =>
       'Activity (steps, distance, energy, exercise)',
     HealthMetricGroup.heartRate => 'Heart rate',
-    HealthMetricGroup.sleep => 'Sleep',
+    HealthMetricGroup.sleep => 'Sleep (total asleep)',
     HealthMetricGroup.bodyMeasurements => 'Weight',
     HealthMetricGroup.workouts => 'Workouts',
   };

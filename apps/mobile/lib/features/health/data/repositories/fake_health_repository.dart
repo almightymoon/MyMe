@@ -71,21 +71,18 @@ class FakeHealthRepository implements HealthRepository {
     Set<HealthMetricGroup> groups,
   ) async {
     await _guard();
-    final granted = await gateway.requestPermissions(groups);
-    final denied = groups.difference(granted);
-    final nextState = _connection.permissionState.copyWith(
-      grantedGroups: {..._connection.permissionState.grantedGroups, ...granted},
-      deniedGroups: {..._connection.permissionState.deniedGroups, ...denied}
-        ..removeAll(granted),
-    );
+    final dispositions = await gateway.requestPermissions(groups);
+    final nextState = _connection.permissionState.merging(dispositions);
     _connection = _connection.copyWith(
-      status: nextState.hasAnyGrant
+      status: nextState.hasAnyReadable
           ? IntegrationConnectionStatus.connected
           : IntegrationConnectionStatus.error,
       permissionState: nextState,
-      connectedAt: nextState.hasAnyGrant
+      connectedAt: nextState.hasAnyReadable
           ? (_connection.connectedAt ?? _clock.now())
           : null,
+      schemaVersion: HealthConnectionConfig.currentSchemaVersion,
+      recoveryNeeded: false,
     );
     _cache.clear();
     _emit();

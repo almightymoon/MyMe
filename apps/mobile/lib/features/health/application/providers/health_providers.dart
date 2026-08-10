@@ -11,6 +11,7 @@ import '../../data/repositories/system_health_repository.dart';
 import '../../domain/entities/daily_health_summary.dart';
 import '../../domain/entities/health_connection_config.dart';
 import '../../domain/entities/health_metric_type.dart';
+import '../../domain/entities/health_permission_state.dart';
 import '../../domain/gateways/platform_health_gateway.dart';
 import '../../domain/repositories/health_repository.dart';
 
@@ -96,11 +97,10 @@ class HealthConnectionController {
 
   HealthRepository get _repository => _ref.read(healthRepositoryProvider);
 
-  Future<Set<HealthMetricGroup>> requestPermissions(
+  Future<HealthPermissionState> requestPermissions(
     Set<HealthMetricGroup> groups,
   ) async {
-    final state = await _repository.requestPermissions(groups);
-    return state.grantedGroups;
+    return _repository.requestPermissions(groups);
   }
 
   Future<void> disconnect() => _repository.disconnect();

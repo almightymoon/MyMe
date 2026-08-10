@@ -2,9 +2,11 @@ import '../../../../core/integrations/domain/integration_availability.dart';
 import '../../../../core/integrations/domain/integration_error.dart';
 import '../../../../core/integrations/domain/integration_provider.dart';
 import '../../domain/entities/health_metric_type.dart';
+import '../../domain/entities/health_permission_state.dart';
 import '../../domain/entities/health_workout.dart';
 import '../../domain/entities/normalized_health_sample.dart';
 import '../../domain/gateways/platform_health_gateway.dart';
+import '../../domain/services/health_aggregation_service.dart';
 
 /// Fully in-memory, controllable [PlatformHealthGateway].
 ///
@@ -16,18 +18,26 @@ class FakePlatformHealthGateway implements PlatformHealthGateway {
   FakePlatformHealthGateway({
     this._availability = IntegrationAvailability.available,
     Set<HealthMetricGroup> grantedGroups = const {},
+    this.treatRequestsAsUnverified = false,
   }) : _grantedGroups = {...grantedGroups};
 
   IntegrationAvailability _availability;
   final Set<HealthMetricGroup> _grantedGroups;
 
+  /// When true, [requestPermissions] marks every requested group as
+  /// [HealthPermissionDisposition.requestCompletedUnverified] (HealthKit-
+  /// style) instead of verified grant/deny.
+  bool treatRequestsAsUnverified;
+
   /// Groups the next [requestPermissions] call should grant. Defaults to
   /// "grant everything requested" — set to a subset to simulate a partial
   /// grant, or to `{}` to simulate the user declining everything.
+  /// Ignored when [treatRequestsAsUnverified] is true.
   Set<HealthMetricGroup>? nextRequestGrantsOverride;
 
   final List<NormalizedHealthSample> _samples = [];
   final List<HealthWorkout> _workouts = [];
+  final _aggregation = const HealthAggregationService();
 
   void seedSample(NormalizedHealthSample sample) {
     _samples.add(sample);
@@ -61,20 +71,36 @@ class FakePlatformHealthGateway implements PlatformHealthGateway {
 
   @override
   Future<bool?> hasPermissions(Set<HealthMetricGroup> groups) async {
+    if (treatRequestsAsUnverified) return null;
     return groups.every(_grantedGroups.contains);
   }
 
   @override
-  Future<Set<HealthMetricGroup>> requestPermissions(
-    Set<HealthMetricGroup> groups,
-  ) async {
+  Future<Map<HealthMetricGroup, HealthPermissionDisposition>>
+  requestPermissions(Set<HealthMetricGroup> groups) async {
     if (_availability != IntegrationAvailability.available) {
       throw IntegrationError.unavailable(IntegrationProvider.health);
     }
+
+    if (treatRequestsAsUnverified) {
+      _grantedGroups.addAll(groups);
+      return {
+        for (final g in groups)
+          g: HealthPermissionDisposition.requestCompletedUnverified,
+      };
+    }
+
     final granted = nextRequestGrantsOverride ?? groups;
     final actuallyGranted = groups.intersection(granted);
-    _grantedGroups.addAll(actuallyGranted);
-    return actuallyGranted;
+    _grantedGroups
+      ..removeAll(groups)
+      ..addAll(actuallyGranted);
+    return {
+      for (final g in groups)
+        g: actuallyGranted.contains(g)
+            ? HealthPermissionDisposition.grantedVerified
+            : HealthPermissionDisposition.deniedVerified,
+    };
   }
 
   bool _hasPermissionFor(HealthMetricType type) =>
@@ -106,5 +132,53 @@ class FakePlatformHealthGateway implements PlatformHealthGateway {
     return _workouts
         .where((w) => w.startAt.isBefore(endUtc) && w.endAt.isAfter(startUtc))
         .toList(growable: false);
+  }
+
+  @override
+  Future<int?> readDailyStepTotal({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async {
+    if (!_grantedGroups.contains(HealthMetricGroup.activity)) return null;
+    final samples = await readSamples(
+      metricTypes: {HealthMetricType.steps},
+      startUtc: startUtc,
+      endUtc: endUtc,
+    );
+    final deduped = _aggregation.dedupeSamples(samples);
+    if (deduped.isEmpty) return null;
+    return deduped.fold<double>(0, (acc, s) => acc + s.value).round();
+  }
+
+  @override
+  Future<double?> readDailyDistanceTotal({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async {
+    if (!_grantedGroups.contains(HealthMetricGroup.activity)) return null;
+    final samples = await readSamples(
+      metricTypes: {HealthMetricType.distanceWalkingRunning},
+      startUtc: startUtc,
+      endUtc: endUtc,
+    );
+    final deduped = _aggregation.dedupeSamples(samples);
+    if (deduped.isEmpty) return null;
+    return deduped.fold<double>(0, (acc, s) => acc + s.value);
+  }
+
+  @override
+  Future<double?> readDailyActiveEnergyTotal({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async {
+    if (!_grantedGroups.contains(HealthMetricGroup.activity)) return null;
+    final samples = await readSamples(
+      metricTypes: {HealthMetricType.activeEnergyBurned},
+      startUtc: startUtc,
+      endUtc: endUtc,
+    );
+    final deduped = _aggregation.dedupeSamples(samples);
+    if (deduped.isEmpty) return null;
+    return deduped.fold<double>(0, (acc, s) => acc + s.value);
   }
 }

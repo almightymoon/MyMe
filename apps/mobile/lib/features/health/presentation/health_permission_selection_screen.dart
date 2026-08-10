@@ -12,6 +12,7 @@ import '../../../core/widgets/memy_module_scaffold.dart';
 import '../application/providers/health_providers.dart';
 import '../domain/entities/health_connection_config.dart';
 import '../domain/entities/health_metric_type.dart';
+import '../domain/entities/health_permission_state.dart';
 import 'widgets/health_disclaimer_banner.dart';
 
 /// Per-group permission picker — the only place MeMy ever calls
@@ -29,6 +30,14 @@ class HealthPermissionSelectionScreen extends ConsumerStatefulWidget {
 
 class _HealthPermissionSelectionScreenState
     extends ConsumerState<HealthPermissionSelectionScreen> {
+  /// Default categories offered on first connect — Weight is opt-in.
+  static const _defaultGroups = {
+    HealthMetricGroup.activity,
+    HealthMetricGroup.heartRate,
+    HealthMetricGroup.sleep,
+    HealthMetricGroup.workouts,
+  };
+
   Set<HealthMetricGroup>? _selected;
   bool _isRequesting = false;
   String? _resultMessage;
@@ -53,21 +62,36 @@ class _HealthPermissionSelectionScreenState
     );
   }
 
+  Set<HealthMetricGroup> _initialSelection(HealthPermissionState state) {
+    final selected = <HealthMetricGroup>{...state.readableGroups};
+    for (final group in _defaultGroups) {
+      final d = state.dispositionOf(group);
+      if (d == HealthPermissionDisposition.notRequested) {
+        selected.add(group);
+      }
+    }
+    return selected;
+  }
+
   Widget _buildBody(BuildContext context, HealthConnectionConfig connection) {
-    final selected = _selected ??= {
-      ...connection.permissionState.grantedGroups,
-      ...HealthMetricGroup.values.where(
-        (g) =>
-            !connection.permissionState.grantedGroups.contains(g) &&
-            !connection.permissionState.deniedGroups.contains(g),
-      ),
-    };
+    final selected = _selected ??= _initialSelection(
+      connection.permissionState,
+    );
     final isConnected =
         connection.status == IntegrationConnectionStatus.connected;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (connection.recoveryNeeded) ...[
+          Text(
+            key: const Key('health_prefs_recovery'),
+            'Saved Health connection settings looked damaged. Reconnect to '
+            'restore access — MeMy did not assume you were disconnected.',
+            style: AppTextStyles.bodyMedium(color: AppColors.emberDark),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
         Text(
           'Every category below maps to one Health read permission. Pick '
           'only what you want MeMy to see — you can change this anytime.',
@@ -147,16 +171,12 @@ class _HealthPermissionSelectionScreenState
       _resultMessage = null;
     });
     try {
-      final granted = await ref
+      final state = await ref
           .read(healthConnectionControllerProvider)
           .requestPermissions(groups);
       if (!mounted) return;
-      final deniedCount = groups.length - granted.length;
       setState(() {
-        _resultMessage = deniedCount == 0
-            ? 'All set — access granted.'
-            : '${granted.length} of ${groups.length} categories granted. '
-                  'You can change this later from your device Health settings.';
+        _resultMessage = _successMessage(state, groups.length);
       });
       if (mounted) context.go(RoutePaths.health);
     } catch (error) {
@@ -167,6 +187,24 @@ class _HealthPermissionSelectionScreenState
     } finally {
       if (mounted) setState(() => _isRequesting = false);
     }
+  }
+
+  String _successMessage(HealthPermissionState state, int requestedCount) {
+    if (state.hasUnverifiedDispositions) {
+      return "Apple Health doesn't tell apps which categories you approved. "
+          'MeMy will show data for anything you allowed — check Settings → '
+          'Health if something is missing.';
+    }
+    final granted = state.verifiedGrantedCount;
+    if (granted == 0) {
+      return 'No categories were granted. You can change this later from '
+          'your device Health settings.';
+    }
+    if (granted >= requestedCount) {
+      return 'All set — $granted of $requestedCount categories verified.';
+    }
+    return '$granted of $requestedCount categories granted. '
+        'You can change this later from your device Health settings.';
   }
 
   Future<void> _disconnect() async {

@@ -1,5 +1,6 @@
 import '../../../../core/integrations/domain/integration_availability.dart';
 import '../entities/health_metric_type.dart';
+import '../entities/health_permission_state.dart';
 import '../entities/health_workout.dart';
 import '../entities/normalized_health_sample.dart';
 
@@ -27,11 +28,14 @@ abstract interface class PlatformHealthGateway {
   /// status without prompting (HealthKit never reveals READ grants).
   Future<bool?> hasPermissions(Set<HealthMetricGroup> groups);
 
-  /// Requests OS permission to read [groups]. Returns the groups the user
-  /// actually granted — may be a subset of what was requested.
-  Future<Set<HealthMetricGroup>> requestPermissions(
-    Set<HealthMetricGroup> groups,
-  );
+  /// Requests OS permission to read [groups].
+  ///
+  /// Returns a disposition per requested group:
+  /// - iOS: typically [HealthPermissionDisposition.requestCompletedUnverified]
+  /// - Android: [HealthPermissionDisposition.grantedVerified] /
+  ///   [HealthPermissionDisposition.deniedVerified] after `hasPermissions`
+  Future<Map<HealthMetricGroup, HealthPermissionDisposition>>
+  requestPermissions(Set<HealthMetricGroup> groups);
 
   /// Samples for [metricTypes] in `[startUtc, endUtc)`.
   ///
@@ -46,6 +50,28 @@ abstract interface class PlatformHealthGateway {
 
   /// Workouts overlapping `[startUtc, endUtc)`.
   Future<List<HealthWorkout>> readWorkouts({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  });
+
+  /// Platform daily step total for `[startUtc, endUtc)` when available.
+  ///
+  /// Prefer this over summing raw step samples (which can double-count).
+  /// Returns `null` when the platform has no aggregate or the call fails —
+  /// callers then fall back to raw samples + dedupe.
+  Future<int?> readDailyStepTotal({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  });
+
+  /// Platform daily walking/running distance total when available.
+  Future<double?> readDailyDistanceTotal({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  });
+
+  /// Platform daily active-energy total when available.
+  Future<double?> readDailyActiveEnergyTotal({
     required DateTime startUtc,
     required DateTime endUtc,
   });

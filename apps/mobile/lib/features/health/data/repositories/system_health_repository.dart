@@ -19,8 +19,8 @@ import 'health_repository_support.dart';
 /// [HealthRepository] backed by [SystemPlatformHealthGateway] with durable
 /// connection prefs (SharedPreferences).
 ///
-/// Persists only [HealthConnectionConfig] — connection status, granted/
-/// denied permission groups, and the last-refresh instant. Aggregated
+/// Persists only [HealthConnectionConfig] — connection status, permission
+/// dispositions, and the last-refresh instant. Aggregated
 /// [DailyHealthSummary] results are cached in memory only, for the current
 /// app session, and are always cleared on [disconnect].
 class SystemHealthRepository implements HealthRepository {
@@ -63,15 +63,21 @@ class SystemHealthRepository implements HealthRepository {
             : null,
       );
     } catch (_) {
-      _connection = const HealthConnectionConfig();
+      // Corrupt prefs: do not silently pretend never-connected. Keep any
+      // last-known in-memory config and flag recoveryNeeded.
+      final previous = _connection;
+      _connection = (previous ?? const HealthConnectionConfig()).copyWith(
+        recoveryNeeded: true,
+        schemaVersion: HealthConnectionConfig.currentSchemaVersion,
+      );
     }
     return _connection!;
   }
 
   Future<void> _writeConnection(HealthConnectionConfig config) async {
-    _connection = config;
-    await prefs.setString(storageKey, jsonEncode(config.toJson()));
-    _connectionController.add(config);
+    _connection = config.copyWith(recoveryNeeded: false);
+    await prefs.setString(storageKey, jsonEncode(_connection!.toJson()));
+    _connectionController.add(_connection!);
   }
 
   @override
@@ -92,22 +98,19 @@ class SystemHealthRepository implements HealthRepository {
     Set<HealthMetricGroup> groups,
   ) async {
     final current = _readConnection();
-    final granted = await gateway.requestPermissions(groups);
-    final denied = groups.difference(granted);
-    final nextState = current.permissionState.copyWith(
-      grantedGroups: {...current.permissionState.grantedGroups, ...granted},
-      deniedGroups: {...current.permissionState.deniedGroups, ...denied}
-        ..removeAll(granted),
-    );
+    final dispositions = await gateway.requestPermissions(groups);
+    final nextState = current.permissionState.merging(dispositions);
     await _writeConnection(
       current.copyWith(
-        status: nextState.hasAnyGrant
+        status: nextState.hasAnyReadable
             ? IntegrationConnectionStatus.connected
             : IntegrationConnectionStatus.error,
         permissionState: nextState,
-        connectedAt: nextState.hasAnyGrant
+        connectedAt: nextState.hasAnyReadable
             ? (current.connectedAt ?? _clock.now())
             : null,
+        schemaVersion: HealthConnectionConfig.currentSchemaVersion,
+        recoveryNeeded: false,
       ),
     );
     _cache.clear();

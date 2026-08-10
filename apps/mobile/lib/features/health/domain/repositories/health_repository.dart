@@ -13,9 +13,9 @@ import '../entities/health_permission_state.dart';
 /// durable connection prefs).
 ///
 /// Persistence contract: only [HealthConnectionConfig] (connection status,
-/// granted/denied permission groups, last-refresh timestamp) is durably
-/// stored. Raw samples are never persisted; [getDailySummary] may keep a
-/// short-lived in-memory cache of already-aggregated summaries, which
+/// per-group permission dispositions, last-refresh timestamp, recovery flag)
+/// is durably stored. Raw samples are never persisted; [getDailySummary] may
+/// keep a short-lived in-memory cache of already-aggregated summaries, which
 /// [disconnect] always clears.
 abstract class HealthRepository {
   Stream<HealthConnectionConfig> watchConnection();

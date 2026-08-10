@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -38,6 +39,8 @@ import '../../features/more/presentation/more_screen.dart';
 import '../../features/plan/presentation/plan_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/settings/presentation/connected_apps_screen.dart';
+import '../../features/settings/presentation/integration_diagnostics_screen.dart';
+import '../../features/settings/presentation/integration_lab_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/shell/presentation/memy_app_shell.dart';
 import '../../features/today/presentation/today_screen.dart';
@@ -320,6 +323,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: RouteNames.connectedApps,
         builder: (context, state) => const ConnectedAppsScreen(),
       ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.integrationDiagnostics,
+        name: RouteNames.integrationDiagnostics,
+        builder: (context, state) => const IntegrationDiagnosticsScreen(),
+      ),
+      if (kDebugMode)
+        GoRoute(
+          parentNavigatorKey: _rootNavigatorKey,
+          path: RoutePaths.integrationLab,
+          name: RouteNames.integrationLab,
+          builder: (context, state) => const IntegrationLabScreen(),
+        ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: RoutePaths.profile,

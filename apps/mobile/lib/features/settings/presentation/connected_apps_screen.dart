@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -75,6 +76,31 @@ class ConnectedAppsScreen extends ConsumerWidget {
                     status: healthStatus,
                     onTap: () => context.push(RoutePaths.health),
                   ),
+                  const SizedBox(height: AppSpacing.lg),
+                  ListTile(
+                    key: const Key('connected_apps_diagnostics'),
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.monitor_heart_outlined),
+                    title: const Text('Integration diagnostics'),
+                    subtitle: const Text(
+                      'Operational metadata only — no personal content',
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () =>
+                        context.push(RoutePaths.integrationDiagnostics),
+                  ),
+                  if (kDebugMode) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    ListTile(
+                      key: const Key('connected_apps_lab'),
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.science_outlined),
+                      title: const Text('Integration Lab'),
+                      subtitle: const Text('Debug-only fake gateway scenarios'),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () => context.push(RoutePaths.integrationLab),
+                    ),
+                  ],
                 ],
               ),
             ),

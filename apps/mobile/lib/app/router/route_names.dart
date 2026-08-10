@@ -36,6 +36,8 @@ abstract final class RouteNames {
   static const String body = 'body';
   static const String settings = 'settings';
   static const String connectedApps = 'connectedApps';
+  static const String integrationDiagnostics = 'integrationDiagnostics';
+  static const String integrationLab = 'integrationLab';
   static const String profile = 'profile';
   static const String nutritionComingSoon = 'nutritionComingSoon';
 }
@@ -78,6 +80,9 @@ abstract final class RoutePaths {
   static const String body = '/body';
   static const String settings = '/settings';
   static const String connectedApps = '/settings/connections';
+  static const String integrationDiagnostics =
+      '/settings/connections/diagnostics';
+  static const String integrationLab = '/settings/connections/lab';
   static const String profile = '/profile';
   static const String nutritionComingSoon = '/nutrition/coming-soon';
 

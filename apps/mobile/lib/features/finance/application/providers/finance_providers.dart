@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/application/providers/core_providers.dart';
 import '../../../../core/config/environment_config.dart';
 import '../../data/repositories/fake_finance_repository.dart';
 import '../../data/repositories/local_finance_repository.dart';
@@ -10,7 +11,6 @@ import '../../domain/entities/finance_summary.dart';
 import '../../domain/entities/finance_transaction.dart';
 import '../../domain/repositories/finance_repository.dart';
 import '../../domain/services/finance_summary_service.dart';
-import '../../../goals/application/providers/goal_providers.dart';
 
 /// Override in tests to force `fake` / `local` without dart-defines.
 final financeDataSourceProvider = Provider<FinanceDataSource>((ref) {

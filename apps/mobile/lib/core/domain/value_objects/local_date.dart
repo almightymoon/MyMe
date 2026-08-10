@@ -1,23 +1,60 @@
+/// Thrown when a [LocalDate] cannot represent a real calendar day.
+class InvalidLocalDateException implements Exception {
+  InvalidLocalDateException(this.message);
+  final String message;
+
+  @override
+  String toString() => 'InvalidLocalDateException: $message';
+}
+
 /// Calendar date without time or timezone ambiguity.
 ///
 /// Serialized exclusively as `YYYY-MM-DD`. Do not store check-in dates as
 /// UTC midnight timestamps.
+///
+/// Week start is **Monday** (ISO-8601). Calendar arithmetic uses UTC midday
+/// to avoid DST skip/duplication when adding days.
 class LocalDate implements Comparable<LocalDate> {
-  const LocalDate(this.year, this.month, this.day)
-    : assert(year >= 1),
-      assert(month >= 1 && month <= 12),
-      assert(day >= 1 && day <= 31);
+  /// Creates a validated calendar date. Rejects impossible days such as
+  /// 2026-02-31 at runtime (not only via assert).
+  factory LocalDate(int year, int month, int day) {
+    _validate(year, month, day);
+    return LocalDate._(year, month, day);
+  }
+
+  const LocalDate._(this.year, this.month, this.day);
 
   final int year;
   final int month;
   final int day;
 
-  /// Monday = 1 … Sunday = 7 (ISO-8601).
-  int get weekday {
-    return DateTime(year, month, day).weekday;
+  static void _validate(int year, int month, int day) {
+    if (year < 1) {
+      throw InvalidLocalDateException('year must be >= 1, got $year');
+    }
+    if (month < 1 || month > 12) {
+      throw InvalidLocalDateException('month must be 1–12, got $month');
+    }
+    if (day < 1 || day > 31) {
+      throw InvalidLocalDateException('day must be 1–31, got $day');
+    }
+    // Validate via UTC to avoid local DST reinterpretation of the civil date.
+    final probe = DateTime.utc(year, month, day);
+    if (probe.year != year || probe.month != month || probe.day != day) {
+      throw InvalidLocalDateException(
+        'not a real calendar day: '
+        '${year.toString().padLeft(4, '0')}-'
+        '${month.toString().padLeft(2, '0')}-'
+        '${day.toString().padLeft(2, '0')}',
+      );
+    }
   }
 
+  /// Monday = 1 … Sunday = 7 (ISO-8601).
+  int get weekday => DateTime.utc(year, month, day).weekday;
+
   static LocalDate fromDateTime(DateTime dateTime) {
+    // Interpret the caller's wall-calendar fields; do not convert timezone.
     return LocalDate(dateTime.year, dateTime.month, dateTime.day);
   }
 
@@ -32,15 +69,11 @@ class LocalDate implements Comparable<LocalDate> {
   static LocalDate parse(String raw) {
     final match = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$').firstMatch(raw.trim());
     if (match == null) {
-      throw FormatException('Invalid LocalDate: $raw');
+      throw InvalidLocalDateException('Invalid LocalDate format: $raw');
     }
     final y = int.parse(match.group(1)!);
     final m = int.parse(match.group(2)!);
     final d = int.parse(match.group(3)!);
-    final dt = DateTime(y, m, d);
-    if (dt.year != y || dt.month != m || dt.day != d) {
-      throw FormatException('Invalid LocalDate calendar day: $raw');
-    }
     return LocalDate(y, m, d);
   }
 
@@ -51,10 +84,11 @@ class LocalDate implements Comparable<LocalDate> {
     return '$y-$m-$d';
   }
 
+  /// Adds [days] using UTC midday so DST transitions cannot skip/duplicate dates.
   LocalDate addDays(int days) {
-    return LocalDate.fromDateTime(
-      DateTime(year, month, day).add(Duration(days: days)),
-    );
+    final utcMidday = DateTime.utc(year, month, day, 12);
+    final shifted = utcMidday.add(Duration(days: days));
+    return LocalDate(shifted.year, shifted.month, shifted.day);
   }
 
   /// Monday-start week containing this date.
@@ -68,6 +102,9 @@ class LocalDate implements Comparable<LocalDate> {
 
   /// Local midnight for UI widgets that need a DateTime.
   DateTime toDateTimeLocal() => DateTime(year, month, day);
+
+  /// UTC midnight corresponding to this civil date (not a local instant).
+  DateTime toDateTimeUtc() => DateTime.utc(year, month, day);
 
   @override
   int compareTo(LocalDate other) {

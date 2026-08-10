@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:uuid/uuid.dart';
 
+import '../../../../core/application/providers/core_providers.dart';
 import '../../../../core/config/environment_config.dart';
 import '../../../../core/network/api_client.dart';
 import '../../data/repositories/api_goal_repository.dart';
@@ -14,13 +13,8 @@ import '../../domain/entities/goal_summary.dart';
 import '../../domain/repositories/goal_repository.dart';
 import '../../domain/services/goal_forecast_service.dart';
 
-final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
-  throw UnimplementedError(
-    'sharedPreferencesProvider must be overridden in bootstrap/tests',
-  );
-});
-
-final uuidProvider = Provider<Uuid>((ref) => const Uuid());
+export '../../../../core/application/providers/core_providers.dart'
+    show sharedPreferencesProvider, uuidProvider, appClockProvider;
 
 /// Override in tests to force `fake` / `local` / `api` without dart-defines.
 final goalsDataSourceProvider = Provider<GoalsDataSource>((ref) {

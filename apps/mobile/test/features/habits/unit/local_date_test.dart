@@ -15,14 +15,16 @@ void main() {
     });
 
     test('rejects invalid format', () {
-      expect(() => LocalDate.parse('2026/08/09'), throwsFormatException);
-      expect(() => LocalDate.parse('08-09-2026'), throwsFormatException);
-      expect(() => LocalDate.parse('2026-8-9'), throwsFormatException);
+      final throwsInvalidLocalDate = throwsA(isA<InvalidLocalDateException>());
+      expect(() => LocalDate.parse('2026/08/09'), throwsInvalidLocalDate);
+      expect(() => LocalDate.parse('08-09-2026'), throwsInvalidLocalDate);
+      expect(() => LocalDate.parse('2026-8-9'), throwsInvalidLocalDate);
     });
 
     test('rejects invalid calendar day', () {
-      expect(() => LocalDate.parse('2026-02-30'), throwsFormatException);
-      expect(() => LocalDate.parse('2026-13-01'), throwsFormatException);
+      final throwsInvalidLocalDate = throwsA(isA<InvalidLocalDateException>());
+      expect(() => LocalDate.parse('2026-02-30'), throwsInvalidLocalDate);
+      expect(() => LocalDate.parse('2026-13-01'), throwsInvalidLocalDate);
     });
 
     test('tryParse returns null for invalid input', () {
@@ -37,7 +39,10 @@ void main() {
     });
 
     test('Feb 29 invalid in non-leap year', () {
-      expect(() => LocalDate.parse('2025-02-29'), throwsFormatException);
+      expect(
+        () => LocalDate.parse('2025-02-29'),
+        throwsA(isA<InvalidLocalDateException>()),
+      );
     });
   });
 
@@ -76,15 +81,15 @@ void main() {
 
   group('equality and ordering', () {
     test('equal dates compare equal', () {
-      const a = LocalDate(2026, 8, 9);
-      const b = LocalDate(2026, 8, 9);
+      final a = LocalDate(2026, 8, 9);
+      final b = LocalDate(2026, 8, 9);
       expect(a, b);
       expect(a.hashCode, b.hashCode);
     });
 
     test('compareTo orders chronologically', () {
-      const earlier = LocalDate(2026, 8, 8);
-      const later = LocalDate(2026, 8, 9);
+      final earlier = LocalDate(2026, 8, 8);
+      final later = LocalDate(2026, 8, 9);
       expect(earlier.isBefore(later), isTrue);
       expect(later.isAfter(earlier), isTrue);
       expect(earlier.isSameOrBefore(later), isTrue);
@@ -100,13 +105,13 @@ void main() {
     });
 
     test('toIso8601String round-trips without timezone', () {
-      const date = LocalDate(2026, 8, 9);
+      final date = LocalDate(2026, 8, 9);
       expect(date.toIso8601String(), '2026-08-09');
       expect(LocalDate.parse(date.toIso8601String()), date);
     });
 
     test('toDateTimeLocal is local midnight', () {
-      const date = LocalDate(2026, 8, 9);
+      final date = LocalDate(2026, 8, 9);
       final dt = date.toDateTimeLocal();
       expect(dt.year, 2026);
       expect(dt.month, 8);

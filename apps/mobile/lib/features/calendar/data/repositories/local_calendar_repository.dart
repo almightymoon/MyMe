@@ -6,6 +6,8 @@ import 'package:drift/drift.dart';
 import '../../../../core/domain/clock/app_clock.dart';
 import '../../../../core/integrations/domain/integration_provider.dart';
 import '../../domain/entities/calendar_config.dart';
+import '../../domain/entities/calendar_create_recovery_case.dart';
+import '../../domain/entities/calendar_event_lookup_result.dart';
 import '../../domain/entities/calendar_event_link.dart' as domain;
 import '../../domain/entities/calendar_event_origin.dart';
 import '../../domain/entities/calendar_event_sync_status.dart';
@@ -318,6 +320,12 @@ class LocalCalendarRepository implements CalendarRepository {
       lastCompleteQueryEnd: row.lastCompleteQueryEndUtc,
       hiddenLocally: row.hiddenLocally,
       memyMarker: row.memyMarker,
+      lastVerifiedLookupAt: row.lastVerifiedLookupAtUtc,
+      lastLookupDisposition: row.lastLookupDisposition == null
+          ? null
+          : CalendarEventLookupDisposition.values.byName(
+              row.lastLookupDisposition!,
+            ),
     );
   }
 
@@ -342,6 +350,8 @@ class LocalCalendarRepository implements CalendarRepository {
       lastCompleteQueryEndUtc: Value(link.lastCompleteQueryEnd),
       hiddenLocally: Value(link.hiddenLocally),
       memyMarker: Value(link.memyMarker),
+      lastVerifiedLookupAtUtc: Value(link.lastVerifiedLookupAt),
+      lastLookupDisposition: Value(link.lastLookupDisposition?.name),
     );
   }
 
@@ -621,5 +631,90 @@ class LocalCalendarRepository implements CalendarRepository {
   Future<void> refresh() async {
     // Drift streams re-query reactively on writes to the same connection;
     // nothing to do when reads/writes share this instance's connection.
+  }
+
+  // ----------------------------------------------------------- recovery
+
+  @override
+  Future<CalendarCreateRecoveryCase> saveRecoveryCase(
+    CalendarCreateRecoveryCase recoveryCase,
+  ) async {
+    await database
+        .into(database.calendarCreateRecoveryCases)
+        .insertOnConflictUpdate(_recoveryToCompanion(recoveryCase));
+    return recoveryCase;
+  }
+
+  @override
+  Future<CalendarCreateRecoveryCase?> getRecoveryCase(String id) async {
+    final row = await (database.select(
+      database.calendarCreateRecoveryCases,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
+    return row == null ? null : _recoveryFromRow(row);
+  }
+
+  @override
+  Future<List<CalendarCreateRecoveryCase>> getUnresolvedRecoveryCases() async {
+    final rows =
+        await (database.select(database.calendarCreateRecoveryCases)..where(
+              (t) =>
+                  t.status.equals(CalendarCreateRecoveryStatus.unresolved.name),
+            ))
+            .get();
+    return rows.map(_recoveryFromRow).toList(growable: false);
+  }
+
+  @override
+  Future<List<CalendarCreateRecoveryCase>> getRecoveryCasesForOperation(
+    String syncOperationId,
+  ) async {
+    final rows = await (database.select(
+      database.calendarCreateRecoveryCases,
+    )..where((t) => t.syncOperationId.equals(syncOperationId))).get();
+    return rows.map(_recoveryFromRow).toList(growable: false);
+  }
+
+  @override
+  Future<CalendarCreateRecoveryCase> updateRecoveryCase(
+    CalendarCreateRecoveryCase recoveryCase,
+  ) async {
+    await database
+        .into(database.calendarCreateRecoveryCases)
+        .insertOnConflictUpdate(_recoveryToCompanion(recoveryCase));
+    return recoveryCase;
+  }
+
+  CalendarCreateRecoveryCase _recoveryFromRow(
+    db.CalendarCreateRecoveryCase row,
+  ) {
+    return CalendarCreateRecoveryCase(
+      id: row.id,
+      syncOperationId: row.syncOperationId,
+      memyEventId: row.memyEventId,
+      recoveryType: CalendarCreateRecoveryType.values.byName(row.recoveryType),
+      status: CalendarCreateRecoveryStatus.values.byName(row.status),
+      candidates: CalendarCreateRecoveryCase.decodeCandidates(
+        row.candidatesJson,
+      ),
+      createdAt: row.createdAtUtc,
+      resolvedAt: row.resolvedAtUtc,
+      dismissedAt: row.dismissedAtUtc,
+    );
+  }
+
+  db.CalendarCreateRecoveryCasesCompanion _recoveryToCompanion(
+    CalendarCreateRecoveryCase recoveryCase,
+  ) {
+    return db.CalendarCreateRecoveryCasesCompanion(
+      id: Value(recoveryCase.id),
+      syncOperationId: Value(recoveryCase.syncOperationId),
+      memyEventId: Value(recoveryCase.memyEventId),
+      recoveryType: Value(recoveryCase.recoveryType.name),
+      status: Value(recoveryCase.status.name),
+      candidatesJson: Value(recoveryCase.encodeCandidates()),
+      createdAtUtc: Value(recoveryCase.createdAt),
+      resolvedAtUtc: Value(recoveryCase.resolvedAt),
+      dismissedAtUtc: Value(recoveryCase.dismissedAt),
+    );
   }
 }

@@ -1,6 +1,7 @@
 import '../../../../core/integrations/domain/integration_availability.dart';
 import '../../../../core/integrations/domain/integration_error.dart';
 import '../../../../core/integrations/domain/integration_provider.dart';
+import '../../domain/entities/calendar_event_lookup_result.dart';
 import '../../domain/entities/calendar_event_time.dart';
 import '../../domain/entities/calendar_read_batch.dart';
 import '../../domain/entities/device_calendar_descriptor.dart';
@@ -30,6 +31,40 @@ class FakeDeviceCalendarGateway implements DeviceCalendarGateway {
 
   /// Optional one-shot override for the next batch completeness (consumed).
   CalendarReadCompleteness? nextBatchCompleteness;
+
+  /// Per-event lookup overrides keyed by `$calendarId:$externalEventId`.
+  final Map<String, CalendarEventLookupResult> lookupOverrides = {};
+
+  /// When set, every [getEventById] returns this unless overridden per key.
+  CalendarEventLookupResult? defaultLookupOverride;
+
+  /// When true, [createEvent] throws after writing to simulate a crash.
+  bool crashAfterCreate = false;
+
+  /// When true, [updateEvent] throws after writing.
+  bool crashAfterUpdate = false;
+
+  /// When true, [deleteEvent] throws after removing.
+  bool crashAfterDelete = false;
+
+  /// When true, [checkAvailability] throws (provider-check failure).
+  bool throwOnAvailabilityCheck = false;
+
+  String _lookupKey(String calendarId, String externalEventId) =>
+      '$calendarId:$externalEventId';
+
+  void setLookupOverride({
+    required String calendarId,
+    required String externalEventId,
+    required CalendarEventLookupResult result,
+  }) {
+    lookupOverrides[_lookupKey(calendarId, externalEventId)] = result;
+  }
+
+  void clearLookupOverrides() {
+    lookupOverrides.clear();
+    defaultLookupOverride = null;
+  }
 
   final Map<String, DeviceCalendarDescriptor> _calendars = {};
   final Map<String, Map<String, DeviceCalendarRawEvent>> _eventsByCalendar = {};
@@ -136,7 +171,12 @@ class FakeDeviceCalendarGateway implements DeviceCalendarGateway {
       List.unmodifiable(_eventsByCalendar[calendarId]?.values ?? const []);
 
   @override
-  Future<IntegrationAvailability> checkAvailability() async => _availability;
+  Future<IntegrationAvailability> checkAvailability() async {
+    if (throwOnAvailabilityCheck) {
+      throw StateError('simulated availability check failure');
+    }
+    return _availability;
+  }
 
   @override
   Future<bool> requestPermissions() async {
@@ -212,12 +252,30 @@ class FakeDeviceCalendarGateway implements DeviceCalendarGateway {
   }
 
   @override
-  Future<DeviceCalendarRawEvent?> getEventById({
+  Future<CalendarEventLookupResult> getEventById({
     required String calendarId,
     required String externalEventId,
   }) async {
     _requirePermission();
-    return _eventsByCalendar[calendarId]?[externalEventId];
+    final key = _lookupKey(calendarId, externalEventId);
+    final override = lookupOverrides.remove(key) ?? defaultLookupOverride;
+    if (override != null) return override;
+
+    final event = _eventsByCalendar[calendarId]?[externalEventId];
+    final now = nowUtc();
+    if (event != null) {
+      return CalendarEventFound(
+        event: event,
+        fetchedAt: now,
+        providerSource: 'fake_map',
+      );
+    }
+    return CalendarEventNotFound(
+      externalCalendarId: calendarId,
+      externalEventId: externalEventId,
+      verifiedAt: now,
+      verificationMethod: 'fake_map',
+    );
   }
 
   @override
@@ -273,6 +331,9 @@ class FakeDeviceCalendarGateway implements DeviceCalendarGateway {
     );
     _eventsByCalendar.putIfAbsent(draft.externalCalendarId, () => {})[id] =
         event;
+    if (crashAfterCreate) {
+      throw IntegrationError.unknown(IntegrationProvider.calendar);
+    }
     return event;
   }
 
@@ -298,6 +359,9 @@ class FakeDeviceCalendarGateway implements DeviceCalendarGateway {
     );
     _eventsByCalendar.putIfAbsent(draft.externalCalendarId, () => {})[id] =
         event;
+    if (crashAfterUpdate) {
+      throw IntegrationError.unknown(IntegrationProvider.calendar);
+    }
     return event;
   }
 
@@ -308,6 +372,9 @@ class FakeDeviceCalendarGateway implements DeviceCalendarGateway {
   }) async {
     _requirePermission();
     _eventsByCalendar[calendarId]?.remove(externalEventId);
+    if (crashAfterDelete) {
+      throw IntegrationError.unknown(IntegrationProvider.calendar);
+    }
   }
 
   @override

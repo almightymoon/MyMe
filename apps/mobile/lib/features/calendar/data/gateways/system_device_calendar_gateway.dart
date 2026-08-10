@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/integrations/domain/integration_availability.dart';
 import '../../../../core/integrations/domain/integration_error.dart';
 import '../../../../core/integrations/domain/integration_provider.dart';
+import '../../domain/entities/calendar_event_lookup_result.dart';
 import '../../domain/entities/calendar_event_time.dart';
 import '../../domain/entities/calendar_read_batch.dart';
 import '../../domain/entities/device_calendar_descriptor.dart';
@@ -141,20 +142,52 @@ class SystemDeviceCalendarGateway implements DeviceCalendarGateway {
   }
 
   @override
-  Future<DeviceCalendarRawEvent?> getEventById({
+  Future<CalendarEventLookupResult> getEventById({
     required String calendarId,
     required String externalEventId,
   }) async {
     final now = DateTime.now().toUtc();
-    final batch = await listEventBatch(
-      calendarId: calendarId,
-      startUtc: now.subtract(_idLookupPast),
-      endUtc: now.add(_idLookupFuture),
-    );
-    for (final event in batch.events) {
-      if (event.externalEventId == externalEventId) return event;
+    try {
+      final batch = await listEventBatch(
+        calendarId: calendarId,
+        startUtc: now.subtract(_idLookupPast),
+        endUtc: now.add(_idLookupFuture),
+      );
+      if (batch.completeness == CalendarReadCompleteness.partial) {
+        return CalendarEventLookupUnsupported(
+          checkedAt: now,
+          explanationCode: 'partial_batch',
+        );
+      }
+      if (batch.completeness == CalendarReadCompleteness.unknown) {
+        return CalendarEventLookupUnknown(
+          sanitizedErrorCode: IntegrationErrorCode.unknown.name,
+          retryable: true,
+          checkedAt: now,
+        );
+      }
+      for (final event in batch.events) {
+        if (event.externalEventId == externalEventId) {
+          return CalendarEventFound(
+            event: event,
+            fetchedAt: batch.fetchedAt,
+            providerSource: 'batch_scan',
+          );
+        }
+      }
+      return CalendarEventNotFound(
+        externalCalendarId: calendarId,
+        externalEventId: externalEventId,
+        verifiedAt: batch.fetchedAt,
+        verificationMethod: 'complete_batch_scan',
+      );
+    } catch (_) {
+      return CalendarEventLookupUnknown(
+        sanitizedErrorCode: IntegrationErrorCode.unknown.name,
+        retryable: true,
+        checkedAt: now,
+      );
     }
-    return null;
   }
 
   @override

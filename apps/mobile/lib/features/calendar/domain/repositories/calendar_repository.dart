@@ -1,3 +1,4 @@
+import '../entities/calendar_create_recovery_case.dart';
 import '../entities/calendar_config.dart';
 import '../entities/calendar_event_link.dart';
 import '../entities/calendar_sync_conflict.dart';
@@ -95,6 +96,24 @@ abstract class CalendarRepository {
   );
 
   Future<CalendarSyncOperation> updateSyncOperation(CalendarSyncOperation op);
+
+  // ----------------------------------------------------------- recovery
+
+  Future<CalendarCreateRecoveryCase> saveRecoveryCase(
+    CalendarCreateRecoveryCase recoveryCase,
+  );
+
+  Future<CalendarCreateRecoveryCase?> getRecoveryCase(String id);
+
+  Future<List<CalendarCreateRecoveryCase>> getUnresolvedRecoveryCases();
+
+  Future<List<CalendarCreateRecoveryCase>> getRecoveryCasesForOperation(
+    String syncOperationId,
+  );
+
+  Future<CalendarCreateRecoveryCase> updateRecoveryCase(
+    CalendarCreateRecoveryCase recoveryCase,
+  );
 
   /// Re-reads persisted state and re-emits every watch stream (used after
   /// out-of-band writes, e.g. a sync pass done outside this instance).

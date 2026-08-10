@@ -22,7 +22,7 @@ class CalendarConfig {
     @Deprecated('Use rolling windows') this.initialSyncAnchorFuture,
   });
 
-  static const int currentSchemaVersion = 2;
+  static const int currentSchemaVersion = 3;
   static const int defaultPastWindowDays = 30;
   static const int defaultFutureWindowDays = 365;
 

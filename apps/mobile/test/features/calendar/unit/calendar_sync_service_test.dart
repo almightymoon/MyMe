@@ -236,7 +236,10 @@ void main() {
       expect(hidden, hasLength(1));
       expect(hidden.single.syncStatus, CalendarEventSyncStatus.hidden);
       final link = await repository.getLinkForEvent(hidden.single.id);
-      expect(link!.presence, ExternalPresenceStatus.confirmedMissing);
+      expect(
+        link!.presence,
+        ExternalPresenceStatus.hiddenAfterExternalDeletion,
+      );
       expect(link.hiddenLocally, isTrue);
     });
 

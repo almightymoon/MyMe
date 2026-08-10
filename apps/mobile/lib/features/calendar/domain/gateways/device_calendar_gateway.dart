@@ -1,4 +1,5 @@
 import '../../../../core/integrations/domain/integration_availability.dart';
+import '../entities/calendar_event_lookup_result.dart';
 import '../entities/calendar_read_batch.dart';
 import '../entities/device_calendar_descriptor.dart';
 import '../entities/device_calendar_raw_event.dart';
@@ -30,7 +31,7 @@ abstract interface class DeviceCalendarGateway {
     required DateTime endUtc,
   });
 
-  Future<DeviceCalendarRawEvent?> getEventById({
+  Future<CalendarEventLookupResult> getEventById({
     required String calendarId,
     required String externalEventId,
   });

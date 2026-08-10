@@ -8,6 +8,9 @@ enum CalendarSyncOperationState {
   retryableFailure,
   unknownOutcome,
   permanentlyFailed,
+
+  /// Ambiguous outcome that needs user resolution (e.g. duplicate markers).
+  requiresUserAction,
 }
 
 class CalendarSyncOperation {

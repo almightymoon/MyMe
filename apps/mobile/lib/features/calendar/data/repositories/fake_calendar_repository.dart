@@ -2,6 +2,7 @@ import 'dart:async';
 
 import '../../../../core/data/fake_repository_config.dart';
 import '../../../../core/domain/clock/app_clock.dart';
+import '../../domain/entities/calendar_create_recovery_case.dart';
 import '../../domain/entities/calendar_config.dart';
 import '../../domain/entities/calendar_event_link.dart';
 import '../../domain/entities/calendar_event_origin.dart';
@@ -32,6 +33,7 @@ class FakeCalendarRepository implements CalendarRepository {
   List<MemyCalendarEvent> _events;
   final Map<String, CalendarEventLink> _linksByEventId = {};
   final Map<String, CalendarSyncOperation> _opsById = {};
+  final Map<String, CalendarCreateRecoveryCase> _recoveryById = {};
   final List<CalendarSyncConflict> _conflicts = [];
   CalendarConfig _configRow = const CalendarConfig();
   int _idSeq = 0;
@@ -385,5 +387,41 @@ class FakeCalendarRepository implements CalendarRepository {
   Future<void> refresh() async {
     _emitEvents();
     _emitConflicts();
+  }
+
+  @override
+  Future<CalendarCreateRecoveryCase> saveRecoveryCase(
+    CalendarCreateRecoveryCase recoveryCase,
+  ) async {
+    _recoveryById[recoveryCase.id] = recoveryCase;
+    return recoveryCase;
+  }
+
+  @override
+  Future<CalendarCreateRecoveryCase?> getRecoveryCase(String id) async =>
+      _recoveryById[id];
+
+  @override
+  Future<List<CalendarCreateRecoveryCase>> getUnresolvedRecoveryCases() async {
+    return _recoveryById.values
+        .where((c) => c.status == CalendarCreateRecoveryStatus.unresolved)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<List<CalendarCreateRecoveryCase>> getRecoveryCasesForOperation(
+    String syncOperationId,
+  ) async {
+    return _recoveryById.values
+        .where((c) => c.syncOperationId == syncOperationId)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<CalendarCreateRecoveryCase> updateRecoveryCase(
+    CalendarCreateRecoveryCase recoveryCase,
+  ) async {
+    _recoveryById[recoveryCase.id] = recoveryCase;
+    return recoveryCase;
   }
 }

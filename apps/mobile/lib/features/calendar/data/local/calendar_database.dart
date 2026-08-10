@@ -65,6 +65,8 @@ class CalendarEventLinks extends Table {
   BoolColumn get hiddenLocally =>
       boolean().withDefault(const Constant(false))();
   TextColumn get memyMarker => text().nullable()();
+  DateTimeColumn get lastVerifiedLookupAtUtc => dateTime().nullable()();
+  TextColumn get lastLookupDisposition => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -112,6 +114,22 @@ class CalendarSyncOperations extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Ambiguous create reconciliation requiring user action.
+class CalendarCreateRecoveryCases extends Table {
+  TextColumn get id => text()();
+  TextColumn get syncOperationId => text()();
+  TextColumn get memyEventId => text()();
+  TextColumn get recoveryType => text()();
+  TextColumn get status => text()();
+  TextColumn get candidatesJson => text().withDefault(const Constant('[]'))();
+  DateTimeColumn get createdAtUtc => dateTime()();
+  DateTimeColumn get resolvedAtUtc => dateTime().nullable()();
+  DateTimeColumn get dismissedAtUtc => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Single-row table (`id` fixed at 0) holding calendar-integration settings.
 class CalendarConfigRows extends Table {
   IntColumn get id => integer().withDefault(const Constant(0))();
@@ -152,6 +170,7 @@ class CalendarConfigRows extends Table {
     CalendarEventLinks,
     CalendarConflicts,
     CalendarSyncOperations,
+    CalendarCreateRecoveryCases,
     CalendarConfigRows,
   ],
 )
@@ -160,7 +179,7 @@ class CalendarDatabase extends _$CalendarDatabase {
     : super(executor ?? driftDatabase(name: 'memy_calendar'));
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -273,6 +292,20 @@ class CalendarDatabase extends _$CalendarDatabase {
             ),
           );
         }
+      }
+      if (from < 3) {
+        await m.addColumn(
+          calendarEventLinks,
+          calendarEventLinks.lastVerifiedLookupAtUtc,
+        );
+        await m.addColumn(
+          calendarEventLinks,
+          calendarEventLinks.lastLookupDisposition,
+        );
+        await m.createTable(calendarCreateRecoveryCases);
+        await (update(calendarConfigRows)..where((t) => t.id.equals(0))).write(
+          const CalendarConfigRowsCompanion(calendarSchemaVersion: Value(3)),
+        );
       }
     },
   );

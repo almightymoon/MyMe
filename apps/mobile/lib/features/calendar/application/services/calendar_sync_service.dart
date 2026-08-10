@@ -1,15 +1,21 @@
 import 'dart:async';
 
 import '../../../../core/domain/clock/app_clock.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/integrations/application/providers/integration_providers.dart';
 import '../../../../core/integrations/domain/integration_availability.dart';
 import '../../../../core/integrations/domain/integration_connection_status.dart';
 import '../../../../core/integrations/domain/integration_error.dart';
 import '../../../../core/integrations/domain/integration_provider.dart';
 import '../../../../core/integrations/domain/sync_result.dart';
+import '../../domain/entities/calendar_config.dart';
+import '../../domain/entities/calendar_create_recovery_case.dart';
 import '../../domain/entities/calendar_event_link.dart';
+import '../../domain/entities/calendar_event_lookup_result.dart';
 import '../../domain/entities/calendar_event_origin.dart';
 import '../../domain/entities/calendar_event_sync_status.dart';
+import '../../domain/entities/calendar_event_time.dart';
+import '../../domain/entities/calendar_marker_search_result.dart';
 import '../../domain/entities/calendar_read_batch.dart';
 import '../../domain/entities/calendar_sync_conflict.dart';
 import '../../domain/entities/calendar_sync_operation.dart';
@@ -87,6 +93,10 @@ class CalendarSyncService {
   }
 
   /// Restores registry state from durable config (app restart / bootstrap).
+  ///
+  /// Never reports [IntegrationConnectionStatus.connected] after a failed
+  /// provider check. Cached agenda may remain visible under
+  /// [IntegrationConnectionStatus.staleCacheAvailable].
   Future<void> hydrateConnectionFromPersistence() async {
     final config = await repository.getConfig();
     final readable = config.effectiveReadableCalendarIds;
@@ -103,10 +113,21 @@ class CalendarSyncService {
     var availability = IntegrationAvailability.unknown;
     try {
       availability = await gateway.checkAvailability();
+      if (availability == IntegrationAvailability.unavailable) {
+        _setConnection(
+          IntegrationConnectionStatus.providerUnavailable,
+          availability: availability,
+          selectedCalendarIds: readable,
+          connectedAt: config.connectionConfiguredAt,
+          error: IntegrationError.unavailable(IntegrationProvider.calendar),
+        );
+        return;
+      }
+
       final permitted = await gateway.hasPermissions();
       if (!permitted) {
         _setConnection(
-          IntegrationConnectionStatus.error,
+          IntegrationConnectionStatus.permissionStatusUnknown,
           availability: availability,
           selectedCalendarIds: readable,
           connectedAt: config.connectionConfiguredAt,
@@ -116,111 +137,365 @@ class CalendarSyncService {
         );
         return;
       }
+
+      // Validate readable IDs still exist when the provider can list them.
+      final calendars = await gateway.listCalendars();
+      final knownIds = calendars.map((c) => c.id).toSet();
+      final validReadable = readable.where(knownIds.contains).toList();
+      final writableId = config.defaultWritableCalendarId;
+      final writableValid =
+          writableId != null &&
+          knownIds.contains(writableId) &&
+          calendars.any((c) => c.id == writableId && !c.isReadOnly);
+
+      if (validReadable.isEmpty) {
+        _setConnection(
+          IntegrationConnectionStatus.configurationInvalid,
+          availability: availability == IntegrationAvailability.unknown
+              ? IntegrationAvailability.available
+              : availability,
+          selectedCalendarIds: readable,
+          connectedAt: config.connectionConfiguredAt,
+          error: IntegrationError.unknown(IntegrationProvider.calendar),
+        );
+        return;
+      }
+
+      final status = writableValid
+          ? IntegrationConnectionStatus.connected
+          : IntegrationConnectionStatus.partiallyConnected;
+
+      _setConnection(
+        status,
+        availability: availability == IntegrationAvailability.unknown
+            ? IntegrationAvailability.available
+            : availability,
+        connectedAt: config.connectionConfiguredAt ?? _clock.now().toUtc(),
+        selectedCalendarIds: validReadable,
+        clearError: writableValid,
+        error: writableValid
+            ? null
+            : IntegrationError.unknown(IntegrationProvider.calendar),
+      );
+
+      await reconcileInFlightOperations();
     } catch (_) {
-      // Soft-fail hydration — still mark connected from persistence.
+      // Provider check failed — keep cached selection, never claim connected.
+      _setConnection(
+        IntegrationConnectionStatus.staleCacheAvailable,
+        availability: availability,
+        selectedCalendarIds: readable,
+        connectedAt: config.connectionConfiguredAt,
+        error: IntegrationError.unknown(IntegrationProvider.calendar),
+      );
     }
-
-    _setConnection(
-      IntegrationConnectionStatus.connected,
-      availability: availability == IntegrationAvailability.unknown
-          ? IntegrationAvailability.available
-          : availability,
-      connectedAt: config.connectionConfiguredAt ?? _clock.now().toUtc(),
-      selectedCalendarIds: readable,
-      clearError: true,
-    );
-
-    await reconcileInFlightCreates();
   }
 
-  /// Reconciles create ops left `inFlight` after a crash/restart.
+  /// Reconciles outbox ops left `inFlight` after a crash/restart.
   ///
-  /// Finds the device event by memy marker when possible; otherwise marks
-  /// [CalendarSyncOperationState.unknownOutcome] and does **not** auto-retry.
-  Future<void> reconcileInFlightCreates() async {
+  /// Creates reconcile by memy marker; updates/deletes reconcile by typed
+  /// [getEventById]. Ambiguous outcomes become recovery cases or
+  /// [CalendarSyncOperationState.requiresUserAction] — never auto-retry creates.
+  Future<void> reconcileInFlightOperations() async {
     final ops = await repository.getInFlightOperations();
     final config = await repository.getConfig();
     final window = config.rollingWindow(_clock.now().toUtc());
 
     for (final op in ops) {
-      if (op.operationType != CalendarSyncOperationType.create) {
+      switch (op.operationType) {
+        case CalendarSyncOperationType.create:
+          await _reconcileInFlightCreate(op, window);
+        case CalendarSyncOperationType.update:
+          await _reconcileInFlightUpdate(op);
+        case CalendarSyncOperationType.delete:
+          await _reconcileInFlightDelete(op);
+      }
+    }
+  }
+
+  /// @deprecated Use [reconcileInFlightOperations].
+  Future<void> reconcileInFlightCreates() => reconcileInFlightOperations();
+
+  Future<CalendarMarkerSearchResult> _findByMemyMarker({
+    required String calendarId,
+    required String memyMarker,
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async {
+    try {
+      final found = await gateway.findEventsByMemyMarker(
+        calendarId: calendarId,
+        memyMarker: memyMarker,
+        startUtc: startUtc,
+        endUtc: endUtc,
+      );
+      if (found.isEmpty) return const CalendarMarkerNoMatch();
+      if (found.length == 1) return CalendarMarkerSingleMatch(found.single);
+      return CalendarMarkerMultipleMatches(found);
+    } catch (e) {
+      return CalendarMarkerSearchUnknown(
+        e is IntegrationError ? e.code.name : IntegrationErrorCode.unknown.name,
+      );
+    }
+  }
+
+  String _titleFingerprint(String title) => title.hashCode.toRadixString(16);
+
+  List<CalendarCreateRecoveryCandidate> _sanitizedCandidates(
+    List<DeviceCalendarRawEvent> events,
+  ) {
+    return events
+        .map(
+          (e) => CalendarCreateRecoveryCandidate(
+            externalEventId: e.externalEventId,
+            externalCalendarId: e.externalCalendarId,
+            titleFingerprint: _titleFingerprint(e.title),
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  Future<void> _persistRecoveryCase({
+    required CalendarSyncOperation op,
+    required CalendarCreateRecoveryType type,
+    List<CalendarCreateRecoveryCandidate> candidates = const [],
+    required CalendarSyncOperationState opState,
+  }) async {
+    final now = _clock.now().toUtc();
+    await repository.saveRecoveryCase(
+      CalendarCreateRecoveryCase(
+        id: _newId('cal_recovery'),
+        syncOperationId: op.id,
+        memyEventId: op.memyEventId,
+        recoveryType: type,
+        status: CalendarCreateRecoveryStatus.unresolved,
+        candidates: candidates,
+        createdAt: now,
+      ),
+    );
+    await repository.updateSyncOperation(op.copyWith(state: opState));
+  }
+
+  Future<void> _reconcileInFlightCreate(
+    CalendarSyncOperation op,
+    ({DateTime start, DateTime end}) window,
+  ) async {
+    final marker = op.memyMarker;
+    if (marker == null || marker.isEmpty) {
+      await repository.updateSyncOperation(
+        op.copyWith(state: CalendarSyncOperationState.unknownOutcome),
+      );
+      return;
+    }
+
+    final search = await _findByMemyMarker(
+      calendarId: op.targetCalendarId,
+      memyMarker: marker,
+      startUtc: window.start,
+      endUtc: window.end,
+    );
+
+    switch (search) {
+      case CalendarMarkerNoMatch():
+        await _persistRecoveryCase(
+          op: op,
+          type: CalendarCreateRecoveryType.noMatchUnknownOutcome,
+          opState: CalendarSyncOperationState.unknownOutcome,
+        );
+      case CalendarMarkerSearchUnknown():
         await repository.updateSyncOperation(
           op.copyWith(state: CalendarSyncOperationState.unknownOutcome),
         );
-        continue;
-      }
-      final marker = op.memyMarker;
-      if (marker == null || marker.isEmpty) {
-        await repository.updateSyncOperation(
-          op.copyWith(state: CalendarSyncOperationState.unknownOutcome),
+      case CalendarMarkerMultipleMatches(:final events):
+        await _persistRecoveryCase(
+          op: op,
+          type: CalendarCreateRecoveryType.multipleMarkerMatches,
+          candidates: _sanitizedCandidates(events),
+          opState: CalendarSyncOperationState.requiresUserAction,
         );
-        continue;
-      }
+      case CalendarMarkerSingleMatch(:final event):
+        await _completeCreateReconciliation(op, event, marker);
+    }
+  }
 
-      try {
-        final found = await gateway.findEventsByMemyMarker(
-          calendarId: op.targetCalendarId,
-          memyMarker: marker,
-          startUtc: window.start,
-          endUtc: window.end,
-        );
-        if (found.isEmpty) {
-          await repository.updateSyncOperation(
-            op.copyWith(state: CalendarSyncOperationState.unknownOutcome),
-          );
-          continue;
-        }
-
-        final raw = found.first;
-        final now = _clock.now().toUtc();
-        final event = await repository.getEvent(op.memyEventId);
-        if (event != null) {
-          await repository.updateEvent(
-            event.copyWith(
-              syncStatus: CalendarEventSyncStatus.synced,
-              provider: IntegrationProvider.calendar,
-              externalCalendarId: raw.externalCalendarId,
-              externalEventId: raw.externalEventId,
-              updatedAt: now,
-            ),
-          );
-          final existingLink = await repository.getLinkForEvent(event.id);
-          await repository.saveLink(
-            (existingLink ??
-                    CalendarEventLink(
-                      id: _newId('cal_link'),
-                      memyEventId: event.id,
-                      provider: IntegrationProvider.calendar,
-                      externalCalendarId: raw.externalCalendarId,
-                      externalEventId: raw.externalEventId,
-                      lastSyncedAt: now,
-                      memyMarker: marker,
-                    ))
-                .copyWith(
+  Future<void> _completeCreateReconciliation(
+    CalendarSyncOperation op,
+    DeviceCalendarRawEvent raw,
+    String marker,
+  ) async {
+    final now = _clock.now().toUtc();
+    final event = await repository.getEvent(op.memyEventId);
+    if (event != null) {
+      await repository.updateEvent(
+        event.copyWith(
+          syncStatus: CalendarEventSyncStatus.synced,
+          provider: IntegrationProvider.calendar,
+          externalCalendarId: raw.externalCalendarId,
+          externalEventId: raw.externalEventId,
+          updatedAt: now,
+        ),
+      );
+      final existingLink = await repository.getLinkForEvent(event.id);
+      await repository.saveLink(
+        (existingLink ??
+                CalendarEventLink(
+                  id: _newId('cal_link'),
+                  memyEventId: event.id,
+                  provider: IntegrationProvider.calendar,
+                  externalCalendarId: raw.externalCalendarId,
+                  externalEventId: raw.externalEventId,
                   lastSyncedAt: now,
-                  lastKnownExternalUpdatedAt: raw.lastModifiedUtc,
-                  presence: ExternalPresenceStatus.present,
-                  lastSeenExternallyAt: now,
                   memyMarker: marker,
-                  clearFirstMissing: true,
-                  clearLastMissing: true,
-                  missingObservationCount: 0,
-                ),
-          );
+                ))
+            .copyWith(
+              lastSyncedAt: now,
+              lastKnownExternalUpdatedAt: raw.lastModifiedUtc,
+              presence: ExternalPresenceStatus.present,
+              lastSeenExternallyAt: now,
+              memyMarker: marker,
+              clearFirstMissing: true,
+              clearLastMissing: true,
+              missingObservationCount: 0,
+            ),
+      );
+    }
+    await repository.updateSyncOperation(
+      op.copyWith(
+        state: CalendarSyncOperationState.completed,
+        providerExternalEventId: raw.externalEventId,
+        completedAt: now,
+      ),
+    );
+  }
+
+  Future<void> _reconcileInFlightUpdate(CalendarSyncOperation op) async {
+    final event = await repository.getEvent(op.memyEventId);
+    if (event == null || !event.isLinkedToExternal) {
+      await repository.updateSyncOperation(
+        op.copyWith(state: CalendarSyncOperationState.unknownOutcome),
+      );
+      return;
+    }
+
+    final lookup = await gateway.getEventById(
+      calendarId: event.externalCalendarId!,
+      externalEventId: event.externalEventId!,
+    );
+
+    switch (lookup) {
+      case CalendarEventFound found:
+        final completedAt = _clock.now().toUtc();
+        await repository.updateSyncOperation(
+          op.copyWith(
+            state: CalendarSyncOperationState.completed,
+            providerExternalEventId: found.event.externalEventId,
+            completedAt: completedAt,
+          ),
+        );
+      case CalendarEventNotFound():
+        await repository.updateSyncOperation(
+          op.copyWith(state: CalendarSyncOperationState.unknownOutcome),
+        );
+      case CalendarEventLookupUnknown():
+      case CalendarEventLookupUnsupported():
+        await repository.updateSyncOperation(
+          op.copyWith(state: CalendarSyncOperationState.unknownOutcome),
+        );
+    }
+  }
+
+  Future<void> _reconcileInFlightDelete(CalendarSyncOperation op) async {
+    final event = await repository.getEvent(op.memyEventId);
+    final externalCalendarId = op.targetCalendarId.isNotEmpty
+        ? op.targetCalendarId
+        : event?.externalCalendarId;
+    final externalEventId =
+        op.providerExternalEventId ?? event?.externalEventId;
+
+    if (externalCalendarId == null ||
+        externalEventId == null ||
+        externalEventId.isEmpty) {
+      await repository.updateSyncOperation(
+        op.copyWith(state: CalendarSyncOperationState.unknownOutcome),
+      );
+      return;
+    }
+
+    final lookup = await gateway.getEventById(
+      calendarId: externalCalendarId,
+      externalEventId: externalEventId,
+    );
+
+    switch (lookup) {
+      case CalendarEventNotFound():
+        final now = _clock.now().toUtc();
+        if (event != null) {
+          final link = await repository.getLinkForEvent(event.id);
+          if (link != null) await repository.deleteLink(link.id);
+          await repository.deleteEvent(event.id);
         }
         await repository.updateSyncOperation(
           op.copyWith(
             state: CalendarSyncOperationState.completed,
-            providerExternalEventId: raw.externalEventId,
             completedAt: now,
           ),
         );
-      } catch (_) {
+      case CalendarEventFound():
+        try {
+          await gateway.deleteEvent(
+            calendarId: externalCalendarId,
+            externalEventId: externalEventId,
+          );
+          final now = _clock.now().toUtc();
+          if (event != null) {
+            final link = await repository.getLinkForEvent(event.id);
+            if (link != null) await repository.deleteLink(link.id);
+            await repository.deleteEvent(event.id);
+          }
+          await repository.updateSyncOperation(
+            op.copyWith(
+              state: CalendarSyncOperationState.completed,
+              completedAt: now,
+            ),
+          );
+        } catch (_) {
+          await repository.updateSyncOperation(
+            op.copyWith(state: CalendarSyncOperationState.unknownOutcome),
+          );
+        }
+      case CalendarEventLookupUnknown():
+      case CalendarEventLookupUnsupported():
         await repository.updateSyncOperation(
           op.copyWith(state: CalendarSyncOperationState.unknownOutcome),
         );
-      }
     }
+  }
+
+  CalendarEventLookupDisposition _lookupDisposition(
+    CalendarEventLookupResult lookup,
+  ) {
+    return switch (lookup) {
+      CalendarEventFound() => CalendarEventLookupDisposition.found,
+      CalendarEventNotFound() => CalendarEventLookupDisposition.notFound,
+      CalendarEventLookupUnknown() => CalendarEventLookupDisposition.unknown,
+      CalendarEventLookupUnsupported() =>
+        CalendarEventLookupDisposition.unsupported,
+    };
+  }
+
+  DateTime _lookupCheckedAt(CalendarEventLookupResult lookup) {
+    return switch (lookup) {
+      CalendarEventFound(:final fetchedAt) => fetchedAt,
+      CalendarEventNotFound(:final verifiedAt) => verifiedAt,
+      CalendarEventLookupUnknown(:final checkedAt) => checkedAt,
+      CalendarEventLookupUnsupported(:final checkedAt) => checkedAt,
+    };
+  }
+
+  bool _isTerminalMissingPresence(ExternalPresenceStatus presence) {
+    return presence == ExternalPresenceStatus.confirmedMissing ||
+        presence == ExternalPresenceStatus.hiddenAfterExternalDeletion ||
+        presence == ExternalPresenceStatus.externallyMissingMeMyOwned;
   }
 
   /// Step 1 of the connect flow: probes availability, requests permission,
@@ -323,7 +598,7 @@ class CalendarSyncService {
           ? null
           : dedicatedId,
       connectionConfiguredAt: config.connectionConfiguredAt ?? now,
-      calendarSchemaVersion: 2,
+      calendarSchemaVersion: CalendarConfig.currentSchemaVersion,
       clearWritableCalendarId: writableId == null || writableId.isEmpty,
       clearDedicatedMeMyCalendarId: dedicatedId == null || dedicatedId.isEmpty,
     );
@@ -557,8 +832,7 @@ class CalendarSyncService {
       );
       for (final link in existingLinks) {
         if (externalById.containsKey(link.externalEventId)) continue;
-        if (link.hiddenLocally ||
-            link.presence == ExternalPresenceStatus.confirmedMissing) {
+        if (link.hiddenLocally || _isTerminalMissingPresence(link.presence)) {
           continue;
         }
 
@@ -592,35 +866,69 @@ class CalendarSyncService {
         }
 
         // Second (or later) miss — confirm with optional direct ID lookup.
-        final direct = await gateway.getEventById(
+        final lookup = await gateway.getEventById(
           calendarId: calendarId,
           externalEventId: link.externalEventId,
         );
-        if (direct != null) {
-          await repository.saveLink(
-            link.copyWith(
-              presence: ExternalPresenceStatus.present,
-              lastSeenExternallyAt: now,
-              clearFirstMissing: true,
-              clearLastMissing: true,
-              missingObservationCount: 0,
-            ),
-          );
-          continue;
+        final checkedAt = _lookupCheckedAt(lookup);
+        final disposition = _lookupDisposition(lookup);
+
+        switch (lookup) {
+          case CalendarEventFound():
+            await repository.saveLink(
+              link.copyWith(
+                presence: ExternalPresenceStatus.present,
+                lastSeenExternallyAt: now,
+                clearFirstMissing: true,
+                clearLastMissing: true,
+                missingObservationCount: 0,
+                lastVerifiedLookupAt: checkedAt,
+                lastLookupDisposition: disposition,
+              ),
+            );
+            continue;
+          case CalendarEventLookupUnknown():
+          case CalendarEventLookupUnsupported():
+            final nextPresence =
+                link.presence == ExternalPresenceStatus.suspectedMissing
+                ? ExternalPresenceStatus.suspectedMissing
+                : ExternalPresenceStatus.lookupUnknown;
+            await repository.saveLink(
+              link.copyWith(
+                presence: nextPresence,
+                lastMissingObservationAt: now,
+                missingObservationCount: nextCount,
+                lastCompleteQueryStart: batch.requestedStart,
+                lastCompleteQueryEnd: batch.requestedEnd,
+                lastVerifiedLookupAt: checkedAt,
+                lastLookupDisposition: disposition,
+              ),
+            );
+            continue;
+          case CalendarEventNotFound():
+            break;
         }
+
+        final isExternalImport =
+            localEvent.origin == CalendarEventOrigin.external;
+        final confirmedPresence = isExternalImport
+            ? ExternalPresenceStatus.hiddenAfterExternalDeletion
+            : ExternalPresenceStatus.externallyMissingMeMyOwned;
 
         await repository.saveLink(
           link.copyWith(
-            presence: ExternalPresenceStatus.confirmedMissing,
+            presence: confirmedPresence,
             lastMissingObservationAt: now,
             missingObservationCount: nextCount,
-            hiddenLocally: localEvent.origin == CalendarEventOrigin.external,
+            hiddenLocally: isExternalImport,
             lastCompleteQueryStart: batch.requestedStart,
             lastCompleteQueryEnd: batch.requestedEnd,
+            lastVerifiedLookupAt: checkedAt,
+            lastLookupDisposition: disposition,
           ),
         );
 
-        if (localEvent.origin == CalendarEventOrigin.external) {
+        if (isExternalImport) {
           await repository.updateEvent(
             localEvent.copyWith(
               syncStatus: CalendarEventSyncStatus.hidden,
@@ -686,17 +994,57 @@ class CalendarSyncService {
       final now = _clock.now().toUtc();
 
       if (event.syncStatus == CalendarEventSyncStatus.pendingDelete) {
-        if (event.isLinkedToExternal) {
+        if (!event.isLinkedToExternal) {
+          await repository.deleteEvent(event.id);
+          deleted++;
+          continue;
+        }
+
+        var deleteOp = CalendarSyncOperation(
+          id: _newId('cal_op'),
+          memyEventId: event.id,
+          operationType: CalendarSyncOperationType.delete,
+          targetCalendarId: event.externalCalendarId!,
+          payloadFingerprint: _payloadFingerprint(event),
+          state: CalendarSyncOperationState.prepared,
+          attemptCount: 0,
+          createdAt: now,
+          providerExternalEventId: event.externalEventId,
+        );
+        await repository.saveSyncOperation(deleteOp);
+        deleteOp = deleteOp.copyWith(
+          state: CalendarSyncOperationState.inFlight,
+          attemptCount: deleteOp.attemptCount + 1,
+          startedAt: now,
+        );
+        await repository.updateSyncOperation(deleteOp);
+
+        try {
           await gateway.deleteEvent(
             calendarId: event.externalCalendarId!,
             externalEventId: event.externalEventId!,
           );
+          final completedAt = _clock.now().toUtc();
           final link = await repository.getLinkForEvent(event.id);
           if (link != null) await repository.deleteLink(link.id);
+          await repository.deleteEvent(event.id);
+          await repository.updateSyncOperation(
+            deleteOp.copyWith(
+              state: CalendarSyncOperationState.completed,
+              completedAt: completedAt,
+            ),
+          );
+          deleted++;
+        } catch (e) {
+          await repository.updateSyncOperation(
+            deleteOp.copyWith(
+              state: CalendarSyncOperationState.unknownOutcome,
+              lastErrorCode: e is IntegrationError
+                  ? e.code.name
+                  : IntegrationErrorCode.unknown.name,
+            ),
+          );
         }
-        // Hard-delete only MeMy-owned rows (repository enforces).
-        await repository.deleteEvent(event.id);
-        deleted++;
         continue;
       }
 
@@ -706,12 +1054,15 @@ class CalendarSyncService {
       }
 
       final priorOps = await repository.getSyncOperationsForEvent(event.id);
-      final hasUnknownCreate = priorOps.any(
+      final blocked = priorOps.any(
         (o) =>
-            o.operationType == CalendarSyncOperationType.create &&
-            o.state == CalendarSyncOperationState.unknownOutcome,
+            (o.operationType == CalendarSyncOperationType.create &&
+                (o.state == CalendarSyncOperationState.unknownOutcome ||
+                    o.state ==
+                        CalendarSyncOperationState.requiresUserAction)) ||
+            o.state == CalendarSyncOperationState.requiresUserAction,
       );
-      if (hasUnknownCreate) {
+      if (blocked) {
         continue;
       }
 
@@ -719,37 +1070,75 @@ class CalendarSyncService {
       if (targetCalendarId == null) continue;
 
       if (event.isLinkedToExternal) {
-        final draft = DeviceCalendarEventDraft(
-          externalEventId: event.externalEventId,
-          externalCalendarId: targetCalendarId,
-          title: event.title,
-          notes: event.notes,
-          location: event.location,
-          time: event.time,
-          reminderMinutes: event.reminderMinutes,
+        var updateOp = CalendarSyncOperation(
+          id: _newId('cal_op'),
+          memyEventId: event.id,
+          operationType: CalendarSyncOperationType.update,
+          targetCalendarId: targetCalendarId,
+          payloadFingerprint: _payloadFingerprint(event),
+          state: CalendarSyncOperationState.prepared,
+          attemptCount: 0,
+          createdAt: now,
+          providerExternalEventId: event.externalEventId,
         );
-        final raw = await gateway.updateEvent(draft);
-        await repository.updateEvent(
-          event.copyWith(
-            syncStatus: CalendarEventSyncStatus.synced,
-            provider: IntegrationProvider.calendar,
-            externalCalendarId: raw.externalCalendarId,
-            externalEventId: raw.externalEventId,
-            updatedAt: now,
-          ),
+        await repository.saveSyncOperation(updateOp);
+        updateOp = updateOp.copyWith(
+          state: CalendarSyncOperationState.inFlight,
+          attemptCount: updateOp.attemptCount + 1,
+          startedAt: now,
         );
-        final existingLink = await repository.getLinkForEvent(event.id);
-        if (existingLink != null) {
-          await repository.saveLink(
-            existingLink.copyWith(
-              lastSyncedAt: now,
-              lastKnownExternalUpdatedAt: raw.lastModifiedUtc,
-              presence: ExternalPresenceStatus.present,
-              lastSeenExternallyAt: now,
+        await repository.updateSyncOperation(updateOp);
+
+        try {
+          final draft = DeviceCalendarEventDraft(
+            externalEventId: event.externalEventId,
+            externalCalendarId: targetCalendarId,
+            title: event.title,
+            notes: event.notes,
+            location: event.location,
+            time: event.time,
+            reminderMinutes: event.reminderMinutes,
+          );
+          final raw = await gateway.updateEvent(draft);
+          final completedAt = _clock.now().toUtc();
+          await repository.updateEvent(
+            event.copyWith(
+              syncStatus: CalendarEventSyncStatus.synced,
+              provider: IntegrationProvider.calendar,
+              externalCalendarId: raw.externalCalendarId,
+              externalEventId: raw.externalEventId,
+              updatedAt: completedAt,
+            ),
+          );
+          final existingLink = await repository.getLinkForEvent(event.id);
+          if (existingLink != null) {
+            await repository.saveLink(
+              existingLink.copyWith(
+                lastSyncedAt: completedAt,
+                lastKnownExternalUpdatedAt: raw.lastModifiedUtc,
+                presence: ExternalPresenceStatus.present,
+                lastSeenExternallyAt: completedAt,
+              ),
+            );
+          }
+          await repository.updateSyncOperation(
+            updateOp.copyWith(
+              state: CalendarSyncOperationState.completed,
+              providerExternalEventId: raw.externalEventId,
+              completedAt: completedAt,
+            ),
+          );
+          pushed++;
+        } catch (e) {
+          await repository.updateSyncOperation(
+            updateOp.copyWith(
+              state: CalendarSyncOperationState.unknownOutcome,
+              lastErrorCode: e is IntegrationError
+                  ? e.code.name
+                  : IntegrationErrorCode.unknown.name,
             ),
           );
         }
-        pushed++;
         continue;
       }
 
@@ -941,5 +1330,228 @@ class CalendarSyncService {
         ),
       );
     }
+  }
+
+  // ----------------------------------------------------------- create recovery
+
+  Future<List<CalendarCreateRecoveryCase>> listUnresolvedRecoveryCases() {
+    return repository.getUnresolvedRecoveryCases();
+  }
+
+  Future<CalendarCreateRecoveryCase> _requireUnresolvedRecovery(
+    String recoveryCaseId,
+  ) async {
+    final recoveryCase = await repository.getRecoveryCase(recoveryCaseId);
+    if (recoveryCase == null) {
+      throw AppException.notFound('Recovery case not found.');
+    }
+    if (recoveryCase.status != CalendarCreateRecoveryStatus.unresolved) {
+      throw AppException.validation('Recovery case is already closed.');
+    }
+    return recoveryCase;
+  }
+
+  Future<CalendarSyncOperation> _requireRecoveryOperation(
+    CalendarCreateRecoveryCase recoveryCase,
+  ) async {
+    final op = await repository.getSyncOperation(recoveryCase.syncOperationId);
+    if (op == null) {
+      throw AppException.notFound('Sync operation for recovery not found.');
+    }
+    return op;
+  }
+
+  Future<void> _markRecoveryResolved(CalendarCreateRecoveryCase recoveryCase) {
+    return repository.updateRecoveryCase(
+      recoveryCase.copyWith(
+        status: CalendarCreateRecoveryStatus.resolved,
+        resolvedAt: _clock.now().toUtc(),
+      ),
+    );
+  }
+
+  Future<void> _markRecoveryDismissed(CalendarCreateRecoveryCase recoveryCase) {
+    return repository.updateRecoveryCase(
+      recoveryCase.copyWith(
+        status: CalendarCreateRecoveryStatus.dismissed,
+        dismissedAt: _clock.now().toUtc(),
+      ),
+    );
+  }
+
+  /// Re-runs marker search for an unresolved create-recovery case.
+  ///
+  /// Never auto-creates a device event. A single match completes create
+  /// reconciliation; zero/multi updates the case in place.
+  Future<void> searchAgainCreateRecovery(String recoveryCaseId) async {
+    final recoveryCase = await _requireUnresolvedRecovery(recoveryCaseId);
+    final op = await _requireRecoveryOperation(recoveryCase);
+    final marker = op.memyMarker;
+    if (marker == null || marker.isEmpty) {
+      throw AppException.validation('Recovery case has no MeMy marker.');
+    }
+
+    final config = await repository.getConfig();
+    final window = config.rollingWindow(_clock.now().toUtc());
+    final search = await _findByMemyMarker(
+      calendarId: op.targetCalendarId,
+      memyMarker: marker,
+      startUtc: window.start,
+      endUtc: window.end,
+    );
+
+    switch (search) {
+      case CalendarMarkerSingleMatch(:final event):
+        await _completeCreateReconciliation(op, event, marker);
+        await _markRecoveryResolved(recoveryCase);
+      case CalendarMarkerMultipleMatches(:final events):
+        await repository.updateRecoveryCase(
+          recoveryCase.copyWith(
+            recoveryType: CalendarCreateRecoveryType.multipleMarkerMatches,
+            candidates: _sanitizedCandidates(events),
+          ),
+        );
+        await repository.updateSyncOperation(
+          op.copyWith(state: CalendarSyncOperationState.requiresUserAction),
+        );
+      case CalendarMarkerNoMatch():
+      case CalendarMarkerSearchUnknown():
+        await repository.updateRecoveryCase(
+          recoveryCase.copyWith(
+            recoveryType: CalendarCreateRecoveryType.noMatchUnknownOutcome,
+            candidates: const [],
+          ),
+        );
+        await repository.updateSyncOperation(
+          op.copyWith(state: CalendarSyncOperationState.unknownOutcome),
+        );
+    }
+  }
+
+  /// Links a candidate already listed on the recovery case.
+  Future<void> linkCreateRecoveryCandidate({
+    required String recoveryCaseId,
+    required String externalEventId,
+    required String externalCalendarId,
+  }) async {
+    final recoveryCase = await _requireUnresolvedRecovery(recoveryCaseId);
+    final matched = recoveryCase.candidates.where(
+      (c) =>
+          c.externalEventId == externalEventId &&
+          c.externalCalendarId == externalCalendarId,
+    );
+    if (matched.isEmpty) {
+      throw AppException.validation(
+        'Chosen candidate is not part of this recovery case.',
+      );
+    }
+
+    final op = await _requireRecoveryOperation(recoveryCase);
+    final marker =
+        op.memyMarker ?? CalendarSyncOperation.markerFor(op.memyEventId);
+
+    final lookup = await gateway.getEventById(
+      calendarId: externalCalendarId,
+      externalEventId: externalEventId,
+    );
+
+    final DeviceCalendarRawEvent raw;
+    switch (lookup) {
+      case CalendarEventFound(:final event):
+        raw = event;
+      case CalendarEventNotFound():
+      case CalendarEventLookupUnknown():
+      case CalendarEventLookupUnsupported():
+        final local = await repository.getEvent(op.memyEventId);
+        raw = DeviceCalendarRawEvent(
+          externalEventId: externalEventId,
+          externalCalendarId: externalCalendarId,
+          title: '',
+          time:
+              local?.time ??
+              TimedCalendarEventTime(
+                startUtc: _clock.now().toUtc(),
+                endUtc: _clock.now().toUtc().add(const Duration(hours: 1)),
+              ),
+        );
+    }
+
+    await _completeCreateReconciliation(op, raw, marker);
+    await _markRecoveryResolved(recoveryCase);
+  }
+
+  /// Keeps the MeMy event local-only and closes the recovery case.
+  Future<void> keepCreateRecoveryLocalOnly(String recoveryCaseId) async {
+    final recoveryCase = await _requireUnresolvedRecovery(recoveryCaseId);
+    final op = await _requireRecoveryOperation(recoveryCase);
+    final now = _clock.now().toUtc();
+
+    final event = await repository.getEvent(recoveryCase.memyEventId);
+    if (event != null) {
+      await repository.updateEvent(
+        event.copyWith(
+          syncStatus: CalendarEventSyncStatus.localOnly,
+          clearExternalLink: true,
+          updatedAt: now,
+        ),
+      );
+    }
+
+    await repository.updateSyncOperation(
+      op.copyWith(
+        state: CalendarSyncOperationState.permanentlyFailed,
+        completedAt: now,
+        clearProviderExternalEventId: true,
+      ),
+    );
+    await _markRecoveryResolved(recoveryCase);
+  }
+
+  /// Explicit user confirmation to retry a create after a zero-match outcome.
+  Future<void> retryCreateAfterConfirmation(String recoveryCaseId) async {
+    final recoveryCase = await _requireUnresolvedRecovery(recoveryCaseId);
+    if (recoveryCase.recoveryType !=
+        CalendarCreateRecoveryType.noMatchUnknownOutcome) {
+      throw AppException.validation(
+        'Retry create is only available for no-match recovery cases.',
+      );
+    }
+
+    final op = await _requireRecoveryOperation(recoveryCase);
+    await repository.updateSyncOperation(
+      op.copyWith(
+        state: CalendarSyncOperationState.prepared,
+        clearLastErrorCode: true,
+        clearNextRetryAt: true,
+      ),
+    );
+    await _markRecoveryResolved(recoveryCase);
+  }
+
+  Future<void> dismissCreateRecovery(String recoveryCaseId) async {
+    final recoveryCase = await _requireUnresolvedRecovery(recoveryCaseId);
+    await _markRecoveryDismissed(recoveryCase);
+  }
+
+  /// Deletes the MeMy-owned local event and closes the op + recovery case.
+  Future<void> removeMeMyEventForRecovery(String recoveryCaseId) async {
+    final recoveryCase = await _requireUnresolvedRecovery(recoveryCaseId);
+    final op = await _requireRecoveryOperation(recoveryCase);
+    final now = _clock.now().toUtc();
+
+    final event = await repository.getEvent(recoveryCase.memyEventId);
+    if (event != null && event.origin == CalendarEventOrigin.local) {
+      final link = await repository.getLinkForEvent(event.id);
+      if (link != null) await repository.deleteLink(link.id);
+      await repository.deleteEvent(event.id);
+    }
+
+    await repository.updateSyncOperation(
+      op.copyWith(
+        state: CalendarSyncOperationState.completed,
+        completedAt: now,
+      ),
+    );
+    await _markRecoveryDismissed(recoveryCase);
   }
 }

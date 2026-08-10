@@ -1425,6 +1425,28 @@ class $CalendarEventLinksTable extends CalendarEventLinks
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _lastVerifiedLookupAtUtcMeta =
+      const VerificationMeta('lastVerifiedLookupAtUtc');
+  @override
+  late final GeneratedColumn<DateTime> lastVerifiedLookupAtUtc =
+      GeneratedColumn<DateTime>(
+        'last_verified_lookup_at_utc',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _lastLookupDispositionMeta =
+      const VerificationMeta('lastLookupDisposition');
+  @override
+  late final GeneratedColumn<String> lastLookupDisposition =
+      GeneratedColumn<String>(
+        'last_lookup_disposition',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1444,6 +1466,8 @@ class $CalendarEventLinksTable extends CalendarEventLinks
     lastCompleteQueryEndUtc,
     hiddenLocally,
     memyMarker,
+    lastVerifiedLookupAtUtc,
+    lastLookupDisposition,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1612,6 +1636,24 @@ class $CalendarEventLinksTable extends CalendarEventLinks
         memyMarker.isAcceptableOrUnknown(data['memy_marker']!, _memyMarkerMeta),
       );
     }
+    if (data.containsKey('last_verified_lookup_at_utc')) {
+      context.handle(
+        _lastVerifiedLookupAtUtcMeta,
+        lastVerifiedLookupAtUtc.isAcceptableOrUnknown(
+          data['last_verified_lookup_at_utc']!,
+          _lastVerifiedLookupAtUtcMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_lookup_disposition')) {
+      context.handle(
+        _lastLookupDispositionMeta,
+        lastLookupDisposition.isAcceptableOrUnknown(
+          data['last_lookup_disposition']!,
+          _lastLookupDispositionMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1694,6 +1736,14 @@ class $CalendarEventLinksTable extends CalendarEventLinks
         DriftSqlType.string,
         data['${effectivePrefix}memy_marker'],
       ),
+      lastVerifiedLookupAtUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_verified_lookup_at_utc'],
+      ),
+      lastLookupDisposition: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_lookup_disposition'],
+      ),
     );
   }
 
@@ -1722,6 +1772,8 @@ class CalendarEventLink extends DataClass
   final DateTime? lastCompleteQueryEndUtc;
   final bool hiddenLocally;
   final String? memyMarker;
+  final DateTime? lastVerifiedLookupAtUtc;
+  final String? lastLookupDisposition;
   const CalendarEventLink({
     required this.id,
     required this.memyEventId,
@@ -1740,6 +1792,8 @@ class CalendarEventLink extends DataClass
     this.lastCompleteQueryEndUtc,
     required this.hiddenLocally,
     this.memyMarker,
+    this.lastVerifiedLookupAtUtc,
+    this.lastLookupDisposition,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1787,6 +1841,14 @@ class CalendarEventLink extends DataClass
     if (!nullToAbsent || memyMarker != null) {
       map['memy_marker'] = Variable<String>(memyMarker);
     }
+    if (!nullToAbsent || lastVerifiedLookupAtUtc != null) {
+      map['last_verified_lookup_at_utc'] = Variable<DateTime>(
+        lastVerifiedLookupAtUtc,
+      );
+    }
+    if (!nullToAbsent || lastLookupDisposition != null) {
+      map['last_lookup_disposition'] = Variable<String>(lastLookupDisposition);
+    }
     return map;
   }
 
@@ -1827,6 +1889,12 @@ class CalendarEventLink extends DataClass
       memyMarker: memyMarker == null && nullToAbsent
           ? const Value.absent()
           : Value(memyMarker),
+      lastVerifiedLookupAtUtc: lastVerifiedLookupAtUtc == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastVerifiedLookupAtUtc),
+      lastLookupDisposition: lastLookupDisposition == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastLookupDisposition),
     );
   }
 
@@ -1869,6 +1937,12 @@ class CalendarEventLink extends DataClass
       ),
       hiddenLocally: serializer.fromJson<bool>(json['hiddenLocally']),
       memyMarker: serializer.fromJson<String?>(json['memyMarker']),
+      lastVerifiedLookupAtUtc: serializer.fromJson<DateTime?>(
+        json['lastVerifiedLookupAtUtc'],
+      ),
+      lastLookupDisposition: serializer.fromJson<String?>(
+        json['lastLookupDisposition'],
+      ),
     );
   }
   @override
@@ -1906,6 +1980,12 @@ class CalendarEventLink extends DataClass
       ),
       'hiddenLocally': serializer.toJson<bool>(hiddenLocally),
       'memyMarker': serializer.toJson<String?>(memyMarker),
+      'lastVerifiedLookupAtUtc': serializer.toJson<DateTime?>(
+        lastVerifiedLookupAtUtc,
+      ),
+      'lastLookupDisposition': serializer.toJson<String?>(
+        lastLookupDisposition,
+      ),
     };
   }
 
@@ -1927,6 +2007,8 @@ class CalendarEventLink extends DataClass
     Value<DateTime?> lastCompleteQueryEndUtc = const Value.absent(),
     bool? hiddenLocally,
     Value<String?> memyMarker = const Value.absent(),
+    Value<DateTime?> lastVerifiedLookupAtUtc = const Value.absent(),
+    Value<String?> lastLookupDisposition = const Value.absent(),
   }) => CalendarEventLink(
     id: id ?? this.id,
     memyEventId: memyEventId ?? this.memyEventId,
@@ -1958,6 +2040,12 @@ class CalendarEventLink extends DataClass
         : this.lastCompleteQueryEndUtc,
     hiddenLocally: hiddenLocally ?? this.hiddenLocally,
     memyMarker: memyMarker.present ? memyMarker.value : this.memyMarker,
+    lastVerifiedLookupAtUtc: lastVerifiedLookupAtUtc.present
+        ? lastVerifiedLookupAtUtc.value
+        : this.lastVerifiedLookupAtUtc,
+    lastLookupDisposition: lastLookupDisposition.present
+        ? lastLookupDisposition.value
+        : this.lastLookupDisposition,
   );
   CalendarEventLink copyWithCompanion(CalendarEventLinksCompanion data) {
     return CalendarEventLink(
@@ -2008,6 +2096,12 @@ class CalendarEventLink extends DataClass
       memyMarker: data.memyMarker.present
           ? data.memyMarker.value
           : this.memyMarker,
+      lastVerifiedLookupAtUtc: data.lastVerifiedLookupAtUtc.present
+          ? data.lastVerifiedLookupAtUtc.value
+          : this.lastVerifiedLookupAtUtc,
+      lastLookupDisposition: data.lastLookupDisposition.present
+          ? data.lastLookupDisposition.value
+          : this.lastLookupDisposition,
     );
   }
 
@@ -2034,7 +2128,9 @@ class CalendarEventLink extends DataClass
           ..write('lastCompleteQueryStartUtc: $lastCompleteQueryStartUtc, ')
           ..write('lastCompleteQueryEndUtc: $lastCompleteQueryEndUtc, ')
           ..write('hiddenLocally: $hiddenLocally, ')
-          ..write('memyMarker: $memyMarker')
+          ..write('memyMarker: $memyMarker, ')
+          ..write('lastVerifiedLookupAtUtc: $lastVerifiedLookupAtUtc, ')
+          ..write('lastLookupDisposition: $lastLookupDisposition')
           ..write(')'))
         .toString();
   }
@@ -2058,6 +2154,8 @@ class CalendarEventLink extends DataClass
     lastCompleteQueryEndUtc,
     hiddenLocally,
     memyMarker,
+    lastVerifiedLookupAtUtc,
+    lastLookupDisposition,
   );
   @override
   bool operator ==(Object other) =>
@@ -2082,7 +2180,9 @@ class CalendarEventLink extends DataClass
           other.lastCompleteQueryStartUtc == this.lastCompleteQueryStartUtc &&
           other.lastCompleteQueryEndUtc == this.lastCompleteQueryEndUtc &&
           other.hiddenLocally == this.hiddenLocally &&
-          other.memyMarker == this.memyMarker);
+          other.memyMarker == this.memyMarker &&
+          other.lastVerifiedLookupAtUtc == this.lastVerifiedLookupAtUtc &&
+          other.lastLookupDisposition == this.lastLookupDisposition);
 }
 
 class CalendarEventLinksCompanion extends UpdateCompanion<CalendarEventLink> {
@@ -2103,6 +2203,8 @@ class CalendarEventLinksCompanion extends UpdateCompanion<CalendarEventLink> {
   final Value<DateTime?> lastCompleteQueryEndUtc;
   final Value<bool> hiddenLocally;
   final Value<String?> memyMarker;
+  final Value<DateTime?> lastVerifiedLookupAtUtc;
+  final Value<String?> lastLookupDisposition;
   final Value<int> rowid;
   const CalendarEventLinksCompanion({
     this.id = const Value.absent(),
@@ -2122,6 +2224,8 @@ class CalendarEventLinksCompanion extends UpdateCompanion<CalendarEventLink> {
     this.lastCompleteQueryEndUtc = const Value.absent(),
     this.hiddenLocally = const Value.absent(),
     this.memyMarker = const Value.absent(),
+    this.lastVerifiedLookupAtUtc = const Value.absent(),
+    this.lastLookupDisposition = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   CalendarEventLinksCompanion.insert({
@@ -2142,6 +2246,8 @@ class CalendarEventLinksCompanion extends UpdateCompanion<CalendarEventLink> {
     this.lastCompleteQueryEndUtc = const Value.absent(),
     this.hiddenLocally = const Value.absent(),
     this.memyMarker = const Value.absent(),
+    this.lastVerifiedLookupAtUtc = const Value.absent(),
+    this.lastLookupDisposition = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        memyEventId = Value(memyEventId),
@@ -2168,6 +2274,8 @@ class CalendarEventLinksCompanion extends UpdateCompanion<CalendarEventLink> {
     Expression<DateTime>? lastCompleteQueryEndUtc,
     Expression<bool>? hiddenLocally,
     Expression<String>? memyMarker,
+    Expression<DateTime>? lastVerifiedLookupAtUtc,
+    Expression<String>? lastLookupDisposition,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2196,6 +2304,10 @@ class CalendarEventLinksCompanion extends UpdateCompanion<CalendarEventLink> {
         'last_complete_query_end_utc': lastCompleteQueryEndUtc,
       if (hiddenLocally != null) 'hidden_locally': hiddenLocally,
       if (memyMarker != null) 'memy_marker': memyMarker,
+      if (lastVerifiedLookupAtUtc != null)
+        'last_verified_lookup_at_utc': lastVerifiedLookupAtUtc,
+      if (lastLookupDisposition != null)
+        'last_lookup_disposition': lastLookupDisposition,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2218,6 +2330,8 @@ class CalendarEventLinksCompanion extends UpdateCompanion<CalendarEventLink> {
     Value<DateTime?>? lastCompleteQueryEndUtc,
     Value<bool>? hiddenLocally,
     Value<String?>? memyMarker,
+    Value<DateTime?>? lastVerifiedLookupAtUtc,
+    Value<String?>? lastLookupDisposition,
     Value<int>? rowid,
   }) {
     return CalendarEventLinksCompanion(
@@ -2245,6 +2359,10 @@ class CalendarEventLinksCompanion extends UpdateCompanion<CalendarEventLink> {
           lastCompleteQueryEndUtc ?? this.lastCompleteQueryEndUtc,
       hiddenLocally: hiddenLocally ?? this.hiddenLocally,
       memyMarker: memyMarker ?? this.memyMarker,
+      lastVerifiedLookupAtUtc:
+          lastVerifiedLookupAtUtc ?? this.lastVerifiedLookupAtUtc,
+      lastLookupDisposition:
+          lastLookupDisposition ?? this.lastLookupDisposition,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2317,6 +2435,16 @@ class CalendarEventLinksCompanion extends UpdateCompanion<CalendarEventLink> {
     if (memyMarker.present) {
       map['memy_marker'] = Variable<String>(memyMarker.value);
     }
+    if (lastVerifiedLookupAtUtc.present) {
+      map['last_verified_lookup_at_utc'] = Variable<DateTime>(
+        lastVerifiedLookupAtUtc.value,
+      );
+    }
+    if (lastLookupDisposition.present) {
+      map['last_lookup_disposition'] = Variable<String>(
+        lastLookupDisposition.value,
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2347,6 +2475,8 @@ class CalendarEventLinksCompanion extends UpdateCompanion<CalendarEventLink> {
           ..write('lastCompleteQueryEndUtc: $lastCompleteQueryEndUtc, ')
           ..write('hiddenLocally: $hiddenLocally, ')
           ..write('memyMarker: $memyMarker, ')
+          ..write('lastVerifiedLookupAtUtc: $lastVerifiedLookupAtUtc, ')
+          ..write('lastLookupDisposition: $lastLookupDisposition, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3789,6 +3919,616 @@ class CalendarSyncOperationsCompanion
   }
 }
 
+class $CalendarCreateRecoveryCasesTable extends CalendarCreateRecoveryCases
+    with
+        TableInfo<
+          $CalendarCreateRecoveryCasesTable,
+          CalendarCreateRecoveryCase
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CalendarCreateRecoveryCasesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _syncOperationIdMeta = const VerificationMeta(
+    'syncOperationId',
+  );
+  @override
+  late final GeneratedColumn<String> syncOperationId = GeneratedColumn<String>(
+    'sync_operation_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _memyEventIdMeta = const VerificationMeta(
+    'memyEventId',
+  );
+  @override
+  late final GeneratedColumn<String> memyEventId = GeneratedColumn<String>(
+    'memy_event_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _recoveryTypeMeta = const VerificationMeta(
+    'recoveryType',
+  );
+  @override
+  late final GeneratedColumn<String> recoveryType = GeneratedColumn<String>(
+    'recovery_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _candidatesJsonMeta = const VerificationMeta(
+    'candidatesJson',
+  );
+  @override
+  late final GeneratedColumn<String> candidatesJson = GeneratedColumn<String>(
+    'candidates_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _createdAtUtcMeta = const VerificationMeta(
+    'createdAtUtc',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAtUtc = GeneratedColumn<DateTime>(
+    'created_at_utc',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _resolvedAtUtcMeta = const VerificationMeta(
+    'resolvedAtUtc',
+  );
+  @override
+  late final GeneratedColumn<DateTime> resolvedAtUtc =
+      GeneratedColumn<DateTime>(
+        'resolved_at_utc',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _dismissedAtUtcMeta = const VerificationMeta(
+    'dismissedAtUtc',
+  );
+  @override
+  late final GeneratedColumn<DateTime> dismissedAtUtc =
+      GeneratedColumn<DateTime>(
+        'dismissed_at_utc',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    syncOperationId,
+    memyEventId,
+    recoveryType,
+    status,
+    candidatesJson,
+    createdAtUtc,
+    resolvedAtUtc,
+    dismissedAtUtc,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'calendar_create_recovery_cases';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CalendarCreateRecoveryCase> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('sync_operation_id')) {
+      context.handle(
+        _syncOperationIdMeta,
+        syncOperationId.isAcceptableOrUnknown(
+          data['sync_operation_id']!,
+          _syncOperationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_syncOperationIdMeta);
+    }
+    if (data.containsKey('memy_event_id')) {
+      context.handle(
+        _memyEventIdMeta,
+        memyEventId.isAcceptableOrUnknown(
+          data['memy_event_id']!,
+          _memyEventIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_memyEventIdMeta);
+    }
+    if (data.containsKey('recovery_type')) {
+      context.handle(
+        _recoveryTypeMeta,
+        recoveryType.isAcceptableOrUnknown(
+          data['recovery_type']!,
+          _recoveryTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_recoveryTypeMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('candidates_json')) {
+      context.handle(
+        _candidatesJsonMeta,
+        candidatesJson.isAcceptableOrUnknown(
+          data['candidates_json']!,
+          _candidatesJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at_utc')) {
+      context.handle(
+        _createdAtUtcMeta,
+        createdAtUtc.isAcceptableOrUnknown(
+          data['created_at_utc']!,
+          _createdAtUtcMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtUtcMeta);
+    }
+    if (data.containsKey('resolved_at_utc')) {
+      context.handle(
+        _resolvedAtUtcMeta,
+        resolvedAtUtc.isAcceptableOrUnknown(
+          data['resolved_at_utc']!,
+          _resolvedAtUtcMeta,
+        ),
+      );
+    }
+    if (data.containsKey('dismissed_at_utc')) {
+      context.handle(
+        _dismissedAtUtcMeta,
+        dismissedAtUtc.isAcceptableOrUnknown(
+          data['dismissed_at_utc']!,
+          _dismissedAtUtcMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CalendarCreateRecoveryCase map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CalendarCreateRecoveryCase(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      syncOperationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_operation_id'],
+      )!,
+      memyEventId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}memy_event_id'],
+      )!,
+      recoveryType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}recovery_type'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      candidatesJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}candidates_json'],
+      )!,
+      createdAtUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at_utc'],
+      )!,
+      resolvedAtUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}resolved_at_utc'],
+      ),
+      dismissedAtUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}dismissed_at_utc'],
+      ),
+    );
+  }
+
+  @override
+  $CalendarCreateRecoveryCasesTable createAlias(String alias) {
+    return $CalendarCreateRecoveryCasesTable(attachedDatabase, alias);
+  }
+}
+
+class CalendarCreateRecoveryCase extends DataClass
+    implements Insertable<CalendarCreateRecoveryCase> {
+  final String id;
+  final String syncOperationId;
+  final String memyEventId;
+  final String recoveryType;
+  final String status;
+  final String candidatesJson;
+  final DateTime createdAtUtc;
+  final DateTime? resolvedAtUtc;
+  final DateTime? dismissedAtUtc;
+  const CalendarCreateRecoveryCase({
+    required this.id,
+    required this.syncOperationId,
+    required this.memyEventId,
+    required this.recoveryType,
+    required this.status,
+    required this.candidatesJson,
+    required this.createdAtUtc,
+    this.resolvedAtUtc,
+    this.dismissedAtUtc,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['sync_operation_id'] = Variable<String>(syncOperationId);
+    map['memy_event_id'] = Variable<String>(memyEventId);
+    map['recovery_type'] = Variable<String>(recoveryType);
+    map['status'] = Variable<String>(status);
+    map['candidates_json'] = Variable<String>(candidatesJson);
+    map['created_at_utc'] = Variable<DateTime>(createdAtUtc);
+    if (!nullToAbsent || resolvedAtUtc != null) {
+      map['resolved_at_utc'] = Variable<DateTime>(resolvedAtUtc);
+    }
+    if (!nullToAbsent || dismissedAtUtc != null) {
+      map['dismissed_at_utc'] = Variable<DateTime>(dismissedAtUtc);
+    }
+    return map;
+  }
+
+  CalendarCreateRecoveryCasesCompanion toCompanion(bool nullToAbsent) {
+    return CalendarCreateRecoveryCasesCompanion(
+      id: Value(id),
+      syncOperationId: Value(syncOperationId),
+      memyEventId: Value(memyEventId),
+      recoveryType: Value(recoveryType),
+      status: Value(status),
+      candidatesJson: Value(candidatesJson),
+      createdAtUtc: Value(createdAtUtc),
+      resolvedAtUtc: resolvedAtUtc == null && nullToAbsent
+          ? const Value.absent()
+          : Value(resolvedAtUtc),
+      dismissedAtUtc: dismissedAtUtc == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dismissedAtUtc),
+    );
+  }
+
+  factory CalendarCreateRecoveryCase.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CalendarCreateRecoveryCase(
+      id: serializer.fromJson<String>(json['id']),
+      syncOperationId: serializer.fromJson<String>(json['syncOperationId']),
+      memyEventId: serializer.fromJson<String>(json['memyEventId']),
+      recoveryType: serializer.fromJson<String>(json['recoveryType']),
+      status: serializer.fromJson<String>(json['status']),
+      candidatesJson: serializer.fromJson<String>(json['candidatesJson']),
+      createdAtUtc: serializer.fromJson<DateTime>(json['createdAtUtc']),
+      resolvedAtUtc: serializer.fromJson<DateTime?>(json['resolvedAtUtc']),
+      dismissedAtUtc: serializer.fromJson<DateTime?>(json['dismissedAtUtc']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'syncOperationId': serializer.toJson<String>(syncOperationId),
+      'memyEventId': serializer.toJson<String>(memyEventId),
+      'recoveryType': serializer.toJson<String>(recoveryType),
+      'status': serializer.toJson<String>(status),
+      'candidatesJson': serializer.toJson<String>(candidatesJson),
+      'createdAtUtc': serializer.toJson<DateTime>(createdAtUtc),
+      'resolvedAtUtc': serializer.toJson<DateTime?>(resolvedAtUtc),
+      'dismissedAtUtc': serializer.toJson<DateTime?>(dismissedAtUtc),
+    };
+  }
+
+  CalendarCreateRecoveryCase copyWith({
+    String? id,
+    String? syncOperationId,
+    String? memyEventId,
+    String? recoveryType,
+    String? status,
+    String? candidatesJson,
+    DateTime? createdAtUtc,
+    Value<DateTime?> resolvedAtUtc = const Value.absent(),
+    Value<DateTime?> dismissedAtUtc = const Value.absent(),
+  }) => CalendarCreateRecoveryCase(
+    id: id ?? this.id,
+    syncOperationId: syncOperationId ?? this.syncOperationId,
+    memyEventId: memyEventId ?? this.memyEventId,
+    recoveryType: recoveryType ?? this.recoveryType,
+    status: status ?? this.status,
+    candidatesJson: candidatesJson ?? this.candidatesJson,
+    createdAtUtc: createdAtUtc ?? this.createdAtUtc,
+    resolvedAtUtc: resolvedAtUtc.present
+        ? resolvedAtUtc.value
+        : this.resolvedAtUtc,
+    dismissedAtUtc: dismissedAtUtc.present
+        ? dismissedAtUtc.value
+        : this.dismissedAtUtc,
+  );
+  CalendarCreateRecoveryCase copyWithCompanion(
+    CalendarCreateRecoveryCasesCompanion data,
+  ) {
+    return CalendarCreateRecoveryCase(
+      id: data.id.present ? data.id.value : this.id,
+      syncOperationId: data.syncOperationId.present
+          ? data.syncOperationId.value
+          : this.syncOperationId,
+      memyEventId: data.memyEventId.present
+          ? data.memyEventId.value
+          : this.memyEventId,
+      recoveryType: data.recoveryType.present
+          ? data.recoveryType.value
+          : this.recoveryType,
+      status: data.status.present ? data.status.value : this.status,
+      candidatesJson: data.candidatesJson.present
+          ? data.candidatesJson.value
+          : this.candidatesJson,
+      createdAtUtc: data.createdAtUtc.present
+          ? data.createdAtUtc.value
+          : this.createdAtUtc,
+      resolvedAtUtc: data.resolvedAtUtc.present
+          ? data.resolvedAtUtc.value
+          : this.resolvedAtUtc,
+      dismissedAtUtc: data.dismissedAtUtc.present
+          ? data.dismissedAtUtc.value
+          : this.dismissedAtUtc,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CalendarCreateRecoveryCase(')
+          ..write('id: $id, ')
+          ..write('syncOperationId: $syncOperationId, ')
+          ..write('memyEventId: $memyEventId, ')
+          ..write('recoveryType: $recoveryType, ')
+          ..write('status: $status, ')
+          ..write('candidatesJson: $candidatesJson, ')
+          ..write('createdAtUtc: $createdAtUtc, ')
+          ..write('resolvedAtUtc: $resolvedAtUtc, ')
+          ..write('dismissedAtUtc: $dismissedAtUtc')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    syncOperationId,
+    memyEventId,
+    recoveryType,
+    status,
+    candidatesJson,
+    createdAtUtc,
+    resolvedAtUtc,
+    dismissedAtUtc,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CalendarCreateRecoveryCase &&
+          other.id == this.id &&
+          other.syncOperationId == this.syncOperationId &&
+          other.memyEventId == this.memyEventId &&
+          other.recoveryType == this.recoveryType &&
+          other.status == this.status &&
+          other.candidatesJson == this.candidatesJson &&
+          other.createdAtUtc == this.createdAtUtc &&
+          other.resolvedAtUtc == this.resolvedAtUtc &&
+          other.dismissedAtUtc == this.dismissedAtUtc);
+}
+
+class CalendarCreateRecoveryCasesCompanion
+    extends UpdateCompanion<CalendarCreateRecoveryCase> {
+  final Value<String> id;
+  final Value<String> syncOperationId;
+  final Value<String> memyEventId;
+  final Value<String> recoveryType;
+  final Value<String> status;
+  final Value<String> candidatesJson;
+  final Value<DateTime> createdAtUtc;
+  final Value<DateTime?> resolvedAtUtc;
+  final Value<DateTime?> dismissedAtUtc;
+  final Value<int> rowid;
+  const CalendarCreateRecoveryCasesCompanion({
+    this.id = const Value.absent(),
+    this.syncOperationId = const Value.absent(),
+    this.memyEventId = const Value.absent(),
+    this.recoveryType = const Value.absent(),
+    this.status = const Value.absent(),
+    this.candidatesJson = const Value.absent(),
+    this.createdAtUtc = const Value.absent(),
+    this.resolvedAtUtc = const Value.absent(),
+    this.dismissedAtUtc = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CalendarCreateRecoveryCasesCompanion.insert({
+    required String id,
+    required String syncOperationId,
+    required String memyEventId,
+    required String recoveryType,
+    required String status,
+    this.candidatesJson = const Value.absent(),
+    required DateTime createdAtUtc,
+    this.resolvedAtUtc = const Value.absent(),
+    this.dismissedAtUtc = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       syncOperationId = Value(syncOperationId),
+       memyEventId = Value(memyEventId),
+       recoveryType = Value(recoveryType),
+       status = Value(status),
+       createdAtUtc = Value(createdAtUtc);
+  static Insertable<CalendarCreateRecoveryCase> custom({
+    Expression<String>? id,
+    Expression<String>? syncOperationId,
+    Expression<String>? memyEventId,
+    Expression<String>? recoveryType,
+    Expression<String>? status,
+    Expression<String>? candidatesJson,
+    Expression<DateTime>? createdAtUtc,
+    Expression<DateTime>? resolvedAtUtc,
+    Expression<DateTime>? dismissedAtUtc,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (syncOperationId != null) 'sync_operation_id': syncOperationId,
+      if (memyEventId != null) 'memy_event_id': memyEventId,
+      if (recoveryType != null) 'recovery_type': recoveryType,
+      if (status != null) 'status': status,
+      if (candidatesJson != null) 'candidates_json': candidatesJson,
+      if (createdAtUtc != null) 'created_at_utc': createdAtUtc,
+      if (resolvedAtUtc != null) 'resolved_at_utc': resolvedAtUtc,
+      if (dismissedAtUtc != null) 'dismissed_at_utc': dismissedAtUtc,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CalendarCreateRecoveryCasesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? syncOperationId,
+    Value<String>? memyEventId,
+    Value<String>? recoveryType,
+    Value<String>? status,
+    Value<String>? candidatesJson,
+    Value<DateTime>? createdAtUtc,
+    Value<DateTime?>? resolvedAtUtc,
+    Value<DateTime?>? dismissedAtUtc,
+    Value<int>? rowid,
+  }) {
+    return CalendarCreateRecoveryCasesCompanion(
+      id: id ?? this.id,
+      syncOperationId: syncOperationId ?? this.syncOperationId,
+      memyEventId: memyEventId ?? this.memyEventId,
+      recoveryType: recoveryType ?? this.recoveryType,
+      status: status ?? this.status,
+      candidatesJson: candidatesJson ?? this.candidatesJson,
+      createdAtUtc: createdAtUtc ?? this.createdAtUtc,
+      resolvedAtUtc: resolvedAtUtc ?? this.resolvedAtUtc,
+      dismissedAtUtc: dismissedAtUtc ?? this.dismissedAtUtc,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (syncOperationId.present) {
+      map['sync_operation_id'] = Variable<String>(syncOperationId.value);
+    }
+    if (memyEventId.present) {
+      map['memy_event_id'] = Variable<String>(memyEventId.value);
+    }
+    if (recoveryType.present) {
+      map['recovery_type'] = Variable<String>(recoveryType.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (candidatesJson.present) {
+      map['candidates_json'] = Variable<String>(candidatesJson.value);
+    }
+    if (createdAtUtc.present) {
+      map['created_at_utc'] = Variable<DateTime>(createdAtUtc.value);
+    }
+    if (resolvedAtUtc.present) {
+      map['resolved_at_utc'] = Variable<DateTime>(resolvedAtUtc.value);
+    }
+    if (dismissedAtUtc.present) {
+      map['dismissed_at_utc'] = Variable<DateTime>(dismissedAtUtc.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CalendarCreateRecoveryCasesCompanion(')
+          ..write('id: $id, ')
+          ..write('syncOperationId: $syncOperationId, ')
+          ..write('memyEventId: $memyEventId, ')
+          ..write('recoveryType: $recoveryType, ')
+          ..write('status: $status, ')
+          ..write('candidatesJson: $candidatesJson, ')
+          ..write('createdAtUtc: $createdAtUtc, ')
+          ..write('resolvedAtUtc: $resolvedAtUtc, ')
+          ..write('dismissedAtUtc: $dismissedAtUtc, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $CalendarConfigRowsTable extends CalendarConfigRows
     with TableInfo<$CalendarConfigRowsTable, CalendarConfigRow> {
   @override
@@ -4913,6 +5653,8 @@ abstract class _$CalendarDatabase extends GeneratedDatabase {
       $CalendarConflictsTable(this);
   late final $CalendarSyncOperationsTable calendarSyncOperations =
       $CalendarSyncOperationsTable(this);
+  late final $CalendarCreateRecoveryCasesTable calendarCreateRecoveryCases =
+      $CalendarCreateRecoveryCasesTable(this);
   late final $CalendarConfigRowsTable calendarConfigRows =
       $CalendarConfigRowsTable(this);
   @override
@@ -4924,6 +5666,7 @@ abstract class _$CalendarDatabase extends GeneratedDatabase {
     calendarEventLinks,
     calendarConflicts,
     calendarSyncOperations,
+    calendarCreateRecoveryCases,
     calendarConfigRows,
   ];
 }
@@ -5481,6 +6224,8 @@ typedef $$CalendarEventLinksTableCreateCompanionBuilder =
       Value<DateTime?> lastCompleteQueryEndUtc,
       Value<bool> hiddenLocally,
       Value<String?> memyMarker,
+      Value<DateTime?> lastVerifiedLookupAtUtc,
+      Value<String?> lastLookupDisposition,
       Value<int> rowid,
     });
 typedef $$CalendarEventLinksTableUpdateCompanionBuilder =
@@ -5502,6 +6247,8 @@ typedef $$CalendarEventLinksTableUpdateCompanionBuilder =
       Value<DateTime?> lastCompleteQueryEndUtc,
       Value<bool> hiddenLocally,
       Value<String?> memyMarker,
+      Value<DateTime?> lastVerifiedLookupAtUtc,
+      Value<String?> lastLookupDisposition,
       Value<int> rowid,
     });
 
@@ -5598,6 +6345,16 @@ class $$CalendarEventLinksTableFilterComposer
 
   ColumnFilters<String> get memyMarker => $composableBuilder(
     column: $table.memyMarker,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastVerifiedLookupAtUtc => $composableBuilder(
+    column: $table.lastVerifiedLookupAtUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastLookupDisposition => $composableBuilder(
+    column: $table.lastLookupDisposition,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -5698,6 +6455,16 @@ class $$CalendarEventLinksTableOrderingComposer
     column: $table.memyMarker,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get lastVerifiedLookupAtUtc => $composableBuilder(
+    column: $table.lastVerifiedLookupAtUtc,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastLookupDisposition => $composableBuilder(
+    column: $table.lastLookupDisposition,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$CalendarEventLinksTableAnnotationComposer
@@ -5792,6 +6559,16 @@ class $$CalendarEventLinksTableAnnotationComposer
     column: $table.memyMarker,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get lastVerifiedLookupAtUtc => $composableBuilder(
+    column: $table.lastVerifiedLookupAtUtc,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lastLookupDisposition => $composableBuilder(
+    column: $table.lastLookupDisposition,
+    builder: (column) => column,
+  );
 }
 
 class $$CalendarEventLinksTableTableManager
@@ -5855,6 +6632,8 @@ class $$CalendarEventLinksTableTableManager
                 Value<DateTime?> lastCompleteQueryEndUtc = const Value.absent(),
                 Value<bool> hiddenLocally = const Value.absent(),
                 Value<String?> memyMarker = const Value.absent(),
+                Value<DateTime?> lastVerifiedLookupAtUtc = const Value.absent(),
+                Value<String?> lastLookupDisposition = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CalendarEventLinksCompanion(
                 id: id,
@@ -5874,6 +6653,8 @@ class $$CalendarEventLinksTableTableManager
                 lastCompleteQueryEndUtc: lastCompleteQueryEndUtc,
                 hiddenLocally: hiddenLocally,
                 memyMarker: memyMarker,
+                lastVerifiedLookupAtUtc: lastVerifiedLookupAtUtc,
+                lastLookupDisposition: lastLookupDisposition,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -5899,6 +6680,8 @@ class $$CalendarEventLinksTableTableManager
                 Value<DateTime?> lastCompleteQueryEndUtc = const Value.absent(),
                 Value<bool> hiddenLocally = const Value.absent(),
                 Value<String?> memyMarker = const Value.absent(),
+                Value<DateTime?> lastVerifiedLookupAtUtc = const Value.absent(),
+                Value<String?> lastLookupDisposition = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CalendarEventLinksCompanion.insert(
                 id: id,
@@ -5918,6 +6701,8 @@ class $$CalendarEventLinksTableTableManager
                 lastCompleteQueryEndUtc: lastCompleteQueryEndUtc,
                 hiddenLocally: hiddenLocally,
                 memyMarker: memyMarker,
+                lastVerifiedLookupAtUtc: lastVerifiedLookupAtUtc,
+                lastLookupDisposition: lastLookupDisposition,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -6645,6 +7430,315 @@ typedef $$CalendarSyncOperationsTableProcessedTableManager =
       CalendarSyncOperation,
       PrefetchHooks Function()
     >;
+typedef $$CalendarCreateRecoveryCasesTableCreateCompanionBuilder =
+    CalendarCreateRecoveryCasesCompanion Function({
+      required String id,
+      required String syncOperationId,
+      required String memyEventId,
+      required String recoveryType,
+      required String status,
+      Value<String> candidatesJson,
+      required DateTime createdAtUtc,
+      Value<DateTime?> resolvedAtUtc,
+      Value<DateTime?> dismissedAtUtc,
+      Value<int> rowid,
+    });
+typedef $$CalendarCreateRecoveryCasesTableUpdateCompanionBuilder =
+    CalendarCreateRecoveryCasesCompanion Function({
+      Value<String> id,
+      Value<String> syncOperationId,
+      Value<String> memyEventId,
+      Value<String> recoveryType,
+      Value<String> status,
+      Value<String> candidatesJson,
+      Value<DateTime> createdAtUtc,
+      Value<DateTime?> resolvedAtUtc,
+      Value<DateTime?> dismissedAtUtc,
+      Value<int> rowid,
+    });
+
+class $$CalendarCreateRecoveryCasesTableFilterComposer
+    extends Composer<_$CalendarDatabase, $CalendarCreateRecoveryCasesTable> {
+  $$CalendarCreateRecoveryCasesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncOperationId => $composableBuilder(
+    column: $table.syncOperationId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get memyEventId => $composableBuilder(
+    column: $table.memyEventId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recoveryType => $composableBuilder(
+    column: $table.recoveryType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get candidatesJson => $composableBuilder(
+    column: $table.candidatesJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAtUtc => $composableBuilder(
+    column: $table.createdAtUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get resolvedAtUtc => $composableBuilder(
+    column: $table.resolvedAtUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get dismissedAtUtc => $composableBuilder(
+    column: $table.dismissedAtUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CalendarCreateRecoveryCasesTableOrderingComposer
+    extends Composer<_$CalendarDatabase, $CalendarCreateRecoveryCasesTable> {
+  $$CalendarCreateRecoveryCasesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncOperationId => $composableBuilder(
+    column: $table.syncOperationId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get memyEventId => $composableBuilder(
+    column: $table.memyEventId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get recoveryType => $composableBuilder(
+    column: $table.recoveryType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get candidatesJson => $composableBuilder(
+    column: $table.candidatesJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAtUtc => $composableBuilder(
+    column: $table.createdAtUtc,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get resolvedAtUtc => $composableBuilder(
+    column: $table.resolvedAtUtc,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get dismissedAtUtc => $composableBuilder(
+    column: $table.dismissedAtUtc,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CalendarCreateRecoveryCasesTableAnnotationComposer
+    extends Composer<_$CalendarDatabase, $CalendarCreateRecoveryCasesTable> {
+  $$CalendarCreateRecoveryCasesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get syncOperationId => $composableBuilder(
+    column: $table.syncOperationId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get memyEventId => $composableBuilder(
+    column: $table.memyEventId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get recoveryType => $composableBuilder(
+    column: $table.recoveryType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get candidatesJson => $composableBuilder(
+    column: $table.candidatesJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAtUtc => $composableBuilder(
+    column: $table.createdAtUtc,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get resolvedAtUtc => $composableBuilder(
+    column: $table.resolvedAtUtc,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get dismissedAtUtc => $composableBuilder(
+    column: $table.dismissedAtUtc,
+    builder: (column) => column,
+  );
+}
+
+class $$CalendarCreateRecoveryCasesTableTableManager
+    extends
+        RootTableManager<
+          _$CalendarDatabase,
+          $CalendarCreateRecoveryCasesTable,
+          CalendarCreateRecoveryCase,
+          $$CalendarCreateRecoveryCasesTableFilterComposer,
+          $$CalendarCreateRecoveryCasesTableOrderingComposer,
+          $$CalendarCreateRecoveryCasesTableAnnotationComposer,
+          $$CalendarCreateRecoveryCasesTableCreateCompanionBuilder,
+          $$CalendarCreateRecoveryCasesTableUpdateCompanionBuilder,
+          (
+            CalendarCreateRecoveryCase,
+            BaseReferences<
+              _$CalendarDatabase,
+              $CalendarCreateRecoveryCasesTable,
+              CalendarCreateRecoveryCase
+            >,
+          ),
+          CalendarCreateRecoveryCase,
+          PrefetchHooks Function()
+        > {
+  $$CalendarCreateRecoveryCasesTableTableManager(
+    _$CalendarDatabase db,
+    $CalendarCreateRecoveryCasesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CalendarCreateRecoveryCasesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$CalendarCreateRecoveryCasesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$CalendarCreateRecoveryCasesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> syncOperationId = const Value.absent(),
+                Value<String> memyEventId = const Value.absent(),
+                Value<String> recoveryType = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> candidatesJson = const Value.absent(),
+                Value<DateTime> createdAtUtc = const Value.absent(),
+                Value<DateTime?> resolvedAtUtc = const Value.absent(),
+                Value<DateTime?> dismissedAtUtc = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CalendarCreateRecoveryCasesCompanion(
+                id: id,
+                syncOperationId: syncOperationId,
+                memyEventId: memyEventId,
+                recoveryType: recoveryType,
+                status: status,
+                candidatesJson: candidatesJson,
+                createdAtUtc: createdAtUtc,
+                resolvedAtUtc: resolvedAtUtc,
+                dismissedAtUtc: dismissedAtUtc,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String syncOperationId,
+                required String memyEventId,
+                required String recoveryType,
+                required String status,
+                Value<String> candidatesJson = const Value.absent(),
+                required DateTime createdAtUtc,
+                Value<DateTime?> resolvedAtUtc = const Value.absent(),
+                Value<DateTime?> dismissedAtUtc = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CalendarCreateRecoveryCasesCompanion.insert(
+                id: id,
+                syncOperationId: syncOperationId,
+                memyEventId: memyEventId,
+                recoveryType: recoveryType,
+                status: status,
+                candidatesJson: candidatesJson,
+                createdAtUtc: createdAtUtc,
+                resolvedAtUtc: resolvedAtUtc,
+                dismissedAtUtc: dismissedAtUtc,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CalendarCreateRecoveryCasesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$CalendarDatabase,
+      $CalendarCreateRecoveryCasesTable,
+      CalendarCreateRecoveryCase,
+      $$CalendarCreateRecoveryCasesTableFilterComposer,
+      $$CalendarCreateRecoveryCasesTableOrderingComposer,
+      $$CalendarCreateRecoveryCasesTableAnnotationComposer,
+      $$CalendarCreateRecoveryCasesTableCreateCompanionBuilder,
+      $$CalendarCreateRecoveryCasesTableUpdateCompanionBuilder,
+      (
+        CalendarCreateRecoveryCase,
+        BaseReferences<
+          _$CalendarDatabase,
+          $CalendarCreateRecoveryCasesTable,
+          CalendarCreateRecoveryCase
+        >,
+      ),
+      CalendarCreateRecoveryCase,
+      PrefetchHooks Function()
+    >;
 typedef $$CalendarConfigRowsTableCreateCompanionBuilder =
     CalendarConfigRowsCompanion Function({
       Value<int> id,
@@ -7119,6 +8213,12 @@ class $CalendarDatabaseManager {
       $$CalendarSyncOperationsTableTableManager(
         _db,
         _db.calendarSyncOperations,
+      );
+  $$CalendarCreateRecoveryCasesTableTableManager
+  get calendarCreateRecoveryCases =>
+      $$CalendarCreateRecoveryCasesTableTableManager(
+        _db,
+        _db.calendarCreateRecoveryCases,
       );
   $$CalendarConfigRowsTableTableManager get calendarConfigRows =>
       $$CalendarConfigRowsTableTableManager(_db, _db.calendarConfigRows);

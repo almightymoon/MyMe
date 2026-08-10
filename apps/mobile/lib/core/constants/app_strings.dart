@@ -2,6 +2,10 @@ abstract final class AppStrings {
   static const String appName = 'MeMy';
   static const String company = 'MoonTech';
   static const String tagline = 'Your life, perfectly balanced.';
+
+  /// Shipping tagline for v1. Deliberately avoids "AI" — the v1 build has no
+  /// live model, so the product is positioned as a local life companion.
+  static const String productTagline = 'Your Personal Life Companion';
   static const String demoMode = 'Demo mode';
   static const String continueToMemy = 'Continue to MeMy';
   static const String signIn = 'Sign In';
@@ -32,6 +36,10 @@ abstract final class AppStrings {
   static const String modulesKicker = 'Modules';
   static const String dashboardTitle = 'Dashboard';
   static const String coach = 'AI Coach';
+  static const String coachPreview = 'Coach Preview';
+  static const String coachPreviewNote =
+      'Coach Preview is a local, scripted demo. No live AI model is contacted '
+      'and nothing you type leaves this device.';
   static const String more = 'Insights';
   static const String insightsTitle = 'Insights';
   static const String insightsSubtitle = 'Weekly summary and modules';
@@ -47,7 +55,15 @@ abstract final class AppStrings {
   static const String financePreview = 'Finance';
   static const String aiRecommendation = 'AI recommendation';
   static const String demoContentLabel = 'Demo content';
+  static const String samplePreviewCaption = 'Sample preview';
   static const String lifeScore = 'Life Score';
+  static const String buildYourDayTitle = 'Your day';
+  static const String buildYourDayMessage =
+      'Open Goals and Habits to build your day.';
+  static const String insightsPlaceholderTitle = 'This week';
+  static const String insightsPlaceholderMessage =
+      'Summaries will grow from the Goals, Habits, and Finance you track '
+      'on this device.';
 
   static const String liveAiNotConnected =
       'Live AI is not connected in this foundation build.';

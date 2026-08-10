@@ -14,7 +14,7 @@ import '../../domain/services/finance_summary_service.dart';
 
 /// Override in tests to force `fake` / `local` without dart-defines.
 final financeDataSourceProvider = Provider<FinanceDataSource>((ref) {
-  return EnvironmentConfig.financeDataSource;
+  return EnvironmentConfig.resolveFinanceDataSource();
 });
 
 final financeSummaryServiceProvider = Provider<FinanceSummaryService>((ref) {
@@ -26,6 +26,10 @@ final localFinanceRepositoryProvider = Provider<LocalFinanceRepository>((ref) {
   final repo = LocalFinanceRepository(
     prefs: prefs,
     summaryService: ref.watch(financeSummaryServiceProvider),
+    // Keep built-in categories; never seed sample transactions in production.
+    seedBuilder: EnvironmentConfig.shouldSeedDemoContent
+        ? null
+        : () => const [],
   );
   ref.onDispose(repo.dispose);
   return repo;

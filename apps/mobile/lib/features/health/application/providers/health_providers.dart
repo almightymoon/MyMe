@@ -16,7 +16,7 @@ import '../../domain/gateways/platform_health_gateway.dart';
 import '../../domain/repositories/health_repository.dart';
 
 final healthDataSourceProvider = Provider<HealthDataSource>((ref) {
-  return EnvironmentConfig.healthDataSource;
+  return EnvironmentConfig.resolveHealthDataSource();
 });
 
 /// Shared fake gateway instance so `HEALTH_DATA_SOURCE=fake` tests/demo mode

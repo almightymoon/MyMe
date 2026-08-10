@@ -27,7 +27,7 @@ final habitProgressServiceProvider = Provider<HabitProgressService>((ref) {
 });
 
 final habitsDataSourceProvider = Provider<HabitsDataSource>((ref) {
-  return EnvironmentConfig.habitsDataSource;
+  return EnvironmentConfig.resolveHabitsDataSource();
 });
 
 final localHabitRepositoryProvider = Provider<LocalHabitRepository>((ref) {
@@ -37,6 +37,12 @@ final localHabitRepositoryProvider = Provider<LocalHabitRepository>((ref) {
     clock: ref.watch(appClockProvider),
     progressService: ref.watch(habitProgressServiceProvider),
     idGenerator: () => ref.read(uuidProvider).v4(),
+    seedHabitsBuilder: EnvironmentConfig.shouldSeedDemoContent
+        ? null
+        : (today, now) => const [],
+    seedCheckInsBuilder: EnvironmentConfig.shouldSeedDemoContent
+        ? null
+        : (today, now) => const [],
   );
   ref.onDispose(repo.dispose);
   return repo;

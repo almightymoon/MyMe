@@ -21,7 +21,7 @@ import '../services/calendar_sync_service.dart';
 
 /// Override in tests to force `fake`/`system` without dart-defines.
 final calendarDataSourceProvider = Provider<CalendarDataSource>((ref) {
-  return EnvironmentConfig.calendarDataSource;
+  return EnvironmentConfig.resolveCalendarDataSource();
 });
 
 /// Only constructed (and only ever touched) in `system` mode — `fake` mode

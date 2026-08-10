@@ -17,8 +17,10 @@ export '../../../../core/application/providers/core_providers.dart'
     show sharedPreferencesProvider, uuidProvider, appClockProvider;
 
 /// Override in tests to force `fake` / `local` / `api` without dart-defines.
+///
+/// Production always resolves to `local` — no demo data, no cloud account.
 final goalsDataSourceProvider = Provider<GoalsDataSource>((ref) {
-  return EnvironmentConfig.goalsDataSource;
+  return EnvironmentConfig.resolveGoalsDataSource();
 });
 
 final apiClientProvider = Provider<ApiClient>((ref) {
@@ -32,8 +34,12 @@ final localGoalRepositoryProvider = Provider<LocalGoalRepository>((ref) {
   final source = ref.watch(goalsDataSourceProvider);
   final repo = LocalGoalRepository(
     prefs: prefs,
-    // Avoid demo seed when acting as API cache.
-    seedBuilder: source == GoalsDataSource.api ? () => const [] : null,
+    // API cache and production: never seed demo Goals as user data.
+    seedBuilder:
+        source == GoalsDataSource.api ||
+            !EnvironmentConfig.shouldSeedDemoContent
+        ? () => const []
+        : null,
   );
   ref.onDispose(repo.dispose);
   return repo;

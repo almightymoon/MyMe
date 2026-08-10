@@ -5,6 +5,7 @@ class UserProfile {
     required this.fullName,
     required this.initials,
     this.tagline,
+    this.email,
   });
 
   final String id;
@@ -12,6 +13,7 @@ class UserProfile {
   final String fullName;
   final String initials;
   final String? tagline;
+  final String? email;
 
   static const empty = UserProfile(
     id: 'anonymous',
@@ -19,5 +21,6 @@ class UserProfile {
     fullName: 'Guest',
     initials: '?',
     tagline: null,
+    email: null,
   );
 }

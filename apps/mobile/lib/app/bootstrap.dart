@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'app.dart';
 import '../core/application/providers/core_providers.dart';
 import '../features/calendar/application/providers/calendar_providers.dart';
+import '../features/trust/application/providers/trust_providers.dart';
 
 Future<Widget> bootstrap() async {
   final prefs = await SharedPreferences.getInstance();
@@ -31,6 +32,8 @@ class _BootstrapHostState extends ConsumerState<_BootstrapHost> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Fire-and-forget; UI reads registry reactively.
       ref.read(calendarBootstrapProvider);
+      // Best-effort stale export temp cleanup.
+      ref.read(exportTempCleanupProvider);
     });
   }
 

@@ -31,3 +31,17 @@ class ExportResult {
   final List<String> warnings;
   final int? byteLength;
 }
+
+/// Safe export failure — UI must show [userSafeMessage], never raw `$e`.
+class ExportFailure implements Exception {
+  const ExportFailure({
+    required this.code,
+    this.userSafeMessage = 'Export failed. Please try again.',
+  });
+
+  final String code;
+  final String userSafeMessage;
+
+  @override
+  String toString() => userSafeMessage;
+}

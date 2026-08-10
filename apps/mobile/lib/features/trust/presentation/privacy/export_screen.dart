@@ -130,11 +130,16 @@ class _PrivacyExportScreenState extends ConsumerState<PrivacyExportScreen> {
       await SharePlus.instance.share(
         ShareParams(files: [XFile(result.filePath)], text: 'MeMy data export'),
       );
-    } catch (e) {
+    } on ExportFailure catch (failure) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Export failed: $e')));
+      ).showSnackBar(SnackBar(content: Text(failure.userSafeMessage)));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Export failed. Please try again.')),
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }

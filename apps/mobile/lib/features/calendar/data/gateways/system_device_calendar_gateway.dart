@@ -1,9 +1,11 @@
 import 'package:device_calendar/device_calendar.dart' as dc;
+import 'package:flutter/material.dart';
 
 import '../../../../core/integrations/domain/integration_availability.dart';
 import '../../../../core/integrations/domain/integration_error.dart';
 import '../../../../core/integrations/domain/integration_provider.dart';
 import '../../domain/entities/calendar_event_time.dart';
+import '../../domain/entities/calendar_read_batch.dart';
 import '../../domain/entities/device_calendar_descriptor.dart';
 import '../../domain/gateways/device_calendar_gateway.dart';
 
@@ -18,6 +20,10 @@ class SystemDeviceCalendarGateway implements DeviceCalendarGateway {
     : _plugin = plugin ?? dc.DeviceCalendarPlugin();
 
   final dc.DeviceCalendarPlugin _plugin;
+
+  /// Wide lookup window for [getEventById] when the plugin has no ID fetch.
+  static const Duration _idLookupPast = Duration(days: 365 * 5);
+  static const Duration _idLookupFuture = Duration(days: 365 * 2);
 
   Never _throwFrom(dc.Result<Object?> result, {String? fallback}) {
     final message = result.errors.isEmpty
@@ -76,17 +82,137 @@ class SystemDeviceCalendarGateway implements DeviceCalendarGateway {
     required DateTime startUtc,
     required DateTime endUtc,
   }) async {
-    final result = await _plugin.retrieveEvents(
-      calendarId,
-      dc.RetrieveEventsParams(startDate: startUtc, endDate: endUtc),
+    final batch = await listEventBatch(
+      calendarId: calendarId,
+      startUtc: startUtc,
+      endUtc: endUtc,
+    );
+    return batch.events;
+  }
+
+  @override
+  Future<CalendarReadBatch> listEventBatch({
+    required String calendarId,
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async {
+    final fetchedAt = DateTime.now().toUtc();
+    try {
+      final result = await _plugin.retrieveEvents(
+        calendarId,
+        dc.RetrieveEventsParams(startDate: startUtc, endDate: endUtc),
+      );
+      if (!result.isSuccess || result.data == null) {
+        return CalendarReadBatch(
+          calendarId: calendarId,
+          requestedStart: startUtc,
+          requestedEnd: endUtc,
+          events: const [],
+          completeness: CalendarReadCompleteness.unknown,
+          fetchedAt: fetchedAt,
+          warnings: result.errors.map((e) => e.errorMessage).toList(),
+        );
+      }
+      final events = result.data!
+          .where((e) => e.eventId != null)
+          .map(_toRawEvent)
+          .toList(growable: false);
+      return CalendarReadBatch(
+        calendarId: calendarId,
+        requestedStart: startUtc,
+        requestedEnd: endUtc,
+        events: events,
+        completeness: CalendarReadCompleteness.complete,
+        fetchedAt: fetchedAt,
+      );
+    } catch (e) {
+      // Never treat an empty catch as a complete batch — absence inference
+      // must not run against unknown results.
+      return CalendarReadBatch(
+        calendarId: calendarId,
+        requestedStart: startUtc,
+        requestedEnd: endUtc,
+        events: const [],
+        completeness: CalendarReadCompleteness.unknown,
+        fetchedAt: fetchedAt,
+        warnings: [e.toString()],
+      );
+    }
+  }
+
+  @override
+  Future<DeviceCalendarRawEvent?> getEventById({
+    required String calendarId,
+    required String externalEventId,
+  }) async {
+    final now = DateTime.now().toUtc();
+    final batch = await listEventBatch(
+      calendarId: calendarId,
+      startUtc: now.subtract(_idLookupPast),
+      endUtc: now.add(_idLookupFuture),
+    );
+    for (final event in batch.events) {
+      if (event.externalEventId == externalEventId) return event;
+    }
+    return null;
+  }
+
+  @override
+  Future<bool> supportsCalendarCreation() async {
+    // device_calendar 4.3.3 exposes createCalendar on both platforms.
+    return true;
+  }
+
+  @override
+  Future<DeviceCalendarDescriptor> createCalendar({
+    required String name,
+    String? colorKey,
+  }) async {
+    if (!await supportsCalendarCreation()) {
+      throw IntegrationError(
+        provider: IntegrationProvider.calendar,
+        code: IntegrationErrorCode.notSupported,
+        message: 'Creating calendars is not supported on this device.',
+      );
+    }
+    Color? color;
+    if (colorKey != null && colorKey.isNotEmpty) {
+      final parsed = int.tryParse(colorKey.replaceFirst('#', ''), radix: 16);
+      if (parsed != null) {
+        color = Color(parsed > 0xFFFFFF ? parsed : (0xFF000000 | parsed));
+      }
+    }
+    final result = await _plugin.createCalendar(
+      name,
+      calendarColor: color ?? Colors.blue,
+      localAccountName: 'MeMy',
     );
     if (!result.isSuccess || result.data == null) {
-      _throwFrom(result, fallback: 'Could not read calendar events.');
+      _throwFrom(result, fallback: 'Could not create the calendar.');
     }
-    return result.data!
-        .where((e) => e.eventId != null)
-        .map(_toRawEvent)
-        .toList(growable: false);
+    final created = await getCalendar(result.data!);
+    return created ??
+        DeviceCalendarDescriptor(
+          id: result.data!,
+          name: name,
+          isReadOnly: false,
+        );
+  }
+
+  @override
+  Future<DeviceCalendarDescriptor?> getCalendar(String calendarId) async {
+    final calendars = await listCalendars();
+    for (final calendar in calendars) {
+      if (calendar.id == calendarId) return calendar;
+    }
+    return null;
+  }
+
+  @override
+  Future<bool> verifyCalendarWritable(String calendarId) async {
+    final calendar = await getCalendar(calendarId);
+    if (calendar == null) return false;
+    return !calendar.isReadOnly;
   }
 
   @override
@@ -131,6 +257,21 @@ class SystemDeviceCalendarGateway implements DeviceCalendarGateway {
     }
   }
 
+  @override
+  Future<List<DeviceCalendarRawEvent>> findEventsByMemyMarker({
+    required String calendarId,
+    required String memyMarker,
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async {
+    final events = await listEvents(
+      calendarId: calendarId,
+      startUtc: startUtc,
+      endUtc: endUtc,
+    );
+    return events.where((e) => e.url == memyMarker).toList(growable: false);
+  }
+
   DeviceCalendarDescriptor _toDescriptor(dc.Calendar calendar) {
     return DeviceCalendarDescriptor(
       id: calendar.id!,
@@ -140,6 +281,12 @@ class SystemDeviceCalendarGateway implements DeviceCalendarGateway {
       isReadOnly: calendar.isReadOnly ?? false,
       isDefault: calendar.isDefault ?? false,
     );
+  }
+
+  String? _urlFromPlugin(dc.Event event) {
+    final url = event.url;
+    if (url == null) return null;
+    return url.data?.contentText ?? url.toString();
   }
 
   DeviceCalendarRawEvent _toRawEvent(dc.Event event) {
@@ -180,6 +327,13 @@ class SystemDeviceCalendarGateway implements DeviceCalendarGateway {
       // every platform; sync falls back to value-based diffing.
       lastModifiedUtc: null,
       attendeeCount: event.attendees?.length ?? 0,
+      url: _urlFromPlugin(event),
+      reminderMinutes:
+          event.reminders
+              ?.map((r) => r.minutes)
+              .whereType<int>()
+              .toList(growable: false) ??
+          const [],
     );
   }
 
@@ -191,6 +345,15 @@ class SystemDeviceCalendarGateway implements DeviceCalendarGateway {
       description: draft.notes,
       location: draft.location,
     );
+    if (draft.url != null && draft.url!.isNotEmpty) {
+      // Plugin serializes via Uri.data.contentText on the method channel.
+      event.url = Uri.dataFromString(draft.url!);
+    }
+    if (draft.reminderMinutes.isNotEmpty) {
+      event.reminders = draft.reminderMinutes
+          .map((m) => dc.Reminder(minutes: m))
+          .toList();
+    }
     if (draft.time.isAllDay) {
       event.allDay = true;
       event.start = dc.TZDateTime.from(draft.time.startUtc, dc.local);

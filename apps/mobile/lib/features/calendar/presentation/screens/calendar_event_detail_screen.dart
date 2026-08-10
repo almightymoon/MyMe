@@ -17,6 +17,7 @@ import '../../../../core/widgets/memy_card.dart';
 import '../../../../core/widgets/memy_page_header.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../application/providers/calendar_providers.dart';
+import '../../domain/entities/calendar_event_origin.dart';
 import '../../domain/entities/calendar_event_sync_status.dart';
 import '../../domain/entities/memy_calendar_event.dart';
 
@@ -50,6 +51,18 @@ class _CalendarEventDetailScreenState
   }
 
   Future<void> _confirmDelete(MemyCalendarEvent event) async {
+    if (event.origin == CalendarEventOrigin.external) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Imported events can’t be deleted in MeMy. Copy to MeMy first.',
+          ),
+        ),
+      );
+      return;
+    }
+
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -72,8 +85,6 @@ class _CalendarEventDetailScreenState
     await _run(() async {
       final repo = ref.read(calendarRepositoryProvider);
       if (event.isLinkedToExternal) {
-        // Mark for deletion so the next push removes it externally too,
-        // instead of orphaning the external event.
         await repo.updateEvent(
           event.copyWith(syncStatus: CalendarEventSyncStatus.pendingDelete),
         );
@@ -82,6 +93,17 @@ class _CalendarEventDetailScreenState
         await repo.deleteEvent(event.id);
       }
       if (mounted) context.go(RoutePaths.calendar);
+    });
+  }
+
+  Future<void> _copyToMeMy(MemyCalendarEvent event) async {
+    await _run(() async {
+      final copy = await ref
+          .read(calendarRepositoryProvider)
+          .copyExternalAsLocal(event);
+      unawaited(ref.read(calendarSyncServiceProvider).push());
+      if (!mounted) return;
+      context.push(RoutePaths.editEventPath(copy.id));
     });
   }
 
@@ -126,11 +148,15 @@ class _CalendarEventDetailScreenState
               );
             }
 
+            final isExternal = event.origin == CalendarEventOrigin.external;
+
             return Column(
               children: [
                 MemyPageHeader(
                   title: event.title,
-                  subtitle: event.isLinkedToExternal
+                  subtitle: isExternal
+                      ? 'Imported · read-only'
+                      : event.isLinkedToExternal
                       ? 'Synced with device calendar'
                       : 'MeMy event',
                   leading: IconButton(
@@ -147,16 +173,27 @@ class _CalendarEventDetailScreenState
                         context.push(RoutePaths.editEventPath(event.id));
                         return;
                       }
+                      if (value == 'copy') {
+                        await _copyToMeMy(event);
+                        return;
+                      }
                       if (value == 'delete') {
                         await _confirmDelete(event);
                       }
                     },
                     itemBuilder: (context) => [
-                      const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Text('Delete'),
-                      ),
+                      if (!isExternal)
+                        const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                      if (isExternal)
+                        const PopupMenuItem(
+                          value: 'copy',
+                          child: Text('Copy to MeMy'),
+                        ),
+                      if (!isExternal)
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Text('Delete'),
+                        ),
                     ],
                   ),
                 ),
@@ -169,6 +206,37 @@ class _CalendarEventDetailScreenState
                       AppSpacing.xxxl,
                     ),
                     children: [
+                      if (isExternal) ...[
+                        MemyCard(
+                          key: const Key('event_readonly_banner'),
+                          child: Text(
+                            'This event was imported from your device calendar '
+                            'and can’t be edited here. Copy it to MeMy to make '
+                            'changes that sync back.',
+                            style: AppTextStyles.bodyMedium(),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        MemyCard(
+                          child: ListTile(
+                            key: const Key('event_copy_to_memy'),
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(
+                              'Copy to MeMy',
+                              style: AppTextStyles.titleMedium(),
+                            ),
+                            subtitle: Text(
+                              'Creates an editable MeMy copy',
+                              style: AppTextStyles.bodySmall(
+                                color: AppColors.faintText,
+                              ),
+                            ),
+                            trailing: const Icon(Icons.copy_rounded),
+                            onTap: _busy ? null : () => _copyToMeMy(event),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                      ],
                       MemyCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,6 +318,10 @@ class _CalendarEventDetailScreenState
         return 'Waiting to be removed from your calendar';
       case CalendarEventSyncStatus.conflict:
         return 'Sync conflict — needs your review';
+      case CalendarEventSyncStatus.externallyMissing:
+        return 'Missing from device calendar';
+      case CalendarEventSyncStatus.hidden:
+        return 'Hidden (removed from device)';
     }
   }
 }

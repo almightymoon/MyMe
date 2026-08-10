@@ -4,8 +4,11 @@ import '../../../../core/data/fake_repository_config.dart';
 import '../../../../core/domain/clock/app_clock.dart';
 import '../../domain/entities/calendar_config.dart';
 import '../../domain/entities/calendar_event_link.dart';
+import '../../domain/entities/calendar_event_origin.dart';
 import '../../domain/entities/calendar_event_sync_status.dart';
+import '../../domain/entities/calendar_mutation_exception.dart';
 import '../../domain/entities/calendar_sync_conflict.dart';
+import '../../domain/entities/calendar_sync_operation.dart';
 import '../../domain/entities/conflict_resolution.dart';
 import '../../domain/entities/memy_calendar_event.dart';
 import '../../domain/repositories/calendar_repository.dart';
@@ -28,6 +31,7 @@ class FakeCalendarRepository implements CalendarRepository {
 
   List<MemyCalendarEvent> _events;
   final Map<String, CalendarEventLink> _linksByEventId = {};
+  final Map<String, CalendarSyncOperation> _opsById = {};
   final List<CalendarSyncConflict> _conflicts = [];
   CalendarConfig _configRow = const CalendarConfig();
   int _idSeq = 0;
@@ -67,17 +71,30 @@ class FakeCalendarRepository implements CalendarRepository {
 
   String _newId(String prefix) => '${prefix}_${_idSeq++}';
 
+  bool _isHiddenFromAgenda(MemyCalendarEvent e) {
+    return e.syncStatus == CalendarEventSyncStatus.hidden ||
+        e.syncStatus == CalendarEventSyncStatus.externallyMissing;
+  }
+
   @override
   Stream<List<MemyCalendarEvent>> watchEventsInRange({
     required DateTime startUtc,
     required DateTime endUtc,
+    bool includeHidden = false,
   }) async* {
-    yield _filterRange(startUtc, endUtc);
-    yield* _eventsController.stream.map((_) => _filterRange(startUtc, endUtc));
+    yield _filterRange(startUtc, endUtc, includeHidden: includeHidden);
+    yield* _eventsController.stream.map(
+      (_) => _filterRange(startUtc, endUtc, includeHidden: includeHidden),
+    );
   }
 
-  List<MemyCalendarEvent> _filterRange(DateTime startUtc, DateTime endUtc) {
+  List<MemyCalendarEvent> _filterRange(
+    DateTime startUtc,
+    DateTime endUtc, {
+    bool includeHidden = false,
+  }) {
     final filtered = _events.where((e) => e.deletedAt == null).where((e) {
+      if (!includeHidden && _isHiddenFromAgenda(e)) return false;
       return e.time.startUtc.isBefore(endUtc) &&
           e.time.endUtc.isAfter(startUtc);
     }).toList()..sort((a, b) => a.time.startUtc.compareTo(b.time.startUtc));
@@ -88,10 +105,11 @@ class FakeCalendarRepository implements CalendarRepository {
   Future<List<MemyCalendarEvent>> getEventsInRange({
     required DateTime startUtc,
     required DateTime endUtc,
+    bool includeHidden = false,
   }) async {
     await _maybeFail();
     if (_config?.forceEmpty ?? false) return const [];
-    return _filterRange(startUtc, endUtc);
+    return _filterRange(startUtc, endUtc, includeHidden: includeHidden);
   }
 
   @override
@@ -143,11 +161,31 @@ class FakeCalendarRepository implements CalendarRepository {
     );
   }
 
+  void _rejectExternalMutation(MemyCalendarEvent existing) {
+    if (existing.origin == CalendarEventOrigin.external) {
+      throw const CalendarMutationException(
+        'Imported calendar events are read-only. Copy to MeMy to edit.',
+      );
+    }
+  }
+
   @override
   Future<MemyCalendarEvent> updateEvent(MemyCalendarEvent event) async {
     await _maybeFail();
     final idx = _events.indexWhere((e) => e.id == event.id);
     if (idx < 0) throw StateError('Calendar event not found: ${event.id}');
+    final existing = _events[idx];
+    // Allow sync-status-only updates from sync service (presence / hide),
+    // but reject content mutations that keep origin=external while changing
+    // user-editable fields via the public API path. Sync service writes
+    // still go through updateEvent — only reject when caller tries to
+    // mutate an external event into pendingPush (user edit) or pendingDelete
+    // (user delete of imported).
+    if (existing.origin == CalendarEventOrigin.external &&
+        (event.syncStatus == CalendarEventSyncStatus.pendingPush ||
+            event.syncStatus == CalendarEventSyncStatus.pendingDelete)) {
+      _rejectExternalMutation(existing);
+    }
     final next = [..._events];
     next[idx] = event;
     _events = next;
@@ -158,9 +196,33 @@ class FakeCalendarRepository implements CalendarRepository {
   @override
   Future<void> deleteEvent(String id) async {
     await _maybeFail();
+    final existing = await getEvent(id);
+    if (existing != null && existing.origin == CalendarEventOrigin.external) {
+      throw const CalendarMutationException(
+        'Imported calendar events are read-only. Copy to MeMy to edit.',
+      );
+    }
     _events = _events.where((e) => e.id != id).toList();
     _linksByEventId.remove(id);
     _emitEvents();
+  }
+
+  @override
+  Future<MemyCalendarEvent> copyExternalAsLocal(MemyCalendarEvent event) async {
+    final now = _clock.now().toUtc();
+    final copy = MemyCalendarEvent(
+      id: _newId('cal_evt'),
+      title: event.title,
+      notes: event.notes,
+      location: event.location,
+      time: event.time,
+      origin: CalendarEventOrigin.local,
+      syncStatus: CalendarEventSyncStatus.pendingPush,
+      reminderMinutes: event.reminderMinutes,
+      createdAt: now,
+      updatedAt: now,
+    );
+    return createEvent(copy);
   }
 
   @override
@@ -191,6 +253,11 @@ class FakeCalendarRepository implements CalendarRepository {
   @override
   Future<void> deleteLink(String linkId) async {
     _linksByEventId.removeWhere((_, link) => link.id == linkId);
+  }
+
+  @override
+  Future<List<CalendarEventLink>> getAllLinks() async {
+    return _linksByEventId.values.toList(growable: false);
   }
 
   @override
@@ -246,11 +313,72 @@ class FakeCalendarRepository implements CalendarRepository {
   }
 
   @override
-  Future<CalendarConfig> getConfig() async => _configRow;
+  Future<CalendarConfig> getConfig() async {
+    final config = _configRow;
+    if (config.readableCalendarIds.isEmpty &&
+        // ignore: deprecated_member_use_from_same_package
+        config.selectedCalendarIds.isNotEmpty) {
+      // ignore: deprecated_member_use_from_same_package
+      return config.copyWith(readableCalendarIds: config.selectedCalendarIds);
+    }
+    return config;
+  }
 
   @override
   Future<void> saveConfig(CalendarConfig config) async {
-    _configRow = config;
+    final readable = config.effectiveReadableCalendarIds;
+    _configRow = config.copyWith(
+      readableCalendarIds: readable,
+      selectedCalendarIds: readable,
+      calendarSchemaVersion: CalendarConfig.currentSchemaVersion,
+    );
+  }
+
+  @override
+  Future<CalendarSyncOperation> saveSyncOperation(
+    CalendarSyncOperation op,
+  ) async {
+    _opsById[op.id] = op;
+    return op;
+  }
+
+  @override
+  Future<CalendarSyncOperation?> getSyncOperation(String id) async =>
+      _opsById[id];
+
+  @override
+  Future<List<CalendarSyncOperation>> getInFlightOperations() async {
+    return _opsById.values
+        .where((o) => o.state == CalendarSyncOperationState.inFlight)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<List<CalendarSyncOperation>> getPendingOperations() async {
+    return _opsById.values
+        .where(
+          (o) =>
+              o.state == CalendarSyncOperationState.prepared ||
+              o.state == CalendarSyncOperationState.retryableFailure,
+        )
+        .toList(growable: false);
+  }
+
+  @override
+  Future<List<CalendarSyncOperation>> getSyncOperationsForEvent(
+    String memyEventId,
+  ) async {
+    return _opsById.values
+        .where((o) => o.memyEventId == memyEventId)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<CalendarSyncOperation> updateSyncOperation(
+    CalendarSyncOperation op,
+  ) async {
+    _opsById[op.id] = op;
+    return op;
   }
 
   @override

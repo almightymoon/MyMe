@@ -2,6 +2,7 @@ import '../../../../core/integrations/domain/integration_availability.dart';
 import '../../../../core/integrations/domain/integration_error.dart';
 import '../../../../core/integrations/domain/integration_provider.dart';
 import '../../domain/entities/calendar_event_time.dart';
+import '../../domain/entities/calendar_read_batch.dart';
 import '../../domain/entities/device_calendar_descriptor.dart';
 import '../../domain/gateways/device_calendar_gateway.dart';
 
@@ -20,7 +21,15 @@ class FakeDeviceCalendarGateway implements DeviceCalendarGateway {
   IntegrationAvailability _availability;
   bool _permissionsGranted;
   bool requestPermissionsResult = true;
+  bool supportsCreation = true;
   int _eventIdSeq = 0;
+  int _calendarIdSeq = 0;
+
+  /// When true, every [listEventBatch] returns [CalendarReadCompleteness.partial].
+  bool forcePartialBatches = false;
+
+  /// Optional one-shot override for the next batch completeness (consumed).
+  CalendarReadCompleteness? nextBatchCompleteness;
 
   final Map<String, DeviceCalendarDescriptor> _calendars = {};
   final Map<String, Map<String, DeviceCalendarRawEvent>> _eventsByCalendar = {};
@@ -57,6 +66,7 @@ class FakeDeviceCalendarGateway implements DeviceCalendarGateway {
     required CalendarEventTime time,
     String? notes,
     String? location,
+    String? url,
     DateTime? lastModifiedUtc,
   }) {
     final id = externalEventId ?? 'fake_evt_${_eventIdSeq++}';
@@ -68,10 +78,13 @@ class FakeDeviceCalendarGateway implements DeviceCalendarGateway {
       location: location,
       time: time,
       lastModifiedUtc: lastModifiedUtc,
+      url: url,
     );
     _eventsByCalendar.putIfAbsent(calendarId, () => {})[id] = event;
     return event;
   }
+
+  DateTime Function() nowUtc = () => DateTime.now().toUtc();
 
   /// Simulates the user editing [externalEventId] directly on the device,
   /// outside of MeMy — bumps `lastModifiedUtc` so pull-sync detects it.
@@ -82,6 +95,7 @@ class FakeDeviceCalendarGateway implements DeviceCalendarGateway {
     CalendarEventTime? time,
     String? notes,
     String? location,
+    String? url,
     required DateTime lastModifiedUtc,
   }) {
     final existing = _eventsByCalendar[calendarId]?[externalEventId];
@@ -96,6 +110,7 @@ class FakeDeviceCalendarGateway implements DeviceCalendarGateway {
       location: location ?? existing.location,
       time: time ?? existing.time,
       lastModifiedUtc: lastModifiedUtc,
+      url: url ?? existing.url,
     );
     _eventsByCalendar[calendarId]![externalEventId] = updated;
     return updated;
@@ -156,15 +171,87 @@ class FakeDeviceCalendarGateway implements DeviceCalendarGateway {
     required DateTime startUtc,
     required DateTime endUtc,
   }) async {
+    final batch = await listEventBatch(
+      calendarId: calendarId,
+      startUtc: startUtc,
+      endUtc: endUtc,
+    );
+    return batch.events;
+  }
+
+  @override
+  Future<CalendarReadBatch> listEventBatch({
+    required String calendarId,
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async {
     _requirePermission();
-    final events = _eventsByCalendar[calendarId]?.values ?? const [];
-    return events
+    final events = (_eventsByCalendar[calendarId]?.values ?? const [])
         .where(
           (e) =>
               e.time.startUtc.isBefore(endUtc) &&
               e.time.endUtc.isAfter(startUtc),
         )
         .toList(growable: false);
+
+    final completeness =
+        nextBatchCompleteness ??
+        (forcePartialBatches
+            ? CalendarReadCompleteness.partial
+            : CalendarReadCompleteness.complete);
+    nextBatchCompleteness = null;
+
+    return CalendarReadBatch(
+      calendarId: calendarId,
+      requestedStart: startUtc,
+      requestedEnd: endUtc,
+      events: events,
+      completeness: completeness,
+      fetchedAt: DateTime.now().toUtc(),
+    );
+  }
+
+  @override
+  Future<DeviceCalendarRawEvent?> getEventById({
+    required String calendarId,
+    required String externalEventId,
+  }) async {
+    _requirePermission();
+    return _eventsByCalendar[calendarId]?[externalEventId];
+  }
+
+  @override
+  Future<bool> supportsCalendarCreation() async => supportsCreation;
+
+  @override
+  Future<DeviceCalendarDescriptor> createCalendar({
+    required String name,
+    String? colorKey,
+  }) async {
+    _requirePermission();
+    if (!supportsCreation) {
+      throw IntegrationError(
+        provider: IntegrationProvider.calendar,
+        code: IntegrationErrorCode.notSupported,
+        message: 'Creating calendars is not supported on this device.',
+      );
+    }
+    final id = 'fake_cal_${_calendarIdSeq++}';
+    return seedCalendar(id: id, name: name);
+  }
+
+  @override
+  Future<DeviceCalendarDescriptor?> getCalendar(String calendarId) async {
+    _requirePermission();
+    return _calendars[calendarId];
+  }
+
+  @override
+  Future<bool> verifyCalendarWritable(String calendarId) async {
+    _requirePermission();
+    final calendar = _calendars[calendarId];
+    if (calendar == null) return false;
+    return !calendar.isReadOnly;
   }
 
   @override
@@ -180,7 +267,9 @@ class FakeDeviceCalendarGateway implements DeviceCalendarGateway {
       notes: draft.notes,
       location: draft.location,
       time: draft.time,
-      lastModifiedUtc: DateTime.now().toUtc(),
+      lastModifiedUtc: nowUtc(),
+      url: draft.url,
+      reminderMinutes: draft.reminderMinutes,
     );
     _eventsByCalendar.putIfAbsent(draft.externalCalendarId, () => {})[id] =
         event;
@@ -203,7 +292,9 @@ class FakeDeviceCalendarGateway implements DeviceCalendarGateway {
       notes: draft.notes,
       location: draft.location,
       time: draft.time,
-      lastModifiedUtc: DateTime.now().toUtc(),
+      lastModifiedUtc: nowUtc(),
+      url: draft.url,
+      reminderMinutes: draft.reminderMinutes,
     );
     _eventsByCalendar.putIfAbsent(draft.externalCalendarId, () => {})[id] =
         event;
@@ -217,5 +308,21 @@ class FakeDeviceCalendarGateway implements DeviceCalendarGateway {
   }) async {
     _requirePermission();
     _eventsByCalendar[calendarId]?.remove(externalEventId);
+  }
+
+  @override
+  Future<List<DeviceCalendarRawEvent>> findEventsByMemyMarker({
+    required String calendarId,
+    required String memyMarker,
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async {
+    _requirePermission();
+    final events = await listEvents(
+      calendarId: calendarId,
+      startUtc: startUtc,
+      endUtc: endUtc,
+    );
+    return events.where((e) => e.url == memyMarker).toList(growable: false);
   }
 }

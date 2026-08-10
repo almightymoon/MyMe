@@ -6,8 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/application/providers/core_providers.dart';
 import '../../../../core/domain/value_objects/local_date.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../../domain/entities/calendar_event_origin.dart';
 import '../../domain/entities/calendar_event_sync_status.dart';
 import '../../domain/entities/calendar_event_time.dart';
+import '../../domain/entities/calendar_mutation_exception.dart';
 import '../../domain/entities/memy_calendar_event.dart';
 import '../../domain/services/calendar_event_validator.dart';
 import '../providers/calendar_providers.dart';
@@ -145,6 +147,13 @@ class CalendarEventFormController
     state = state.copyWith(isSubmitting: true, clearError: true);
 
     try {
+      final existing = state.editing;
+      if (existing != null && existing.origin == CalendarEventOrigin.external) {
+        throw const CalendarMutationException(
+          'Imported calendar events are read-only. Copy to MeMy to edit.',
+        );
+      }
+
       final title = CalendarEventValidator.validateTitle(state.title);
       final notes = CalendarEventValidator.validateNotes(state.notes);
       final location = CalendarEventValidator.validateLocation(state.location);
@@ -174,7 +183,6 @@ class CalendarEventFormController
 
       final repo = _ref.read(calendarRepositoryProvider);
       final now = _ref.read(appClockProvider).now().toUtc();
-      final existing = state.editing;
 
       final event = existing == null
           ? MemyCalendarEvent(
@@ -212,6 +220,9 @@ class CalendarEventFormController
 
       return saved.id;
     } on CalendarEventValidationException catch (error) {
+      state = state.copyWith(isSubmitting: false, errorMessage: error.message);
+      return null;
+    } on CalendarMutationException catch (error) {
       state = state.copyWith(isSubmitting: false, errorMessage: error.message);
       return null;
     } catch (error) {

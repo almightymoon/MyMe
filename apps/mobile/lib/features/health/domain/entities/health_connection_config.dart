@@ -16,6 +16,7 @@ class HealthConnectionConfig {
     this.lastRefreshAt,
     this.schemaVersion = currentSchemaVersion,
     this.recoveryNeeded = false,
+    this.backupAvailable = false,
   });
 
   /// Current on-disk schema for [toJson].
@@ -31,7 +32,10 @@ class HealthConnectionConfig {
   /// this as a clean "never connected" — offer reconnect / clear.
   final bool recoveryNeeded;
 
-  bool get isConnected => status == IntegrationConnectionStatus.connected;
+  /// True when a valid backup config exists and [restoreBackup] may recover.
+  final bool backupAvailable;
+
+  bool get isConnected => status.allowsLiveSync;
 
   HealthConnectionConfig copyWith({
     IntegrationConnectionStatus? status,
@@ -40,6 +44,7 @@ class HealthConnectionConfig {
     DateTime? lastRefreshAt,
     int? schemaVersion,
     bool? recoveryNeeded,
+    bool? backupAvailable,
     bool clearConnectedAt = false,
   }) {
     return HealthConnectionConfig(
@@ -49,21 +54,27 @@ class HealthConnectionConfig {
       lastRefreshAt: lastRefreshAt ?? this.lastRefreshAt,
       schemaVersion: schemaVersion ?? this.schemaVersion,
       recoveryNeeded: recoveryNeeded ?? this.recoveryNeeded,
+      backupAvailable: backupAvailable ?? this.backupAvailable,
     );
   }
 
-  factory HealthConnectionConfig.fromJson(Map<String, dynamic>? json) {
+  factory HealthConnectionConfig.fromJson(
+    Map<String, dynamic>? json, {
+    String? platform,
+  }) {
     if (json == null) return const HealthConnectionConfig();
     final version = _readSchemaVersion(json);
     return HealthConnectionConfig(
       status: _statusFrom(json['status'] as String?),
       permissionState: HealthPermissionState.fromJson(
         json['permissionState'] as Map<String, dynamic>?,
+        platform: platform,
       ),
       connectedAt: _parseDate(json['connectedAt']),
       lastRefreshAt: _parseDate(json['lastRefreshAt']),
       schemaVersion: version,
       recoveryNeeded: json['recoveryNeeded'] == true,
+      backupAvailable: json['backupAvailable'] == true,
     );
   }
 
@@ -74,6 +85,7 @@ class HealthConnectionConfig {
     'connectedAt': connectedAt?.toIso8601String(),
     'lastRefreshAt': lastRefreshAt?.toIso8601String(),
     'recoveryNeeded': recoveryNeeded,
+    'backupAvailable': backupAvailable,
   };
 
   static int _readSchemaVersion(Map<String, dynamic> json) {

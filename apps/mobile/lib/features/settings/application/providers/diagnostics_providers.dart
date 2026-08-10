@@ -7,6 +7,7 @@ import '../../../../core/integrations/application/providers/integration_provider
 import '../../../../core/integrations/domain/integration_diagnostics_report.dart';
 import '../../../../core/integrations/domain/integration_provider.dart';
 import '../../../calendar/application/providers/calendar_providers.dart';
+import '../../../calendar/domain/entities/calendar_sync_operation.dart';
 import '../../../calendar/domain/entities/external_presence_status.dart';
 import '../../../health/application/providers/health_providers.dart' as health;
 import '../../../health/domain/entities/health_metric_type.dart';
@@ -26,14 +27,31 @@ final integrationDiagnosticsProvider =
       final pending = await calendarRepo.getPendingOperations();
       final conflicts = await calendarRepo.getConflicts();
       final links = await calendarRepo.getAllLinks();
+      final recoveryCases = await calendarRepo.getUnresolvedRecoveryCases();
       final healthConnection = await healthRepo.getConnection();
       final healthAvailability = await healthRepo.checkAvailability();
+      final backupAvailable = await healthRepo.hasBackupAvailable();
 
       final suspected = links
           .where((l) => l.presence == ExternalPresenceStatus.suspectedMissing)
           .length;
       final confirmed = links
-          .where((l) => l.presence == ExternalPresenceStatus.confirmedMissing)
+          .where(
+            (l) =>
+                l.presence == ExternalPresenceStatus.confirmedMissing ||
+                l.presence ==
+                    ExternalPresenceStatus.hiddenAfterExternalDeletion ||
+                l.presence == ExternalPresenceStatus.externallyMissingMeMyOwned,
+          )
+          .length;
+
+      final unknownOutcomeCount = pending
+          .where((o) => o.state == CalendarSyncOperationState.unknownOutcome)
+          .length;
+      final requiresUserActionCount = pending
+          .where(
+            (o) => o.state == CalendarSyncOperationState.requiresUserAction,
+          )
           .length;
 
       final dispositions = <String, String>{
@@ -59,6 +77,9 @@ final integrationDiagnosticsProvider =
           conflictCount: conflicts.length,
           suspectedMissingCount: suspected,
           confirmedMissingCount: confirmed,
+          unresolvedRecoveryCount: recoveryCases.length,
+          unknownOutcomeCount: unknownOutcomeCount,
+          requiresUserActionCount: requiresUserActionCount,
           lastSuccessfulPullAt: config.lastSuccessfulPullAt,
           lastSuccessfulPushAt: config.lastSuccessfulPushAt,
           lastErrorCode: calendarConnection.lastError?.code.name,
@@ -70,6 +91,7 @@ final integrationDiagnosticsProvider =
           permissionDispositions: dispositions,
           configSchemaVersion: healthConnection.schemaVersion,
           recoveryNeeded: healthConnection.recoveryNeeded,
+          backupAvailable: backupAvailable || healthConnection.backupAvailable,
           lastSuccessfulRefreshAt: healthConnection.lastRefreshAt,
           lastErrorCode: healthRegistry?.lastError?.code.name,
         ),

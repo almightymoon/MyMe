@@ -19,11 +19,14 @@ void main() {
           connectionStatus: 'connected',
           readableCalendarCount: 2,
           hasValidWritableTarget: true,
-          calendarSchemaVersion: 2,
+          calendarSchemaVersion: 3,
           pendingOperationCount: 1,
           conflictCount: 0,
           suspectedMissingCount: 1,
           confirmedMissingCount: 0,
+          unresolvedRecoveryCount: 0,
+          unknownOutcomeCount: 0,
+          requiresUserActionCount: 0,
           lastSuccessfulPullAt: DateTime.utc(2026, 6, 15, 11),
           lastErrorCode: 'permissionDenied',
         ),
@@ -37,6 +40,7 @@ void main() {
           },
           configSchemaVersion: 2,
           recoveryNeeded: false,
+          backupAvailable: true,
         ),
       );
 
@@ -50,6 +54,8 @@ void main() {
       expect(json, isNot(contains('sourceDeviceId')));
       expect(json, isNot(contains('@')));
       expect(json, contains('suspectedMissingCount'));
+      expect(json, contains('unresolvedRecoveryCount'));
+      expect(json, contains('backupAvailable'));
       expect(json, contains('permissionDispositions'));
       expect(json, contains('gatewayMode'));
     });

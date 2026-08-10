@@ -12,6 +12,7 @@ import '../../../core/integrations/domain/integration_availability.dart';
 import '../../../core/widgets/memy_page_header.dart';
 import '../../calendar/application/providers/calendar_providers.dart';
 import '../../calendar/data/gateways/fake_device_calendar_gateway.dart';
+import '../../calendar/domain/entities/calendar_event_lookup_result.dart';
 import '../../calendar/domain/entities/calendar_read_batch.dart';
 import '../../health/application/providers/health_providers.dart';
 import '../../health/data/gateways/fake_platform_health_gateway.dart';
@@ -101,9 +102,96 @@ class IntegrationLabScreen extends ConsumerWidget {
                       }
                     },
                   ),
+                  _LabButton(
+                    key: const Key('lab_calendar_lookup_unknown'),
+                    label: 'Lookup returns unknown',
+                    onPressed: () {
+                      final gateway = ref.read(deviceCalendarGatewayProvider);
+                      if (gateway is FakeDeviceCalendarGateway) {
+                        gateway.defaultLookupOverride =
+                            CalendarEventLookupUnknown(
+                              sanitizedErrorCode: 'unknown',
+                              retryable: true,
+                              checkedAt: DateTime.now().toUtc(),
+                            );
+                        _snack(context, 'Next getEventById → unknown');
+                      } else {
+                        _snack(context, 'Switch CALENDAR_DATA_SOURCE=fake');
+                      }
+                    },
+                  ),
+                  _LabButton(
+                    key: const Key('lab_calendar_hydration_fail'),
+                    label: 'Simulate hydration provider failure',
+                    onPressed: () async {
+                      final gateway = ref.read(deviceCalendarGatewayProvider);
+                      if (gateway is FakeDeviceCalendarGateway) {
+                        gateway.throwOnAvailabilityCheck = true;
+                        final sync = ref.read(calendarSyncServiceProvider);
+                        await sync.hydrateConnectionFromPersistence();
+                        gateway.throwOnAvailabilityCheck = false;
+                        if (context.mounted) {
+                          _snack(
+                            context,
+                            'Hydration → staleCacheAvailable (not connected)',
+                          );
+                        }
+                      } else {
+                        _snack(context, 'Switch CALENDAR_DATA_SOURCE=fake');
+                      }
+                    },
+                  ),
+                  _LabButton(
+                    key: const Key('lab_calendar_lookup_not_found'),
+                    label: 'Lookup returns verified not-found',
+                    onPressed: () {
+                      final gateway = ref.read(deviceCalendarGatewayProvider);
+                      if (gateway is FakeDeviceCalendarGateway) {
+                        gateway.defaultLookupOverride = CalendarEventNotFound(
+                          externalCalendarId: 'cal_lab',
+                          externalEventId: 'evt_lab',
+                          verifiedAt: DateTime.now().toUtc(),
+                          verificationMethod: 'fakeMapMiss',
+                        );
+                        _snack(context, 'Next getEventById → notFound');
+                      } else {
+                        _snack(context, 'Switch CALENDAR_DATA_SOURCE=fake');
+                      }
+                    },
+                  ),
                   const SizedBox(height: AppSpacing.lg),
                   Text('Health (fake)', style: AppTextStyles.titleMedium()),
                   const SizedBox(height: AppSpacing.sm),
+                  _LabButton(
+                    key: const Key('lab_health_ios_cancelled'),
+                    label: 'iOS-style cancelled request',
+                    onPressed: () {
+                      final gateway = ref.read(platformHealthGatewayProvider);
+                      if (gateway is FakePlatformHealthGateway) {
+                        gateway.treatRequestsAsUnverified = true;
+                        gateway.nextRequestOutcome =
+                            FakePermissionRequestOutcome.cancelled;
+                        _snack(context, 'Next request → requestCancelled');
+                      } else {
+                        _snack(context, 'Switch HEALTH_DATA_SOURCE=fake');
+                      }
+                    },
+                  ),
+                  _LabButton(
+                    key: const Key('lab_health_ios_failed'),
+                    label: 'iOS-style failed request',
+                    onPressed: () {
+                      final gateway = ref.read(platformHealthGatewayProvider);
+                      if (gateway is FakePlatformHealthGateway) {
+                        gateway.treatRequestsAsUnverified = true;
+                        gateway.nextRequestOutcome =
+                            FakePermissionRequestOutcome.failed;
+                        _snack(context, 'Next request → requestFailed');
+                      } else {
+                        _snack(context, 'Switch HEALTH_DATA_SOURCE=fake');
+                      }
+                    },
+                  ),
                   _LabButton(
                     key: const Key('lab_health_ios_unverified'),
                     label: 'iOS-style unverified dispositions',
@@ -111,6 +199,7 @@ class IntegrationLabScreen extends ConsumerWidget {
                       final gateway = ref.read(platformHealthGatewayProvider);
                       if (gateway is FakePlatformHealthGateway) {
                         gateway.treatRequestsAsUnverified = true;
+                        gateway.nextRequestOutcome = null;
                         _snack(
                           context,
                           'Next grant → unverified (HealthKit-style)',

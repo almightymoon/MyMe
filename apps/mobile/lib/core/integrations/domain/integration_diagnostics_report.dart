@@ -73,6 +73,9 @@ class CalendarDiagnosticsSection {
     required this.conflictCount,
     required this.suspectedMissingCount,
     required this.confirmedMissingCount,
+    required this.unresolvedRecoveryCount,
+    required this.unknownOutcomeCount,
+    required this.requiresUserActionCount,
     this.lastSuccessfulPullAt,
     this.lastSuccessfulPushAt,
     this.lastErrorCode,
@@ -88,6 +91,9 @@ class CalendarDiagnosticsSection {
   final int conflictCount;
   final int suspectedMissingCount;
   final int confirmedMissingCount;
+  final int unresolvedRecoveryCount;
+  final int unknownOutcomeCount;
+  final int requiresUserActionCount;
   final DateTime? lastSuccessfulPullAt;
   final DateTime? lastSuccessfulPushAt;
   final String? lastErrorCode;
@@ -103,6 +109,9 @@ class CalendarDiagnosticsSection {
     'conflictCount': conflictCount,
     'suspectedMissingCount': suspectedMissingCount,
     'confirmedMissingCount': confirmedMissingCount,
+    'unresolvedRecoveryCount': unresolvedRecoveryCount,
+    'unknownOutcomeCount': unknownOutcomeCount,
+    'requiresUserActionCount': requiresUserActionCount,
     'lastSuccessfulPullAt': lastSuccessfulPullAt?.toUtc().toIso8601String(),
     'lastSuccessfulPushAt': lastSuccessfulPushAt?.toUtc().toIso8601String(),
     'lastErrorCode': lastErrorCode,
@@ -117,6 +126,7 @@ class HealthDiagnosticsSection {
     required this.permissionDispositions,
     required this.configSchemaVersion,
     required this.recoveryNeeded,
+    required this.backupAvailable,
     this.lastSuccessfulRefreshAt,
     this.lastErrorCode,
   });
@@ -127,6 +137,7 @@ class HealthDiagnosticsSection {
   final Map<String, String> permissionDispositions;
   final int configSchemaVersion;
   final bool recoveryNeeded;
+  final bool backupAvailable;
   final DateTime? lastSuccessfulRefreshAt;
   final String? lastErrorCode;
 
@@ -137,6 +148,7 @@ class HealthDiagnosticsSection {
     'permissionDispositions': permissionDispositions,
     'configSchemaVersion': configSchemaVersion,
     'recoveryNeeded': recoveryNeeded,
+    'backupAvailable': backupAvailable,
     'lastSuccessfulRefreshAt': lastSuccessfulRefreshAt
         ?.toUtc()
         .toIso8601String(),

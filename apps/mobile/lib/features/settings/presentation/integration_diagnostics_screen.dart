@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/router/app_navigation.dart';
 import '../../../app/router/route_names.dart';
@@ -10,9 +11,10 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
-import '../application/providers/diagnostics_providers.dart';
 import '../../../core/integrations/domain/integration_diagnostics_report.dart';
 import '../../../core/widgets/memy_page_header.dart';
+import '../../calendar/application/providers/calendar_providers.dart';
+import '../application/providers/diagnostics_providers.dart';
 
 /// `/settings/connections/diagnostics` — operational metadata only.
 class IntegrationDiagnosticsScreen extends ConsumerWidget {
@@ -21,6 +23,8 @@ class IntegrationDiagnosticsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(integrationDiagnosticsProvider);
+    final recoveryCount =
+        ref.watch(calendarRecoveryCasesProvider).valueOrNull?.length ?? 0;
 
     return Scaffold(
       key: const Key('integration_diagnostics'),
@@ -51,7 +55,8 @@ class IntegrationDiagnosticsScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-                data: (report) => _Body(report: report),
+                data: (report) =>
+                    _Body(report: report, recoveryCount: recoveryCount),
               ),
             ),
           ],
@@ -62,9 +67,10 @@ class IntegrationDiagnosticsScreen extends ConsumerWidget {
 }
 
 class _Body extends StatelessWidget {
-  const _Body({required this.report});
+  const _Body({required this.report, required this.recoveryCount});
 
   final IntegrationDiagnosticsReport report;
+  final int recoveryCount;
 
   @override
   Widget build(BuildContext context) {
@@ -83,6 +89,22 @@ class _Body extends StatelessWidget {
           'or account emails.',
           style: AppTextStyles.bodySmall().copyWith(color: AppColors.faintText),
         ),
+        if (recoveryCount > 0) ...[
+          const SizedBox(height: AppSpacing.md),
+          ListTile(
+            key: const Key('integration_diagnostics_calendar_recovery'),
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.healing_rounded),
+            title: Text(
+              recoveryCount == 1
+                  ? '1 calendar create recovery'
+                  : '$recoveryCount calendar create recoveries',
+            ),
+            subtitle: const Text('Open create-recovery review'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => context.push(RoutePaths.calendarRecovery),
+          ),
+        ],
         const SizedBox(height: AppSpacing.lg),
         _Section(
           title: 'App',
@@ -107,7 +129,10 @@ class _Body extends StatelessWidget {
             ),
             ('Schema', 'v${report.calendar.calendarSchemaVersion}'),
             ('Pending ops', '${report.calendar.pendingOperationCount}'),
+            ('Unknown outcomes', '${report.calendar.unknownOutcomeCount}'),
+            ('Needs user action', '${report.calendar.requiresUserActionCount}'),
             ('Conflicts', '${report.calendar.conflictCount}'),
+            ('Create recoveries', '${report.calendar.unresolvedRecoveryCount}'),
             ('Suspected missing', '${report.calendar.suspectedMissingCount}'),
             ('Confirmed missing', '${report.calendar.confirmedMissingCount}'),
             (
@@ -132,6 +157,7 @@ class _Body extends StatelessWidget {
             ('Status', report.health.connectionStatus),
             ('Schema', 'v${report.health.configSchemaVersion}'),
             ('Recovery needed', report.health.recoveryNeeded ? 'yes' : 'no'),
+            ('Backup available', report.health.backupAvailable ? 'yes' : 'no'),
             (
               'Last refresh',
               report.health.lastSuccessfulRefreshAt

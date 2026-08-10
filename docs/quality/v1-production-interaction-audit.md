@@ -3,111 +3,84 @@
 Every interactive surface reachable in a production build
 (`APP_ENV=production`), and an honest verdict on what it does.
 
-Legend: **Live** = real behaviour on real local data. **Labelled placeholder**
-= works, opens something, and says clearly that the deeper feature is not
-built. **Demo content** = real UI, illustrative numbers. **Removed** = not
-reachable in production.
+Legend: **Live** = real behaviour on real local data. **Labelled catalogue**
+= static bundled content, not personal history. **Removed** = not reachable in
+production.
+
+Updated with the final application-completion honesty pass.
 
 ## Entry and onboarding
 
 | Surface | Verdict | Notes |
 |---|---|---|
 | First launch → `/onboarding` | Live | Six steps; completion persisted to `memy_onboarding_complete_v1` |
-| Welcome / Privacy steps | Live | Copy only; no "AI" positioning |
-| Preferences step | Live | Currency, units, week start, detected timezone, optional display name — all persisted |
-| Calendar step → Connect | Live | Pushes `/calendar/connect`; no permission requested until tapped there |
-| Calendar step → Skip | Live | Advances; nothing written |
-| Health step → Connect / Skip | Live | Same pattern against `/health/connect` |
-| Finish → Open Today | Live | Guarded against double-submit; navigates to `/today` |
-| `/signin`, `/signup`, `/forgot-password` | Removed | Redirect to onboarding or Today |
+| Welcome / Privacy steps | Live | Copy only; no live-AI positioning |
+| Preferences step | Live | Currency, units, week start, detected timezone, optional display name |
+| Calendar / Health Connect or Skip | Live | Permissions only after Connect |
+| Finish → Open Today | Live | Double-submit guarded |
+| `/signin`, `/signup`, `/forgot-password` | Removed | Redirect |
 
 ## Bottom navigation
 
 | Surface | Verdict | Notes |
 |---|---|---|
-| Today | Live shell, mixed content | Tasks are live and local; Life Score and focus copy are demo content |
-| Plan | Live shell, mixed content | Module tiles navigate to live modules |
-| Quick Add FAB | Live | Opens the sheet |
-| More (Insights) | Live shell, demo figures | Trend/saved/goals numbers are illustrative; every tile navigates |
-| Coach | Removed | Hidden; `/coach` redirects to Today |
+| Today | Live | Greeting from onboarding display name; modules from live providers; no Life Score / fake focus in production |
+| Plan | Live | Goals/Habits/Finance/Health/Calendar from live providers; Wardrobe/Body/Nutrition/Coach strip hidden |
+| Quick Add FAB | Live | Single sheet; no stacking |
+| More (Insights) | Live shell | Honest weekly summary copy; no fabricated PKR/goals track tiles as live metrics |
+| Coach | Removed | Hidden; `/coach` → Today |
 
 ## Quick Add
 
 | Action | Verdict |
 |---|---|
-| Daily Task | Live — appends to Today's tasks |
-| Goal | Live — `/goals/new` |
-| Transaction | Live — `/finance/new` |
-| Calendar Event | Live — `/calendar/new` |
-| Habit | Live — `/habits/new` |
+| Daily Task | Live |
+| Goal / Transaction / Event / Habit | Live |
 | Log Meal | Removed |
 
-## Sidebar
+## Sidebar / More destinations
 
-| Item | Verdict |
-|---|---|
-| Account header → Profile | Live |
-| Today, Plan | Live |
-| Goals, Finance, Habits | Live, local persistence |
-| Calendar | Live against the device calendar |
-| Health | Live, read-only from platform Health |
-| Exercise | Live browsing over bundled content |
-| Connected Apps | Live |
-| Appearance | Live |
-| Settings | Live |
-| Privacy & Data, Security, Help & Support, Legal, About | Live |
-| Coach, Wardrobe, Body, Notifications | Removed |
-| Sign Out | Removed — there is no session |
+Profile, Goals, Finance, Habits, Calendar, Health, Exercise, Connected Apps,
+Appearance, Settings, Privacy, Security, Help, Legal, About — **Live**.
 
-## Settings
+Coach, Wardrobe, Body, Notifications, Sign Out — **Removed**.
 
-| Row | Verdict |
-|---|---|
-| Profile Information | Live |
-| Security | Live |
-| Connected Apps | Live |
-| Appearance | Live |
-| Privacy | Live |
-| Help & Support, Terms, Privacy Policy, About | Live |
-| Reset onboarding | Live — clears the completion flag only, never user data |
-| Units, Language | Removed (were snackbar-only) |
-| Change Password | Removed (no auth provider) |
-| Notifications | Removed (not built) |
-| Log Out | Removed |
-
-## Modules
-
-| Surface | Verdict | Notes |
-|---|---|---|
-| Goals list / detail / add / edit / milestones | Live | Local repository |
-| Finance overview / add / edit / history / detail | Live | Local repository |
-| Habits overview / add / edit / detail / check-in | Live | Local repository |
-| Calendar overview / add / edit / conflicts / recovery | Live | Device calendar + local mirror |
-| Health overview / connect / permissions / workouts | Live | Read-only; permission-gated |
-| Exercise overview and library | Live | Bundled demo content, labelled |
-| Exercise item tap | Live sheet | Shows description, safety note, and a "coaching media is planned" note; routes to the workout placeholder |
-| Workout session | Labelled placeholder | Explicitly says timers and form coaching are not live |
-
-## Trust centre
+## Exercise
 
 | Surface | Verdict |
 |---|---|
-| Privacy & Data centre | Live |
-| Export (v2) | Live — device-local archive |
-| Delete local data | Live — scoped and global wipe; global wipe also resets onboarding |
-| Integration diagnostics | Live — operational metadata only |
-| Integration Lab | Removed in production; debug + capability gated elsewhere |
-| Legal documents, Help articles, Report a problem, Feature request | Live |
-| What's New | Live — safe error copy, no raw exceptions |
+| Overview categories + featured card | Labelled catalogue |
+| Library + detail sheet | Labelled catalogue (description, safety, muscles) |
+| Start Workout / weekly summary / recent activity | Removed in production |
+| `/exercise/session` | Redirects to `/exercise` in production |
 
-## Known demo content in production
+## Modules (Goals / Finance / Habits / Calendar / Health)
 
-These render real UI over illustrative numbers and are the main honesty debt
-carried into v1:
+All CRUD, check-in, sync/recovery, and permission flows listed in
+`v1-screen-logic-matrix.md` are **Live** with loading/empty/error/retry,
+duplicate-submit protection on saves, and cross-feature refresh without restart.
 
-- Today: Life Score ring, "Today's Focus" copy, weather-free glance card.
-- Insights: Life Score trend, "PKR 12K" saved, "3 / 4" goals on track, tip
-  card.
-- Exercise: the bundled exercise and workout catalogue.
+## Trust / Support / Legal / About
 
-None of them accept input or promise a background process.
+Export v2, scoped deletion, diagnostics (allowlisted), Help offline articles,
+Contact/Report/Feature share flows, Security (truthful, no MFA/E2E claims),
+Legal markdown, About + What’s New — **Live**.
+
+Integration Lab — **Removed** in production.
+
+## Dead / misleading controls closed in this pass
+
+| Control | Resolution |
+|---|---|
+| Plan “95 bpm” / “Team Meeting” hardcodes | Replaced with `todayHealthSummaryProvider` / `todayCalendarEventsProvider` |
+| Plan Wardrobe / Nutrition / Body / Coach strip in production | Hidden via `ReleaseCapabilities` |
+| Today greeting “Emma” from `FakeTodayRepository` | `displayNameProvider` + local onboarding prefs; production base summary has no seed focus |
+| Production Start Workout | Hidden; session route redirects to Exercise |
+| `/settings/notifications` deep link | Redirects to Settings |
+
+## Remaining honesty (accepted catalogue, not user data)
+
+- Exercise library artwork and catalogue rows are bundled content.
+- More Insights remains a navigation hub, not a fabricated analytics product.
+
+No open dead production button remains for mutating actions.

@@ -34,6 +34,7 @@ enum DataExportCapability { supported, summaryOnly, notSupported, planned }
 
 enum DataDeletionCapability {
   supported,
+  cacheClearOnly,
   disconnectOnly,
   notSupported,
   planned,

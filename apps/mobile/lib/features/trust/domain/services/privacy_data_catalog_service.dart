@@ -1,144 +1,16 @@
-import '../../../../core/config/environment_config.dart';
 import '../entities/data_catalog.dart';
+import '../entities/data_module_capability.dart';
+import '../entities/data_module_id.dart';
+import 'data_module_registry.dart';
 
-/// Hardcoded privacy catalog reflecting actual MeMy mobile behavior.
+/// Privacy catalog derived from [DataModuleRegistry] capability flags.
 class PrivacyDataCatalogService {
-  const PrivacyDataCatalogService();
+  const PrivacyDataCatalogService(this.registry);
+
+  final DataModuleRegistry registry;
 
   List<DataCatalogEntry> entries() {
-    final goalsUsesApi =
-        EnvironmentConfig.goalsDataSource == GoalsDataSource.api;
-
-    return [
-      DataCatalogEntry(
-        module: DataModule.goals,
-        title: 'Goals',
-        summary: goalsUsesApi
-            ? 'Goals sync with the MeMy API when GOALS_DATA_SOURCE=api; '
-                  'a local cache is kept on this device.'
-            : 'Goals are stored on this device only (SharedPreferences).',
-        storageLocations: [
-          DataStorageLocation.localDevice,
-          if (goalsUsesApi) DataStorageLocation.memyBackend,
-        ],
-        sensitivity: DataSensitivity.personal,
-        backendTransfer: goalsUsesApi,
-        aiTransfer: false,
-        exportCapability: DataExportCapability.supported,
-        deletionCapability: DataDeletionCapability.supported,
-        notes: const ['AI Coach does not receive goal payloads in this build.'],
-      ),
-      const DataCatalogEntry(
-        module: DataModule.finance,
-        title: 'Finance',
-        summary:
-            'Manual transactions and categories stay on this device. '
-            'No MeMy backend sync and no AI transfer.',
-        storageLocations: [DataStorageLocation.localDevice],
-        sensitivity: DataSensitivity.financial,
-        backendTransfer: false,
-        aiTransfer: false,
-        exportCapability: DataExportCapability.supported,
-        deletionCapability: DataDeletionCapability.supported,
-      ),
-      const DataCatalogEntry(
-        module: DataModule.habits,
-        title: 'Habits',
-        summary:
-            'Habits and check-ins are stored on this device only. '
-            'No MeMy backend sync and no AI transfer.',
-        storageLocations: [DataStorageLocation.localDevice],
-        sensitivity: DataSensitivity.personal,
-        backendTransfer: false,
-        aiTransfer: false,
-        exportCapability: DataExportCapability.supported,
-        deletionCapability: DataDeletionCapability.supported,
-      ),
-      const DataCatalogEntry(
-        module: DataModule.calendar,
-        title: 'Calendar',
-        summary:
-            'MeMy keeps a local Drift cache of events and sync metadata. '
-            'Device calendars remain the external source; MeMy does not '
-            'upload calendar content to a MeMy backend or AI provider.',
-        storageLocations: [
-          DataStorageLocation.localDevice,
-          DataStorageLocation.deviceCalendar,
-        ],
-        sensitivity: DataSensitivity.schedule,
-        backendTransfer: false,
-        aiTransfer: false,
-        exportCapability: DataExportCapability.supported,
-        deletionCapability: DataDeletionCapability.supported,
-        notes: [
-          'Export defaults to MeMy-owned events / config summary only.',
-          'Wipe clears MeMy local cache; it does not delete external '
-              'device calendar events.',
-        ],
-      ),
-      const DataCatalogEntry(
-        module: DataModule.health,
-        title: 'Health',
-        summary:
-            'Platform Health (HealthKit / Health Connect) is the source of '
-            'truth. MeMy stores connection/permission configuration locally '
-            'and keeps daily summaries in memory only. Health values are '
-            'never sent to MeMy API or AI.',
-        storageLocations: [
-          DataStorageLocation.healthPlatform,
-          DataStorageLocation.localDevice,
-          DataStorageLocation.memoryOnly,
-        ],
-        sensitivity: DataSensitivity.wellness,
-        backendTransfer: false,
-        aiTransfer: false,
-        exportCapability: DataExportCapability.summaryOnly,
-        deletionCapability: DataDeletionCapability.disconnectOnly,
-        notes: [
-          'Export includes connection configuration summary only — never '
-              'raw sample values.',
-          'Disconnect / wipe clears MeMy prefs and in-memory summaries; '
-              'platform Health data is untouched.',
-        ],
-      ),
-      const DataCatalogEntry(
-        module: DataModule.profile,
-        title: 'Profile',
-        summary:
-            'Demo profile fields used in this build are local / seed data.',
-        storageLocations: [DataStorageLocation.localDevice],
-        sensitivity: DataSensitivity.personal,
-        backendTransfer: false,
-        aiTransfer: false,
-        exportCapability: DataExportCapability.summaryOnly,
-        deletionCapability: DataDeletionCapability.planned,
-      ),
-      const DataCatalogEntry(
-        module: DataModule.preferences,
-        title: 'Preferences',
-        summary:
-            'Appearance and reduce-motion preferences when stored locally.',
-        storageLocations: [DataStorageLocation.localDevice],
-        sensitivity: DataSensitivity.operational,
-        backendTransfer: false,
-        aiTransfer: false,
-        exportCapability: DataExportCapability.supported,
-        deletionCapability: DataDeletionCapability.supported,
-      ),
-      const DataCatalogEntry(
-        module: DataModule.diagnostics,
-        title: 'Diagnostics',
-        summary:
-            'Operational integration counts and status codes only — never '
-            'event titles, health values, or account secrets.',
-        storageLocations: [DataStorageLocation.localDevice],
-        sensitivity: DataSensitivity.operational,
-        backendTransfer: false,
-        aiTransfer: false,
-        exportCapability: DataExportCapability.summaryOnly,
-        deletionCapability: DataDeletionCapability.notSupported,
-      ),
-    ];
+    return registry.descriptors.map(_toEntry).toList(growable: false);
   }
 
   DataCatalogEntry? entryFor(DataModule module) {
@@ -146,5 +18,82 @@ class PrivacyDataCatalogService {
       if (entry.module == module) return entry;
     }
     return null;
+  }
+
+  DataCatalogEntry _toEntry(DataModuleDescriptor d) {
+    return DataCatalogEntry(
+      module: _toDataModule(d.id),
+      title: d.title,
+      summary: d.summary,
+      storageLocations: _storageFor(d),
+      sensitivity: _sensitivityFor(d.id),
+      backendTransfer: d.backendTransfer,
+      aiTransfer: d.aiTransfer,
+      exportCapability: _exportCapability(d),
+      deletionCapability: _deletionCapability(d),
+      notes: d.notes,
+    );
+  }
+
+  static DataModule _toDataModule(DataModuleId id) => switch (id) {
+    DataModuleId.goals => DataModule.goals,
+    DataModuleId.finance => DataModule.finance,
+    DataModuleId.habits => DataModule.habits,
+    DataModuleId.calendar => DataModule.calendar,
+    DataModuleId.health => DataModule.health,
+    DataModuleId.profile => DataModule.profile,
+    DataModuleId.preferences => DataModule.preferences,
+    DataModuleId.diagnostics => DataModule.diagnostics,
+  };
+
+  static List<DataStorageLocation> _storageFor(DataModuleDescriptor d) {
+    return switch (d.id) {
+      DataModuleId.goals => [
+        DataStorageLocation.localDevice,
+        if (d.backendTransfer) DataStorageLocation.memyBackend,
+      ],
+      DataModuleId.finance ||
+      DataModuleId.habits ||
+      DataModuleId.preferences ||
+      DataModuleId.profile ||
+      DataModuleId.diagnostics => [DataStorageLocation.localDevice],
+      DataModuleId.calendar => [
+        DataStorageLocation.localDevice,
+        DataStorageLocation.deviceCalendar,
+      ],
+      DataModuleId.health => [
+        DataStorageLocation.healthPlatform,
+        DataStorageLocation.localDevice,
+        DataStorageLocation.memoryOnly,
+      ],
+    };
+  }
+
+  static DataSensitivity _sensitivityFor(DataModuleId id) => switch (id) {
+    DataModuleId.finance => DataSensitivity.financial,
+    DataModuleId.calendar => DataSensitivity.schedule,
+    DataModuleId.health => DataSensitivity.wellness,
+    DataModuleId.diagnostics ||
+    DataModuleId.preferences => DataSensitivity.operational,
+    _ => DataSensitivity.personal,
+  };
+
+  static DataExportCapability _exportCapability(DataModuleDescriptor d) {
+    if (d.rawExport) return DataExportCapability.supported;
+    if (d.summaryExport) return DataExportCapability.summaryOnly;
+    return DataExportCapability.notSupported;
+  }
+
+  static DataDeletionCapability _deletionCapability(DataModuleDescriptor d) {
+    if (d.localRecordDeletion) return DataDeletionCapability.supported;
+    if (d.localCacheClear && d.id == DataModuleId.goals) {
+      return DataDeletionCapability.cacheClearOnly;
+    }
+    if (d.id == DataModuleId.health) {
+      return DataDeletionCapability.disconnectOnly;
+    }
+    if (d.localCacheClear) return DataDeletionCapability.cacheClearOnly;
+    if (d.id == DataModuleId.profile) return DataDeletionCapability.planned;
+    return DataDeletionCapability.notSupported;
   }
 }

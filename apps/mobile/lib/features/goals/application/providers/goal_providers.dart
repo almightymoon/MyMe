@@ -2,12 +2,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/application/providers/core_providers.dart';
 import '../../../../core/config/environment_config.dart';
-import '../../../../core/network/api_client.dart';
+import '../../../../core/network/network_providers.dart';
 import '../../../auth/application/auth_session_controller.dart';
 import '../../../auth/data/account_local_store.dart';
 import '../../data/repositories/api_goal_repository.dart';
 import '../../data/repositories/fake_goal_repository.dart';
+import '../../data/repositories/journaling_goal_repository.dart';
 import '../../data/repositories/local_goal_repository.dart';
+import '../../../sync/application/sync_providers.dart';
 import '../../domain/entities/goal.dart';
 import '../../domain/entities/goal_enums.dart';
 import '../../domain/entities/goal_forecast.dart';
@@ -17,17 +19,13 @@ import '../../domain/services/goal_forecast_service.dart';
 
 export '../../../../core/application/providers/core_providers.dart'
     show sharedPreferencesProvider, uuidProvider, appClockProvider;
+export '../../../../core/network/network_providers.dart' show apiClientProvider;
 
 /// Override in tests to force `fake` / `local` / `api` without dart-defines.
 ///
 /// Production always resolves to `local` — no demo data, no cloud account.
 final goalsDataSourceProvider = Provider<GoalsDataSource>((ref) {
   return EnvironmentConfig.resolveGoalsDataSource();
-});
-
-final apiClientProvider = Provider<ApiClient>((ref) {
-  final client = ApiClient();
-  return client;
 });
 
 /// Local persistence used either as primary store (`local`) or API read-cache.
@@ -64,7 +62,11 @@ final goalRepositoryProvider = Provider<GoalRepository>((ref) {
       ref.onDispose(repo.dispose);
       return repo;
     case GoalsDataSource.local:
-      return ref.watch(localGoalRepositoryProvider);
+      return JournalingGoalRepository(
+        inner: ref.watch(localGoalRepositoryProvider),
+        journal: ref.watch(syncMutationJournalProvider),
+        session: ref.watch(authSessionProvider),
+      );
     case GoalsDataSource.api:
       final repo = ApiGoalRepository(
         client: ref.watch(apiClientProvider),

@@ -19,11 +19,14 @@ final authSessionProvider =
 
 class AuthSessionController extends StateNotifier<StoredAuthSession?> {
   AuthSessionController(this._store, {StoredAuthSession? initial})
-    : super(initial);
+    : _skipHydrate = initial != null,
+      super(initial);
 
   final SecureSessionStore _store;
+  final bool _skipHydrate;
 
   Future<void> hydrate() async {
+    if (_skipHydrate) return;
     state = await _store.read();
   }
 
@@ -42,3 +45,12 @@ class AuthSessionController extends StateNotifier<StoredAuthSession?> {
 
   bool get isSignedIn => state != null;
 }
+
+/// Completes before the router is built so cached sessions are not skipped.
+final sessionHydrationProvider = FutureProvider<void>((ref) async {
+  try {
+    await ref.read(authSessionProvider.notifier).hydrate();
+  } on Object {
+    // Corrupted or unavailable secure storage: treat as signed out.
+  }
+});

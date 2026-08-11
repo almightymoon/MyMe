@@ -1,8 +1,8 @@
 # Production authentication and offline-first sync
 
-**Status:** Architecture freeze for the production-account milestone.  
-**Baseline commit inspected:** `be5f630f32e44358e08a8e7f8215639428597bd1`  
-**Working tree:** local-first v1 plus uncommitted settings/l10n/quick-add work. Not yet production-account.
+**Status:** Production account + durable offline sync implementation.  
+**Mobile:** Google / Apple identity gateways, secure refresh storage, session hydration before routing, Bearer API client, account-scoped module stores, sqlite outbox.  
+**API:** Verified Google/Apple exchange, hashed rotating refresh tokens, string change cursors, composite bootstrap cursors, private MinIO signed URLs.
 
 This document describes (1) the repository as inspected and (2) the target architecture. Implementation must not contradict either.
 

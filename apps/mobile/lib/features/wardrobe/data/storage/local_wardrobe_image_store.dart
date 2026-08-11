@@ -11,10 +11,12 @@ class LocalWardrobeImageStore implements WardrobeImageStore {
   LocalWardrobeImageStore({
     required this.documentsDirectory,
     required this.idGenerator,
+    this.accountNamespace = 'legacy',
   });
 
   final Future<Directory> Function() documentsDirectory;
   final String Function() idGenerator;
+  final String accountNamespace;
 
   static const int maxBytes = 8 * 1024 * 1024;
   static const int maxEdge = 2048;
@@ -34,7 +36,7 @@ class LocalWardrobeImageStore implements WardrobeImageStore {
 
   Future<Directory> _originals() async {
     final dir = Directory(
-      p.join((await _root()).path, 'wardrobe', 'originals'),
+      p.join((await _root()).path, 'wardrobe', accountNamespace, 'originals'),
     );
     await dir.create(recursive: true);
     return dir;
@@ -42,7 +44,7 @@ class LocalWardrobeImageStore implements WardrobeImageStore {
 
   Future<Directory> _thumbs() async {
     final dir = Directory(
-      p.join((await _root()).path, 'wardrobe', 'thumbnails'),
+      p.join((await _root()).path, 'wardrobe', accountNamespace, 'thumbnails'),
     );
     await dir.create(recursive: true);
     return dir;
@@ -118,7 +120,12 @@ class LocalWardrobeImageStore implements WardrobeImageStore {
   @override
   Future<File?> getOriginalFile(WardrobeImageReference reference) async {
     final file = File(
-      p.join((await _root()).path, 'wardrobe', reference.relativeOriginalPath),
+      p.join(
+        (await _root()).path,
+        'wardrobe',
+        accountNamespace,
+        reference.relativeOriginalPath,
+      ),
     );
     return file.existsSync() ? file : null;
   }
@@ -126,7 +133,12 @@ class LocalWardrobeImageStore implements WardrobeImageStore {
   @override
   Future<File?> getThumbnailFile(WardrobeImageReference reference) async {
     final file = File(
-      p.join((await _root()).path, 'wardrobe', reference.relativeThumbnailPath),
+      p.join(
+        (await _root()).path,
+        'wardrobe',
+        accountNamespace,
+        reference.relativeThumbnailPath,
+      ),
     );
     return file.existsSync() ? file : null;
   }
@@ -167,7 +179,7 @@ class LocalWardrobeImageStore implements WardrobeImageStore {
   @override
   Future<List<String>> findOrphanImages(Set<String> knownRelativePaths) async {
     final orphans = <String>[];
-    final root = p.join((await _root()).path, 'wardrobe');
+    final root = p.join((await _root()).path, 'wardrobe', accountNamespace);
     for (final folder in ['originals', 'thumbnails']) {
       final dir = Directory(p.join(root, folder));
       if (!dir.existsSync()) continue;
@@ -185,7 +197,7 @@ class LocalWardrobeImageStore implements WardrobeImageStore {
   @override
   Future<int> cleanOrphanImages(Set<String> knownRelativePaths) async {
     final orphans = await findOrphanImages(knownRelativePaths);
-    final root = p.join((await _root()).path, 'wardrobe');
+    final root = p.join((await _root()).path, 'wardrobe', accountNamespace);
     for (final relative in orphans) {
       final file = File(p.join(root, relative));
       if (file.existsSync()) await file.delete();

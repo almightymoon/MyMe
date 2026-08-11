@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/application/auth_session_controller.dart';
 import '../../features/auth/presentation/account_sign_in_screen.dart';
+import '../../features/auth/presentation/device_sessions_screen.dart';
 import '../../features/auth/presentation/forgot_password_screen.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
@@ -69,6 +70,8 @@ import '../../features/trust/presentation/privacy/ai_data_use_screen.dart';
 import '../../features/trust/presentation/privacy/deletion_screen.dart';
 import '../../features/trust/presentation/privacy/export_screen.dart';
 import '../../features/trust/presentation/privacy/privacy_data_center_screen.dart';
+import '../../features/sync/presentation/conflict_center_screen.dart';
+import '../../features/sync/presentation/sync_center_screen.dart';
 import '../../features/trust/presentation/security/security_screen.dart';
 import '../../features/trust/presentation/support/help_support_screen.dart';
 import '../../features/wardrobe/presentation/screens/wardrobe_flow_screens.dart';
@@ -659,6 +662,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RoutePaths.security,
         name: RouteNames.security,
         builder: (context, state) => const SecurityScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.syncCenter,
+        name: RouteNames.syncCenter,
+        builder: (context, state) => const SyncCenterScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.conflictCenter,
+        name: RouteNames.conflictCenter,
+        builder: (context, state) => const ConflictCenterScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.deviceSessions,
+        name: RouteNames.deviceSessions,
+        builder: (context, state) => const DeviceSessionsScreen(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

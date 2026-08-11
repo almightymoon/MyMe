@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/application/providers/core_providers.dart';
 import '../../../../core/config/environment_config.dart';
+import '../../../auth/application/auth_session_controller.dart';
+import '../../../auth/data/account_local_store.dart';
 import '../../../../core/domain/value_objects/local_date.dart';
 import '../../data/repositories/fake_habit_repository.dart';
 import '../../data/repositories/local_habit_repository.dart';
@@ -32,8 +34,11 @@ final habitsDataSourceProvider = Provider<HabitsDataSource>((ref) {
 
 final localHabitRepositoryProvider = Provider<LocalHabitRepository>((ref) {
   final prefs = ref.watch(sharedPreferencesProvider);
+  final store = AccountLocalStore(ref.watch(authSessionProvider)?.userId);
   final repo = LocalHabitRepository(
     prefs: prefs,
+    documentKey: store.key(LocalHabitRepository.storageKey),
+    initKey: store.key(LocalHabitRepository.initializedKey),
     clock: ref.watch(appClockProvider),
     progressService: ref.watch(habitProgressServiceProvider),
     idGenerator: () => ref.read(uuidProvider).v4(),

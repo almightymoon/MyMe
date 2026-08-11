@@ -7,10 +7,14 @@ import '../../../app/router/route_names.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
+import '../../../core/application/providers/core_providers.dart';
+import '../../../core/network/network_providers.dart';
 import '../../../core/widgets/memy_primary_button.dart';
 import '../../onboarding/application/onboarding_providers.dart';
 import '../application/auth_session_controller.dart';
 import '../application/identity_auth_providers.dart';
+import '../data/auth_device_info_factory.dart';
+import '../domain/auth_session_tokens.dart';
 import '../domain/identity_auth_gateway.dart';
 import '../domain/secure_session_store.dart';
 import 'widgets/auth_atmosphere.dart';
@@ -27,7 +31,10 @@ class _AccountSignInScreenState extends ConsumerState<AccountSignInScreen> {
   bool _busy = false;
   String? _error;
 
-  Future<void> _continue(Future<IdentityAuthResult> Function() signIn) async {
+  Future<void> _continue(
+    Future<IdentityAuthResult> Function() signIn, {
+    required String provider,
+  }) async {
     setState(() {
       _busy = true;
       _error = null;
@@ -45,22 +52,54 @@ class _AccountSignInScreenState extends ConsumerState<AccountSignInScreen> {
       });
       return;
     }
-    await ref
-        .read(authSessionProvider.notifier)
-        .signIn(
-          StoredAuthSession(
-            userId: 'pending-exchange',
-            deviceId: 'pending-device',
-            clientGeneratedDeviceId: 'pending-client-device',
-            provider: 'google',
-            refreshToken: 'pending',
-            authenticatedAt: DateTime.now().toUtc(),
-          ),
+    try {
+      final device = await loadAuthDeviceInfo(
+        ref.read(sharedPreferencesProvider),
+      );
+      final authApi = ref.read(authApiProvider);
+      late final AuthSessionTokens tokens;
+      if (provider == 'apple') {
+        tokens = await authApi.signInWithApple(
+          identityToken: result.idToken!,
+          device: device,
+          nonce: result.nonce ?? '',
+          givenName: result.givenName,
+          familyName: result.familyName,
         );
-    if (!mounted) return;
-    setState(() => _busy = false);
-    final onboardingComplete = ref.read(onboardingCompletionProvider);
-    context.go(onboardingComplete ? RoutePaths.today : RoutePaths.onboarding);
+      } else {
+        tokens = await authApi.signInWithGoogle(
+          idToken: result.idToken!,
+          device: device,
+          nonce: result.nonce,
+        );
+      }
+      ref
+          .read(accessTokenStoreProvider)
+          .replace(tokens.accessToken, tokens.accessTokenExpiresAt);
+      await ref
+          .read(authSessionProvider.notifier)
+          .signIn(
+            StoredAuthSession(
+              userId: tokens.userId,
+              deviceId: tokens.deviceId,
+              clientGeneratedDeviceId: device.clientGeneratedDeviceId,
+              provider: provider,
+              refreshToken: tokens.refreshToken,
+              authenticatedAt: DateTime.now().toUtc(),
+              refreshTokenExpiresAt: tokens.refreshTokenExpiresAt,
+            ),
+          );
+      if (!mounted) return;
+      setState(() => _busy = false);
+      final onboardingComplete = ref.read(onboardingCompletionProvider);
+      context.go(onboardingComplete ? RoutePaths.today : RoutePaths.onboarding);
+    } on Object {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _error = 'Could not finish sign-in. Try again.';
+      });
+    }
   }
 
   String _messageFor(IdentityAuthStatus status) {
@@ -69,7 +108,12 @@ class _AccountSignInScreenState extends ConsumerState<AccountSignInScreen> {
         return 'Internet is required for the first sign-in.';
       case IdentityAuthStatus.missingIdToken:
         return 'The provider did not return an identity token.';
+      case IdentityAuthStatus.configurationError:
+        return 'Sign-in is not configured on this build.';
+      case IdentityAuthStatus.providerUnavailable:
+        return 'This sign-in option is not available on this device.';
       case IdentityAuthStatus.failed:
+      case IdentityAuthStatus.providerFailure:
         return 'Could not sign in. Try again.';
       case IdentityAuthStatus.cancelled:
       case IdentityAuthStatus.success:
@@ -114,6 +158,7 @@ class _AccountSignInScreenState extends ConsumerState<AccountSignInScreen> {
                     ? null
                     : () => _continue(
                         ref.read(identityAuthGatewayProvider).signInWithGoogle,
+                        provider: 'google',
                       ),
               ),
               if (showApple) ...[
@@ -125,6 +170,7 @@ class _AccountSignInScreenState extends ConsumerState<AccountSignInScreen> {
                       ? null
                       : () => _continue(
                           ref.read(identityAuthGatewayProvider).signInWithApple,
+                          provider: 'apple',
                         ),
                 ),
               ],

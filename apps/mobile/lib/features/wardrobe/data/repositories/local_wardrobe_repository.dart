@@ -20,13 +20,18 @@ class LocalWardrobeRepository implements WardrobeRepository {
     this.clock = const SystemAppClock(),
     this.suggestionService = const OutfitSuggestionService(),
     this.validation = const OutfitValidationService(),
-  });
+    String? documentKey,
+    String? initKey,
+  }) : documentKey = documentKey ?? LocalWardrobeRepository.storageKey,
+       initKey = initKey ?? LocalWardrobeRepository.initializedKey;
 
   static const int schemaVersion = 1;
   static const String storageKey = 'memy_wardrobe_v1';
   static const String initializedKey = 'memy_wardrobe_initialized_v1';
 
   final SharedPreferences prefs;
+  final String documentKey;
+  final String initKey;
   final WardrobeImageStore imageStore;
   final AppClock clock;
   final OutfitSuggestionService suggestionService;
@@ -48,17 +53,17 @@ class LocalWardrobeRepository implements WardrobeRepository {
   Future<void> _requireReady() => ensureInitialized();
 
   Future<void> _initialize() async {
-    final initialized = prefs.getBool(initializedKey) ?? false;
+    final initialized = prefs.getBool(initKey) ?? false;
     if (!initialized) {
       await _persist();
-      await prefs.setBool(initializedKey, true);
+      await prefs.setBool(initKey, true);
       return;
     }
     _readFromDisk();
   }
 
   void _readFromDisk() {
-    final raw = prefs.getString(storageKey);
+    final raw = prefs.getString(documentKey);
     if (raw == null || raw.isEmpty) return;
     try {
       final decoded = jsonDecode(raw);
@@ -92,7 +97,7 @@ class LocalWardrobeRepository implements WardrobeRepository {
 
   Future<void> _persist() async {
     await prefs.setString(
-      storageKey,
+      documentKey,
       jsonEncode({
         'schemaVersion': schemaVersion,
         'items': _items.map((e) => e.toJson()).toList(),

@@ -21,7 +21,7 @@ export class SyncController {
     @CurrentUser() user: RequestUser,
     @Query() query: SyncBootstrapQueryDto,
   ) {
-    return this.sync.bootstrap(user.id, query.limit, query.afterEntityId);
+    return this.sync.bootstrap(user.id, query.limit, query.cursor);
   }
 
   @Post('push')
@@ -33,6 +33,6 @@ export class SyncController {
   @Get('pull')
   @ApiOperation({ summary: 'Pull ordered changes after the stored cursor' })
   pull(@CurrentUser() user: RequestUser, @Query() query: SyncPullQueryDto) {
-    return this.sync.pull(user.id, query.cursor ?? 0, query.limit);
+    return this.sync.pull(user.id, query.cursor ?? '0', query.limit);
   }
 }

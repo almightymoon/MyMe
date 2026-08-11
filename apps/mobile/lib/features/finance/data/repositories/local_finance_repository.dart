@@ -43,13 +43,18 @@ class LocalFinanceRepository implements FinanceRepository {
     this.categorySeedBuilder,
     this.summaryService = const FinanceSummaryService(),
     this.reportService = const FinanceReportService(),
-  });
+    String? documentKey,
+    String? initKey,
+  }) : documentKey = documentKey ?? LocalFinanceRepository.storageKey,
+       initKey = initKey ?? LocalFinanceRepository.initializedKey;
 
   static const int schemaVersion = 3;
   static const String storageKey = 'memy_finance_v1';
   static const String initializedKey = 'memy_finance_initialized_v1';
 
   final SharedPreferences prefs;
+  final String documentKey;
+  final String initKey;
   final List<FinanceTransaction> Function()? seedBuilder;
   final List<FinanceCategory> Function()? categorySeedBuilder;
   final FinanceSummaryService summaryService;
@@ -76,7 +81,7 @@ class LocalFinanceRepository implements FinanceRepository {
   }
 
   Future<void> _initialize() async {
-    final initialized = prefs.getBool(initializedKey) ?? false;
+    final initialized = prefs.getBool(initKey) ?? false;
     if (!initialized) {
       _categories = List<FinanceCategory>.unmodifiable(
         categorySeedBuilder?.call() ?? FinanceSeed.demoCategories(),
@@ -88,7 +93,7 @@ class LocalFinanceRepository implements FinanceRepository {
       _moneyPositions = const [];
       _baseCurrencyCode = OnboardingPreferences.readBaseCurrency(prefs);
       await _persist();
-      await prefs.setBool(initializedKey, true);
+      await prefs.setBool(initKey, true);
       return;
     }
 
@@ -96,7 +101,7 @@ class LocalFinanceRepository implements FinanceRepository {
   }
 
   void _readFromDisk() {
-    final raw = prefs.getString(storageKey);
+    final raw = prefs.getString(documentKey);
     if (raw == null || raw.isEmpty) {
       _transactions = const [];
       _budgets = const [];
@@ -211,7 +216,7 @@ class LocalFinanceRepository implements FinanceRepository {
       'budgets': _budgets.map((b) => b.toJson()).toList(),
       'moneyPositions': _moneyPositions.map((p) => p.toJson()).toList(),
     });
-    await prefs.setString(storageKey, payload);
+    await prefs.setString(documentKey, payload);
     if (!_controller.isClosed) {
       _controller.add(List.unmodifiable(_sorted(_transactions)));
     }

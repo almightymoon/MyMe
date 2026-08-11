@@ -37,4 +37,11 @@ describe('sync payload validator', () => {
       }),
     ).toThrow();
   });
+
+  it('requires habit names and rejects health samples', () => {
+    expect(validatePayload('habit', 'create', { name: 'Walk' })).toMatchObject({
+      name: 'Walk',
+    });
+    expect(() => assertEntityType('healthSample')).toThrow();
+  });
 });

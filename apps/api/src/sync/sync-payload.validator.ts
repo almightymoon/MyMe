@@ -217,8 +217,24 @@ export function validatePayload(
       }
       return row;
     }
+    case 'goalMilestone':
+    case 'goalProgress':
+      requireString(row, 'goalId', 64);
+      return row;
+    case 'financeCategory':
+      requireString(row, 'name', 80);
+      return row;
+    case 'habit':
+      requireString(row, 'name', 120);
+      return row;
+    case 'habitScheduleRevision':
+    case 'habitStatusPeriod':
+      requireString(row, 'habitId', 64);
+      return row;
     case 'wardrobeItem':
     case 'wardrobeOutfit':
+    case 'wardrobeOutfitPlan':
+    case 'wardrobeWearRecord':
     case 'wardrobeAsset':
       optionalString(row, 'backendAssetId', 64);
       if (row.localImagePath || row.absolutePath || row.exif) {
@@ -242,7 +258,9 @@ export function validatePayload(
       }
       return row;
     default:
-      optionalString(row, 'id', 64);
-      return row;
+      throw new BadRequestException({
+        code: 'SYNC_ENTITY_UNKNOWN',
+        message: 'Unknown entity type.',
+      });
   }
 }

@@ -53,8 +53,45 @@ describe('SyncService ownership', () => {
           );
         },
       ),
-      findMany: jest.fn(async ({ where }: { where: { userId: string } }) =>
-        records.filter((row) => row.userId === where.userId && !row.deletedAt),
+      findMany: jest.fn(
+        async ({
+          where,
+          take,
+        }: {
+          where: {
+            userId: string;
+            OR?: Array<Record<string, unknown>>;
+          };
+          take?: number;
+        }) => {
+          let rows = records.filter(
+            (row) => row.userId === where.userId && !row.deletedAt,
+          );
+          const or = where.OR;
+          if (or && or.length === 2) {
+            const gtType = (or[0] as { entityType: { gt: string } }).entityType
+              .gt;
+            const same = or[1] as {
+              entityType: string;
+              entityId: { gt: string };
+            };
+            rows = rows.filter(
+              (row) =>
+                String(row.entityType) > gtType ||
+                (row.entityType === same.entityType &&
+                  String(row.entityId) > same.entityId.gt),
+            );
+          }
+          rows.sort((a, b) => {
+            const type = String(a.entityType).localeCompare(
+              String(b.entityType),
+            );
+            return type !== 0
+              ? type
+              : String(a.entityId).localeCompare(String(b.entityId));
+          });
+          return typeof take === 'number' ? rows.slice(0, take) : rows;
+        },
       ),
       upsert: jest.fn(
         async ({ create }: { create: Record<string, unknown> }) => {
@@ -188,7 +225,42 @@ describe('SyncService ownership', () => {
         },
       ],
     });
-    const pulled = await service.pull(userB, 0, 50);
+    const pulled = await service.pull(userB, '0', 50);
     expect(pulled.changes).toHaveLength(0);
+    expect(typeof pulled.cursor).toBe('string');
+  });
+
+  it('paginates bootstrap with a composite cursor across entity types', async () => {
+    records.push(
+      {
+        userId: userA,
+        entityType: 'financeTransaction',
+        entityId: '11111111-1111-4111-8111-111111111111',
+        serverVersion: 1,
+        payload: { name: 'A' },
+        updatedAt: new Date(),
+        deletedAt: null,
+      },
+      {
+        userId: userA,
+        entityType: 'goal',
+        entityId: '22222222-2222-4222-8222-222222222222',
+        serverVersion: 1,
+        payload: { name: 'B' },
+        updatedAt: new Date(),
+        deletedAt: null,
+      },
+    );
+    const first = await service.bootstrap(userA, 1);
+    expect(first.records).toHaveLength(1);
+    expect(first.hasMore).toBe(true);
+    expect(first.nextCursor).toBeTruthy();
+    const second = await service.bootstrap(
+      userA,
+      1,
+      first.nextCursor ?? undefined,
+    );
+    expect(second.records).toHaveLength(1);
+    expect(second.records[0].entityId).not.toEqual(first.records[0].entityId);
   });
 });

@@ -45,16 +45,22 @@ class LocalHabitRepository implements HabitRepository {
     this.seedHabitsBuilder,
     this.seedCheckInsBuilder,
     this.idGenerator,
+    String? documentKey,
+    String? initKey,
   }) : _clock = clock ?? const SystemAppClock(),
        _progress =
            progressService ??
-           HabitProgressService(scheduleService: const HabitScheduleService());
+           HabitProgressService(scheduleService: const HabitScheduleService()),
+       documentKey = documentKey ?? LocalHabitRepository.storageKey,
+       initKey = initKey ?? LocalHabitRepository.initializedKey;
 
   static const int schemaVersion = 2;
   static const String storageKey = 'memy_habits_v1';
   static const String initializedKey = 'memy_habits_initialized_v1';
 
   final SharedPreferences prefs;
+  final String documentKey;
+  final String initKey;
   final AppClock _clock;
   final HabitProgressService _progress;
   final List<Habit> Function(LocalDate today, DateTime now)? seedHabitsBuilder;
@@ -81,7 +87,7 @@ class LocalHabitRepository implements HabitRepository {
   }
 
   Future<void> _initialize() async {
-    final initialized = prefs.getBool(initializedKey) ?? false;
+    final initialized = prefs.getBool(initKey) ?? false;
     final now = _clock.now();
     final today = LocalDate.fromDateTime(now);
     if (!initialized) {
@@ -95,7 +101,7 @@ class LocalHabitRepository implements HabitRepository {
       );
       _ensureHistoryForAllHabits();
       await _persist();
-      await prefs.setBool(initializedKey, true);
+      await prefs.setBool(initKey, true);
       return;
     }
     _readFromDisk();
@@ -105,7 +111,7 @@ class LocalHabitRepository implements HabitRepository {
   }
 
   void _readFromDisk() {
-    final raw = prefs.getString(storageKey);
+    final raw = prefs.getString(documentKey);
     if (raw == null || raw.isEmpty) {
       _habits = const [];
       _checkIns = const [];
@@ -269,7 +275,7 @@ class LocalHabitRepository implements HabitRepository {
       'scheduleRevisions': _scheduleRevisions.map((r) => r.toJson()).toList(),
       'statusPeriods': _statusPeriods.map((p) => p.toJson()).toList(),
     });
-    await prefs.setString(storageKey, payload);
+    await prefs.setString(documentKey, payload);
     _habitController.add(List.unmodifiable(_habits));
     _checkInController.add(List.unmodifiable(_checkIns));
   }

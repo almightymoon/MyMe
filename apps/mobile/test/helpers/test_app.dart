@@ -147,6 +147,8 @@ Future<void> pumpMemyApp(
       child: const MemyApp(),
     ),
   );
+  await tester.pump();
+  await tester.pump();
 }
 
 Future<void> signInToToday(WidgetTester tester) async {

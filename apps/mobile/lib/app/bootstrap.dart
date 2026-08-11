@@ -9,10 +9,7 @@ import '../features/calendar/application/providers/calendar_providers.dart';
 import '../features/trust/application/providers/trust_providers.dart';
 
 Future<Widget> bootstrap() async {
-  assert(() {
-    EnvironmentConfig.validate();
-    return true;
-  }());
+  EnvironmentConfig.validate();
   final prefs = await SharedPreferences.getInstance();
   return ProviderScope(
     overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],

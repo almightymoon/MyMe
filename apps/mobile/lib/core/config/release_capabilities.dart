@@ -140,6 +140,8 @@ class ReleaseCapabilities {
 
   bool get accountAuth => authMode == AuthMode.account;
 
+  bool get requiresAuthentication => accountAuth;
+
   /// Sign out is available for demo auth and real accounts.
   bool get showSignOut => demoAuth || accountAuth;
 }

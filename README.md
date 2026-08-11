@@ -15,13 +15,14 @@ The HTML application is the design prototype. Do not convert it line-for-line in
 
 ## v1 release posture
 
-Production mobile (`--dart-define=APP_ENV=production`):
+Production mobile (`--dart-define=APP_ENV=production --dart-define=AUTH_MODE=account`):
 
-- Local onboarding (no demo Sign In)
-- Local Goals, Finance, Habits, Wardrobe (photos stay on device)
-- System Device Calendar and read-only HealthKit / Health Connect
+- Google Sign-In and Sign in with Apple (iOS)
+- Offline-first Goals, Finance, Habits, Wardrobe, MeMy calendar events
+- Durable sync outbox; private Wardrobe images in MinIO
+- System Device Calendar imports and raw Health stay on the device
 - Privacy export/deletion, Help, Legal drafts, About
-- **No** cloud account, cloud sync, live AI, Integration Lab, or fake repositories
+- **No** demo mode, Facebook, email/password, live AI, or fake identity in production
 
 See:
 

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/constants/app_strings.dart';
 import '../core/l10n/app_language.dart';
+import '../features/auth/application/auth_session_controller.dart';
 import '../features/trust/application/providers/trust_providers.dart';
 import '../features/user/application/providers/user_providers.dart';
 import 'router/app_router.dart';
@@ -16,6 +17,13 @@ class MemyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final hydration = ref.watch(sessionHydrationProvider);
+    if (hydration.isLoading) {
+      return const MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(body: Center(child: CircularProgressIndicator())),
+      );
+    }
     final router = ref.watch(appRouterProvider);
     final themeMode = ref.watch(themeModePreferenceProvider);
     final language = ref.watch(appLanguageProvider);

@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/application/providers/core_providers.dart';
 import '../../../../core/config/environment_config.dart';
+import '../../../auth/application/auth_session_controller.dart';
+import '../../../auth/data/account_local_store.dart';
 import '../../data/repositories/fake_finance_repository.dart';
 import '../../data/repositories/local_finance_repository.dart';
 import '../../../../core/domain/value_objects/year_month.dart';
@@ -34,8 +36,11 @@ final financeReportServiceProvider = Provider<FinanceReportService>((ref) {
 
 final localFinanceRepositoryProvider = Provider<LocalFinanceRepository>((ref) {
   final prefs = ref.watch(sharedPreferencesProvider);
+  final store = AccountLocalStore(ref.watch(authSessionProvider)?.userId);
   final repo = LocalFinanceRepository(
     prefs: prefs,
+    documentKey: store.key(LocalFinanceRepository.storageKey),
+    initKey: store.key(LocalFinanceRepository.initializedKey),
     summaryService: ref.watch(financeSummaryServiceProvider),
     // Keep built-in categories; never seed sample transactions in production.
     seedBuilder: EnvironmentConfig.shouldSeedDemoContent

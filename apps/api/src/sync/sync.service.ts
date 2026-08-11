@@ -32,23 +32,30 @@ export class SyncService {
     return device;
   }
 
-  async bootstrap(
-    userId: string,
-    limit = DEFAULT_LIMIT,
-    afterEntityId?: string,
-  ) {
+  async bootstrap(userId: string, limit = DEFAULT_LIMIT, afterCursor?: string) {
+    const after = decodeBootstrapCursor(afterCursor);
     const records = await this.prisma.syncRecord.findMany({
       where: {
         userId,
         deletedAt: null,
-        ...(afterEntityId ? { entityId: { gt: afterEntityId } } : {}),
+        ...(after
+          ? {
+              OR: [
+                { entityType: { gt: after.entityType } },
+                {
+                  entityType: after.entityType,
+                  entityId: { gt: after.entityId },
+                },
+              ],
+            }
+          : {}),
       },
       orderBy: [{ entityType: 'asc' }, { entityId: 'asc' }],
       take: limit + 1,
     });
     const hasMore = records.length > limit;
     const page = hasMore ? records.slice(0, limit) : records;
-    const cursor = await this.currentCursor(userId);
+    const last = page[page.length - 1];
     return {
       records: page.map((row) => ({
         entityType: row.entityType,
@@ -57,7 +64,11 @@ export class SyncService {
         payload: row.payload,
         updatedAt: row.updatedAt.toISOString(),
       })),
-      cursor,
+      cursor: await this.currentCursor(userId),
+      nextCursor:
+        hasMore && last
+          ? encodeBootstrapCursor(last.entityType, last.entityId)
+          : null,
       hasMore,
     };
   }
@@ -136,11 +147,12 @@ export class SyncService {
     };
   }
 
-  async pull(userId: string, cursor = 0, limit = DEFAULT_LIMIT) {
+  async pull(userId: string, cursor = '0', limit = DEFAULT_LIMIT) {
+    const after = parseCursor(cursor);
     const changes = await this.prisma.syncChangeLog.findMany({
       where: {
         userId,
-        sequence: { gt: BigInt(cursor) },
+        sequence: { gt: after },
       },
       orderBy: { sequence: 'asc' },
       take: limit + 1,
@@ -148,10 +160,12 @@ export class SyncService {
     const hasMore = changes.length > limit;
     const page = hasMore ? changes.slice(0, limit) : changes;
     const nextCursor =
-      page.length === 0 ? cursor : Number(page[page.length - 1].sequence);
+      page.length === 0
+        ? stringifyCursor(after)
+        : page[page.length - 1].sequence.toString();
     return {
       changes: page.map((row) => ({
-        serverChangeSequence: Number(row.sequence),
+        serverChangeSequence: row.sequence.toString(),
         entityType: row.entityType,
         entityId: row.entityId,
         operation: row.operation,
@@ -285,12 +299,45 @@ export class SyncService {
     });
   }
 
-  private async currentCursor(userId: string): Promise<number> {
+  private async currentCursor(userId: string): Promise<string> {
     const latest = await this.prisma.syncChangeLog.findFirst({
       where: { userId },
       orderBy: { sequence: 'desc' },
       select: { sequence: true },
     });
-    return latest ? Number(latest.sequence) : 0;
+    return latest ? latest.sequence.toString() : '0';
+  }
+}
+
+function parseCursor(cursor: string | number | undefined): bigint {
+  try {
+    return BigInt(String(cursor ?? '0'));
+  } catch {
+    return 0n;
+  }
+}
+
+function stringifyCursor(value: bigint): string {
+  return value.toString();
+}
+
+function encodeBootstrapCursor(entityType: string, entityId: string): string {
+  return Buffer.from(JSON.stringify({ t: entityType, i: entityId })).toString(
+    'base64url',
+  );
+}
+
+function decodeBootstrapCursor(
+  cursor?: string,
+): { entityType: string; entityId: string } | null {
+  if (!cursor) return null;
+  try {
+    const parsed = JSON.parse(
+      Buffer.from(cursor, 'base64url').toString('utf8'),
+    ) as { t?: string; i?: string };
+    if (!parsed.t || !parsed.i) return null;
+    return { entityType: parsed.t, entityId: parsed.i };
+  } catch {
+    return null;
   }
 }

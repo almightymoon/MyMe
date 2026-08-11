@@ -14,6 +14,7 @@ class FlutterSecureSessionStore implements SecureSessionStore {
   static const _provider = 'memy.session.provider';
   static const _refresh = 'memy.session.refresh';
   static const _authenticatedAt = 'memy.session.authenticatedAt';
+  static const _refreshExpiresAt = 'memy.session.refreshExpiresAt';
 
   final FlutterSecureStorage _storage;
 
@@ -25,6 +26,7 @@ class FlutterSecureSessionStore implements SecureSessionStore {
     final clientDeviceId = await _storage.read(key: _clientDeviceId);
     final provider = await _storage.read(key: _provider);
     final authenticatedAt = await _storage.read(key: _authenticatedAt);
+    final refreshExpiresAt = await _storage.read(key: _refreshExpiresAt);
     if (userId == null ||
         refresh == null ||
         deviceId == null ||
@@ -33,14 +35,22 @@ class FlutterSecureSessionStore implements SecureSessionStore {
         authenticatedAt == null) {
       return null;
     }
-    return StoredAuthSession(
-      userId: userId,
-      deviceId: deviceId,
-      clientGeneratedDeviceId: clientDeviceId,
-      provider: provider,
-      refreshToken: refresh,
-      authenticatedAt: DateTime.parse(authenticatedAt),
-    );
+    try {
+      return StoredAuthSession(
+        userId: userId,
+        deviceId: deviceId,
+        clientGeneratedDeviceId: clientDeviceId,
+        provider: provider,
+        refreshToken: refresh,
+        authenticatedAt: DateTime.parse(authenticatedAt),
+        refreshTokenExpiresAt: refreshExpiresAt == null
+            ? null
+            : DateTime.parse(refreshExpiresAt),
+      );
+    } on ArgumentError {
+      await clear();
+      return null;
+    }
   }
 
   @override
@@ -57,6 +67,12 @@ class FlutterSecureSessionStore implements SecureSessionStore {
       key: _authenticatedAt,
       value: session.authenticatedAt.toUtc().toIso8601String(),
     );
+    if (session.refreshTokenExpiresAt != null) {
+      await _storage.write(
+        key: _refreshExpiresAt,
+        value: session.refreshTokenExpiresAt!.toUtc().toIso8601String(),
+      );
+    }
   }
 
   @override
@@ -67,5 +83,6 @@ class FlutterSecureSessionStore implements SecureSessionStore {
     await _storage.delete(key: _provider);
     await _storage.delete(key: _refresh);
     await _storage.delete(key: _authenticatedAt);
+    await _storage.delete(key: _refreshExpiresAt);
   }
 }

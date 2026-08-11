@@ -51,3 +51,10 @@ jobs:
 
       - name: Debug APK
         run: flutter build apk --debug
+
+      - name: Production configuration debug APK
+        run: >
+          flutter build apk --debug
+          --dart-define=APP_ENV=production
+          --dart-define=AUTH_MODE=account
+          --dart-define=API_BASE_URL=https://api.example.invalid/api/v1

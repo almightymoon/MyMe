@@ -5,6 +5,14 @@ import {
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import {
+  createDownloadUrl,
+  createObjectStorageClient,
+  createUploadUrl,
+  deleteObject,
+  objectExists,
+  readObjectStorageConfig,
+} from './object-storage';
 
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MAX_BYTES = 8 * 1024 * 1024;
@@ -36,6 +44,7 @@ export class AssetsService {
         message: 'This image is too large to upload.',
       });
     }
+    const storage = this.storageOrThrowInProduction();
     const id = randomUUID();
     const objectKey = `wardrobe/${randomUUID()}`;
     const asset = await this.prisma.asset.create({
@@ -51,9 +60,22 @@ export class AssetsService {
         height: input.height,
       },
     });
+    const uploadUrl = storage
+      ? await createUploadUrl(
+          createObjectStorageClient(storage),
+          storage,
+          objectKey,
+          input.mimeType,
+        )
+      : '';
     return {
       assetId: asset.id,
-      objectKey: asset.objectKey,
+      uploadUrl,
+      uploadMethod: 'PUT',
+      expiresInSeconds: storage?.expiresInSeconds ?? 300,
+      headers: {
+        'Content-Type': input.mimeType,
+      },
       uploadStatus: asset.uploadStatus,
       maxBytes: MAX_BYTES,
     };
@@ -61,6 +83,26 @@ export class AssetsService {
 
   async complete(userId: string, assetId: string) {
     const asset = await this.requireOwned(userId, assetId);
+    const storage = this.storageOrThrowInProduction();
+    if (storage) {
+      const head = await objectExists(
+        createObjectStorageClient(storage),
+        storage,
+        asset.objectKey,
+      );
+      if (!head.exists) {
+        throw new ForbiddenException({
+          code: 'ASSET_NOT_UPLOADED',
+          message: 'The image was not found in private storage.',
+        });
+      }
+      if (head.contentLength && head.contentLength !== asset.byteSize) {
+        throw new ForbiddenException({
+          code: 'ASSET_SIZE_MISMATCH',
+          message: 'The uploaded image size does not match.',
+        });
+      }
+    }
     return this.prisma.asset.update({
       where: { id: asset.id },
       data: { uploadStatus: 'uploaded' },
@@ -75,20 +117,56 @@ export class AssetsService {
         message: 'This image is not available.',
       });
     }
+    const storage = this.storageOrThrowInProduction();
+    const downloadUrl = storage
+      ? await createDownloadUrl(
+          createObjectStorageClient(storage),
+          storage,
+          asset.objectKey,
+        )
+      : '';
     return {
       assetId: asset.id,
       mimeType: asset.mimeType,
       byteSize: asset.byteSize,
-      objectKey: asset.objectKey,
+      downloadUrl,
+      expiresInSeconds: storage?.expiresInSeconds ?? 300,
     };
   }
 
   async remove(userId: string, assetId: string) {
     const asset = await this.requireOwned(userId, assetId);
+    const storage = readObjectStorageConfig();
+    if (storage) {
+      try {
+        await deleteObject(
+          createObjectStorageClient(storage),
+          storage,
+          asset.objectKey,
+        );
+      } catch {
+        await this.prisma.asset.update({
+          where: { id: asset.id },
+          data: { deletedAt: new Date(), uploadStatus: 'deletionPending' },
+        });
+        return;
+      }
+    }
     await this.prisma.asset.update({
       where: { id: asset.id },
       data: { deletedAt: new Date(), uploadStatus: 'deletionPending' },
     });
+  }
+
+  private storageOrThrowInProduction() {
+    const storage = readObjectStorageConfig();
+    if (!storage && process.env.NODE_ENV === 'production') {
+      throw new ForbiddenException({
+        code: 'ASSET_STORAGE_UNAVAILABLE',
+        message: 'Private object storage is not configured.',
+      });
+    }
+    return storage;
   }
 
   private async requireOwned(userId: string, assetId: string) {

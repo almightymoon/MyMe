@@ -66,10 +66,9 @@ export class SyncPushDto {
 export class SyncPullQueryDto {
   @ApiPropertyOptional()
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(0)
-  cursor?: number;
+  @IsString()
+  @MaxLength(64)
+  cursor?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -89,8 +88,11 @@ export class SyncBootstrapQueryDto {
   @Max(200)
   limit?: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: 'Opaque composite cursor of entityType + entityId',
+  })
   @IsOptional()
   @IsString()
-  afterEntityId?: string;
+  @MaxLength(512)
+  cursor?: string;
 }

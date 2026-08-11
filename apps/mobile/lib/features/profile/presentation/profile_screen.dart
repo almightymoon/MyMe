@@ -9,6 +9,13 @@ import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/config/release_capabilities.dart';
+import '../../../core/network/network_providers.dart';
+import '../../auth/application/auth_session_controller.dart';
+import '../../auth/data/account_local_store.dart';
+import '../../finance/data/repositories/local_finance_repository.dart';
+import '../../goals/data/repositories/local_goal_repository.dart';
+import '../../habits/data/repositories/local_habit_repository.dart';
+import '../../wardrobe/data/repositories/local_wardrobe_repository.dart';
 import '../../../core/widgets/memy_card.dart';
 import '../../../core/widgets/memy_module_scaffold.dart';
 import '../../onboarding/application/onboarding_providers.dart';
@@ -146,10 +153,18 @@ class ProfileScreen extends ConsumerWidget {
                     _ProfileRow(
                       keyName: 'profile_row_signout',
                       label: 'Sign out',
-                      value: 'Demo session',
+                      value: capabilities.accountAuth
+                          ? 'Keep or remove data'
+                          : 'Demo session',
                       valueColor: AppColors.health,
                       isLast: true,
-                      onTap: () => context.go(RoutePaths.signIn),
+                      onTap: () {
+                        if (capabilities.accountAuth) {
+                          _confirmAccountSignOut(context, ref);
+                          return;
+                        }
+                        context.go(RoutePaths.signIn);
+                      },
                     ),
                   ] else ...[
                     Divider(height: 1, color: AppColors.line),
@@ -202,6 +217,67 @@ class ProfileScreen extends ConsumerWidget {
     await ref.read(onboardingCompletionProvider.notifier).reset();
     if (!context.mounted) return;
     context.go(RoutePaths.onboarding);
+  }
+
+  Future<void> _confirmAccountSignOut(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final choice = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Sign out?'),
+        content: const Text(
+          'Keep offline data on this device, or remove this account’s local '
+          'MeMy records. Health and imported calendars stay on the device.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop('cancel'),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop('keep'),
+            child: const Text('Keep data'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop('remove'),
+            child: const Text('Remove local data'),
+          ),
+        ],
+      ),
+    );
+    if (choice == null || choice == 'cancel' || !context.mounted) return;
+    final session = ref.read(authSessionProvider);
+    try {
+      if (session != null) {
+        await ref.read(authApiProvider).logout(session.refreshToken);
+      }
+    } on Object {
+      // Revoke is best-effort; local sign-out still proceeds.
+    }
+    if (choice == 'remove' && session != null) {
+      final prefs = ref.read(sharedPreferencesProvider);
+      final store = AccountLocalStore(session.userId);
+      for (final key in [
+        LocalGoalRepository.storageKey,
+        LocalGoalRepository.initializedKey,
+        LocalFinanceRepository.storageKey,
+        LocalFinanceRepository.initializedKey,
+        LocalHabitRepository.storageKey,
+        LocalHabitRepository.initializedKey,
+        LocalWardrobeRepository.storageKey,
+        LocalWardrobeRepository.initializedKey,
+      ]) {
+        await prefs.remove(store.key(key));
+      }
+    }
+    ref.read(accessTokenStoreProvider).clear();
+    await ref
+        .read(authSessionProvider.notifier)
+        .signOut(removeLocalCache: choice == 'remove');
+    if (!context.mounted) return;
+    context.go(RoutePaths.welcome);
   }
 }
 

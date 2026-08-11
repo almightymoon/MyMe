@@ -72,6 +72,9 @@ abstract final class RouteNames {
   static const String privacyDeletion = 'privacyDeletion';
   static const String privacyAiDataUse = 'privacyAiDataUse';
   static const String security = 'security';
+  static const String syncCenter = 'syncCenter';
+  static const String deviceSessions = 'deviceSessions';
+  static const String conflictCenter = 'conflictCenter';
   static const String support = 'support';
   static const String helpArticle = 'helpArticle';
   static const String helpContact = 'helpContact';
@@ -159,6 +162,9 @@ abstract final class RoutePaths {
   static const String privacyDeletion = '/privacy/delete';
   static const String privacyAiDataUse = '/privacy/ai';
   static const String security = '/security';
+  static const String syncCenter = '/sync';
+  static const String deviceSessions = '/security/devices';
+  static const String conflictCenter = '/sync/conflicts';
   static const String support = '/support';
   static const String help = '/support';
   static const String helpArticle = '/support/article/:articleId';

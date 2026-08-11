@@ -109,6 +109,12 @@ describe('AuthService', () => {
         async ({ where }: { where: { id: string } }) => users[where.id],
       ),
     },
+    syncRecord: {
+      count: jest.fn(async () => 0),
+    },
+    syncChangeLog: {
+      findFirst: jest.fn(async () => null),
+    },
     device: {
       upsert: jest.fn(
         async ({

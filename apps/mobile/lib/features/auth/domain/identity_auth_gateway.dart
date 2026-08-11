@@ -1,4 +1,13 @@
-enum IdentityAuthStatus { success, cancelled, failed, missingIdToken, network }
+enum IdentityAuthStatus {
+  success,
+  cancelled,
+  failed,
+  missingIdToken,
+  network,
+  providerUnavailable,
+  configurationError,
+  providerFailure,
+}
 
 class IdentityAuthResult {
   const IdentityAuthResult({

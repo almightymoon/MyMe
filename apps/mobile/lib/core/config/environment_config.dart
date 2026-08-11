@@ -240,6 +240,21 @@ class EnvironmentConfig {
 
   static bool get usesAccountAuth => authMode == AuthMode.account;
 
+  /// Production and explicit account builds require Google / Apple sign-in.
+  static bool get requiresAuthentication => usesAccountAuth;
+
+  /// Backend web client ID used as the Google ID-token audience.
+  static const String googleServerClientId = String.fromEnvironment(
+    'GOOGLE_SERVER_CLIENT_ID',
+    defaultValue: '',
+  );
+
+  /// iOS OAuth client ID for Google Sign-In, when configured.
+  static const String googleIosClientId = String.fromEnvironment(
+    'GOOGLE_IOS_CLIENT_ID',
+    defaultValue: '',
+  );
+
   /// Local, non-live coach preview. Never available in production.
   static bool get enableAiPreview =>
       _resolveGate(enableAiPreviewRaw, defaultWhenUnset: !isProduction);
@@ -422,6 +437,9 @@ class EnvironmentConfig {
     }
     if (_authModeExplicitlyDemo) {
       problems.add('AUTH_MODE=demo');
+    }
+    if (authMode != AuthMode.account) {
+      problems.add('AUTH_MODE must resolve to account in production');
     }
     if (bool.hasEnvironment('STORE_SCREENSHOT_MODE') &&
         storeScreenshotModeRaw.trim().toLowerCase() == 'true') {

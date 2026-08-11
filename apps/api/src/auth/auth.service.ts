@@ -359,6 +359,14 @@ export class AuthService {
       where: { id: userId },
     });
     const tokens = this.issueAccess(userId, persistedDevice.id, rawRefresh);
+    const recordCount = await this.prisma.syncRecord.count({
+      where: { userId, deletedAt: null },
+    });
+    const latest = await this.prisma.syncChangeLog.findFirst({
+      where: { userId },
+      orderBy: { sequence: 'desc' },
+      select: { sequence: true },
+    });
     return {
       ...tokens,
       user: {
@@ -368,7 +376,10 @@ export class AuthService {
         avatarKey: user.avatarKey,
       },
       deviceId: persistedDevice.id,
-      bootstrapEmpty: true,
+      hasSynchronizedRecords: recordCount > 0,
+      bootstrapEmpty: recordCount === 0,
+      bootstrapRequired: recordCount > 0,
+      currentCursor: latest ? latest.sequence.toString() : '0',
     };
   }
 
@@ -395,6 +406,9 @@ export class AuthService {
       accessToken: token,
       accessTokenExpiresAt: expiresAt.toISOString(),
       refreshToken,
+      refreshTokenExpiresAt: new Date(
+        Date.now() + REFRESH_TTL_MS,
+      ).toISOString(),
     };
   }
 

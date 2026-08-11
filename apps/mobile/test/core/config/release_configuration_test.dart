@@ -156,6 +156,7 @@ void main() {
     test('has account auth and no demo auth', () {
       expect(capabilities.demoAuth, isFalse);
       expect(capabilities.accountAuth, isTrue);
+      expect(capabilities.requiresAuthentication, isTrue);
       expect(capabilities.showSignOut, isTrue);
     });
   });

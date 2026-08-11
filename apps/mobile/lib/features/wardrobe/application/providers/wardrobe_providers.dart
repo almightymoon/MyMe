@@ -5,6 +5,9 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/application/providers/core_providers.dart';
 import '../../../../core/domain/value_objects/local_date.dart';
+import '../../../auth/application/auth_session_controller.dart';
+import '../../../auth/data/account_local_store.dart';
+import '../../../auth/data/account_namespace.dart';
 import '../../data/repositories/local_wardrobe_repository.dart';
 import '../../data/storage/local_wardrobe_image_store.dart';
 import '../../domain/entities/wardrobe_enums.dart';
@@ -17,6 +20,7 @@ final wardrobeDocumentsDirectoryProvider =
     Provider<Future<Directory> Function()?>((ref) => null);
 
 final wardrobeImageStoreProvider = Provider<WardrobeImageStore>((ref) {
+  final accountId = ref.watch(authSessionProvider)?.userId;
   return LocalWardrobeImageStore(
     documentsDirectory: () async {
       final override = ref.read(wardrobeDocumentsDirectoryProvider);
@@ -28,12 +32,18 @@ final wardrobeImageStoreProvider = Provider<WardrobeImageStore>((ref) {
       }
     },
     idGenerator: () => ref.read(uuidProvider).v4(),
+    accountNamespace: accountId == null
+        ? 'legacy'
+        : accountStorageNamespace(accountId),
   );
 });
 
 final wardrobeRepositoryProvider = Provider<WardrobeRepository>((ref) {
+  final store = AccountLocalStore(ref.watch(authSessionProvider)?.userId);
   final repo = LocalWardrobeRepository(
     prefs: ref.watch(sharedPreferencesProvider),
+    documentKey: store.key(LocalWardrobeRepository.storageKey),
+    initKey: store.key(LocalWardrobeRepository.initializedKey),
     imageStore: ref.watch(wardrobeImageStoreProvider),
     clock: ref.watch(appClockProvider),
   );

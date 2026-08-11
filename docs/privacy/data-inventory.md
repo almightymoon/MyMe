@@ -20,4 +20,4 @@ catalog). Support reports use `SupportDiagnosticsReport` mapped from
 `IntegrationDiagnosticsReport` with allowlisted fields only — never event
 titles, health sample values, or tokens.
 
-\* Demo authentication has no production cloud account.
+\* Production accounts synchronize app-owned records through the NestJS API. Health samples and imported calendar events remain device-local. Demo authentication remains internal-only.

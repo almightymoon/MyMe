@@ -15,11 +15,31 @@ export const envValidationSchema = Joi.object({
   API_GLOBAL_PREFIX: Joi.string().default('api/v1'),
   CORS_ORIGINS: Joi.string().allow('').default('*'),
   DATABASE_URL: Joi.string().uri().required(),
-  DEV_USER_ID: Joi.string().uuid().required(),
+  DEV_USER_ID: Joi.string().uuid().when('NODE_ENV', {
+    is: 'production',
+    then: Joi.optional(),
+    otherwise: Joi.required(),
+  }),
   DEV_USER_EMAIL: Joi.string().email().optional(),
   DEV_USER_DISPLAY_NAME: Joi.string().default('Dev User'),
   DEV_USER_TIMEZONE: Joi.string().default('UTC'),
   DEV_USER_CURRENCY: Joi.string().length(3).default('PKR'),
+  JWT_ACCESS_SECRET: Joi.string()
+    .min(32)
+    .when('NODE_ENV', {
+      is: 'production',
+      then: Joi.required(),
+      otherwise: Joi.optional().default('memy-dev-access-secret-min-32-chars'),
+    }),
+  REFRESH_TOKEN_PEPPER: Joi.string()
+    .min(16)
+    .when('NODE_ENV', {
+      is: 'production',
+      then: Joi.required(),
+      otherwise: Joi.optional().default('memy-dev-refresh-pepper'),
+    }),
+  GOOGLE_CLIENT_ID: Joi.string().allow('').optional(),
+  APPLE_CLIENT_ID: Joi.string().allow('').optional(),
 });
 
 export type AppConfig = {
@@ -34,6 +54,12 @@ export type AppConfig = {
     displayName: string;
     timezone: string;
     currencyCode: string;
+  };
+  auth: {
+    accessSecret: string;
+    refreshPepper: string;
+    googleClientId?: string;
+    appleClientId?: string;
   };
 };
 
@@ -57,6 +83,14 @@ export default (): AppConfig => {
       displayName: process.env.DEV_USER_DISPLAY_NAME ?? 'Dev User',
       timezone: process.env.DEV_USER_TIMEZONE ?? 'UTC',
       currencyCode: process.env.DEV_USER_CURRENCY ?? 'PKR',
+    },
+    auth: {
+      accessSecret:
+        process.env.JWT_ACCESS_SECRET ?? 'memy-dev-access-secret-min-32-chars',
+      refreshPepper:
+        process.env.REFRESH_TOKEN_PEPPER ?? 'memy-dev-refresh-pepper',
+      googleClientId: process.env.GOOGLE_CLIENT_ID || undefined,
+      appleClientId: process.env.APPLE_CLIENT_ID || undefined,
     },
   };
 };

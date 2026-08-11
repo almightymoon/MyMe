@@ -31,7 +31,7 @@ class ApiClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          if (kDebugMode) {
+          if (kDebugMode && !EnvironmentConfig.isProduction) {
             options.headers['X-Dev-User-Id'] = EnvironmentConfig.devUserId;
           }
           handler.next(options);

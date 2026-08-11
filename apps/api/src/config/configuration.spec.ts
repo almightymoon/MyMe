@@ -49,7 +49,7 @@ describe('envValidationSchema', () => {
     expect(error?.message).toMatch(/DATABASE_URL/);
   });
 
-  it('fails when DEV_USER_ID is missing', () => {
+  it('fails when DEV_USER_ID is missing outside production', () => {
     const withoutUser = { ...base } as Record<string, string>;
     delete withoutUser.DEV_USER_ID;
     const { error } = envValidationSchema.validate(withoutUser, {
@@ -58,6 +58,21 @@ describe('envValidationSchema', () => {
     });
     expect(error).toBeDefined();
     expect(error?.message).toMatch(/DEV_USER_ID/);
+  });
+
+  it('requires JWT secrets in production and not DEV_USER_ID', () => {
+    const { error, value } = envValidationSchema.validate(
+      {
+        NODE_ENV: 'production',
+        DATABASE_URL: base.DATABASE_URL,
+        JWT_ACCESS_SECRET: 'production-access-secret-min-32-chars',
+        REFRESH_TOKEN_PEPPER: 'production-pepper',
+        CORS_ORIGINS: 'https://app.example.invalid',
+      },
+      { abortEarly: false, allowUnknown: true },
+    );
+    expect(error).toBeUndefined();
+    expect(value.JWT_ACCESS_SECRET).toContain('production-access');
   });
 
   it('fails when DATABASE_URL is not a URI', () => {

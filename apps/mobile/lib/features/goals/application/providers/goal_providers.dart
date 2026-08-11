@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/application/providers/core_providers.dart';
 import '../../../../core/config/environment_config.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../auth/application/auth_session_controller.dart';
+import '../../../auth/data/account_local_store.dart';
 import '../../data/repositories/api_goal_repository.dart';
 import '../../data/repositories/fake_goal_repository.dart';
 import '../../data/repositories/local_goal_repository.dart';
@@ -32,8 +34,11 @@ final apiClientProvider = Provider<ApiClient>((ref) {
 final localGoalRepositoryProvider = Provider<LocalGoalRepository>((ref) {
   final prefs = ref.watch(sharedPreferencesProvider);
   final source = ref.watch(goalsDataSourceProvider);
+  final store = AccountLocalStore(ref.watch(authSessionProvider)?.userId);
   final repo = LocalGoalRepository(
     prefs: prefs,
+    documentKey: store.key(LocalGoalRepository.storageKey),
+    initKey: store.key(LocalGoalRepository.initializedKey),
     // API cache and production: never seed demo Goals as user data.
     seedBuilder:
         source == GoalsDataSource.api ||

@@ -5,4 +5,5 @@ export type RequestUser = {
   timezone: string;
   currencyCode: string;
   authMode: 'development' | 'production';
+  deviceId?: string;
 };

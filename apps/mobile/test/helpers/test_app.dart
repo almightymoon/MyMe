@@ -18,6 +18,8 @@ import 'package:memy/features/habits/data/repositories/local_habit_repository.da
 import 'package:memy/features/today/application/providers/weather_providers.dart';
 import 'package:memy/features/today/domain/services/device_location_service.dart';
 import 'package:memy/features/today/domain/weather_exception.dart';
+import 'package:memy/features/auth/application/auth_session_controller.dart';
+import 'package:memy/features/auth/domain/secure_session_store.dart';
 import 'package:memy/features/wardrobe/application/providers/wardrobe_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -130,6 +132,9 @@ Future<void> pumpMemyApp(
     ProviderScope(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(preferences),
+        secureSessionStoreProvider.overrideWithValue(
+          InMemorySecureSessionStore(),
+        ),
         fakeRepositoryConfigProvider.overrideWithValue(
           config ?? createTestFakeConfig(),
         ),

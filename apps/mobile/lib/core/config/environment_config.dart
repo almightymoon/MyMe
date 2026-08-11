@@ -77,7 +77,8 @@
 /// # (default: development, so CI/tests keep their existing behaviour)
 /// --dart-define=APP_ENV=production
 ///
-/// # Auth mode: demo | none  (default: demo; production always resolves none)
+/// # Auth mode: demo | none | account
+/// # (default: demo; production always resolves account)
 /// --dart-define=AUTH_MODE=none
 ///
 /// # Optional feature gates (default off in production, on in dev/internal)
@@ -105,9 +106,11 @@ enum HealthDataSource { fake, system }
 /// Build channel. `production` is the locked-down v1 shipping configuration.
 enum AppEnvironment { development, internal, production }
 
-/// `demo` shows the local demo sign-in screens; `none` skips auth entirely and
-/// relies on local onboarding instead. Production always resolves to [none].
-enum AuthMode { demo, none }
+/// `demo` shows the local fake email/password screens (non-production only).
+/// `none` skips account auth and relies on local onboarding.
+/// `account` is Google / Sign in with Apple. Production always resolves to
+/// [account].
+enum AuthMode { demo, none, account }
 
 /// Raised by [EnvironmentConfig.validate] when dart-defines are contradictory.
 class EnvironmentConfigError extends Error {
@@ -184,7 +187,7 @@ class EnvironmentConfig {
     defaultValue: 'development',
   );
 
-  /// `demo` | `none`. Ignored in production, which always resolves to `none`.
+  /// `demo` | `none` | `account`. Ignored in production (always `account`).
   static const String authModeRaw = String.fromEnvironment(
     'AUTH_MODE',
     defaultValue: 'demo',
@@ -234,6 +237,8 @@ class EnvironmentConfig {
 
   /// True only for non-production builds that still route through demo sign-in.
   static bool get usesDemoAuth => authMode == AuthMode.demo;
+
+  static bool get usesAccountAuth => authMode == AuthMode.account;
 
   /// Local, non-live coach preview. Never available in production.
   static bool get enableAiPreview =>
@@ -363,14 +368,20 @@ class EnvironmentConfig {
     }
   }
 
-  /// Auth mode for an arbitrary environment — production is always [none].
+  /// Auth mode for an arbitrary environment — production is always [account].
   static AuthMode resolveAuthMode({AppEnvironment? environment, String? raw}) {
     if ((environment ?? appEnvironment) == AppEnvironment.production) {
-      return AuthMode.none;
+      return AuthMode.account;
     }
-    return (raw ?? authModeRaw).trim().toLowerCase() == 'none'
-        ? AuthMode.none
-        : AuthMode.demo;
+    switch ((raw ?? authModeRaw).trim().toLowerCase()) {
+      case 'none':
+        return AuthMode.none;
+      case 'account':
+        return AuthMode.account;
+      case 'demo':
+      default:
+        return AuthMode.demo;
+    }
   }
 
   static GoalsDataSource get goalsDataSource => resolveGoalsDataSource();

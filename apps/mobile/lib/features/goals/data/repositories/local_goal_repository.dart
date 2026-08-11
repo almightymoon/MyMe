@@ -30,7 +30,13 @@ import '../seed/goals_seed.dart';
 /// reads legacy `int`/`num` amounts persisted by earlier app versions, so
 /// existing on-disk documents keep loading without a migration step.
 class LocalGoalRepository implements GoalRepository {
-  LocalGoalRepository({required this.prefs, this.seedBuilder});
+  LocalGoalRepository({
+    required this.prefs,
+    this.seedBuilder,
+    String? documentKey,
+    String? initKey,
+  }) : documentKey = documentKey ?? LocalGoalRepository.storageKey,
+       initKey = initKey ?? LocalGoalRepository.initializedKey;
 
   static const int schemaVersion = 1;
   static const String storageKey = 'memy_goals_v1';
@@ -38,6 +44,8 @@ class LocalGoalRepository implements GoalRepository {
 
   final SharedPreferences prefs;
   final List<Goal> Function()? seedBuilder;
+  final String documentKey;
+  final String initKey;
 
   final _controller = StreamController<List<Goal>>.broadcast();
   Future<void>? _initFuture;
@@ -48,13 +56,13 @@ class LocalGoalRepository implements GoalRepository {
   }
 
   Future<void> _initialize() async {
-    final initialized = prefs.getBool(initializedKey) ?? false;
+    final initialized = prefs.getBool(initKey) ?? false;
     if (!initialized) {
       _cache = List<Goal>.unmodifiable(
         seedBuilder?.call() ?? GoalsSeed.demoGoals(),
       );
       await _persist(_cache);
-      await prefs.setBool(initializedKey, true);
+      await prefs.setBool(initKey, true);
       return;
     }
 
@@ -62,7 +70,7 @@ class LocalGoalRepository implements GoalRepository {
   }
 
   List<Goal> _readFromDisk() {
-    final raw = prefs.getString(storageKey);
+    final raw = prefs.getString(documentKey);
     if (raw == null || raw.isEmpty) {
       return const [];
     }
@@ -103,7 +111,7 @@ class LocalGoalRepository implements GoalRepository {
       'schemaVersion': schemaVersion,
       'goals': goals.map((g) => g.toJson()).toList(),
     });
-    await prefs.setString(storageKey, payload);
+    await prefs.setString(documentKey, payload);
     _cache = List<Goal>.unmodifiable(goals);
     if (!_controller.isClosed) {
       _controller.add(_cache);

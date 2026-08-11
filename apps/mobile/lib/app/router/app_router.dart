@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/auth/application/auth_session_controller.dart';
+import '../../features/auth/presentation/account_sign_in_screen.dart';
 import '../../features/auth/presentation/forgot_password_screen.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
@@ -106,6 +108,8 @@ const _onboardingEscapes = {
 final appRouterProvider = Provider<GoRouter>((ref) {
   final capabilities = ref.watch(releaseCapabilitiesProvider);
   final demoAuth = capabilities.demoAuth;
+  final accountAuth = capabilities.accountAuth;
+  final signedIn = ref.watch(authSessionProvider) != null;
 
   // Read (not watch): the router must not rebuild mid-flow. Redirects call
   // this on every navigation, so completion changes are still picked up.
@@ -114,14 +118,35 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   String postOnboardingHome() =>
       onboardingComplete() ? RoutePaths.today : RoutePaths.onboarding;
 
+  String unsignedLocation() =>
+      accountAuth ? RoutePaths.welcome : postOnboardingHome();
+
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: demoAuth ? RoutePaths.signIn : postOnboardingHome(),
+    initialLocation: demoAuth
+        ? RoutePaths.signIn
+        : (accountAuth && !signedIn
+              ? RoutePaths.welcome
+              : postOnboardingHome()),
     redirect: (context, state) {
       final path = state.uri.path;
 
-      if (!demoAuth && _demoAuthPaths.contains(path)) {
+      if (accountAuth && !signedIn) {
+        if (path == RoutePaths.welcome ||
+            path == RoutePaths.privacy ||
+            path == RoutePaths.legal ||
+            path.startsWith('/legal/') ||
+            path.startsWith('/privacy/')) {
+          return null;
+        }
+        return RoutePaths.welcome;
+      }
+      if (accountAuth && signedIn && path == RoutePaths.welcome) {
         return postOnboardingHome();
+      }
+
+      if (!demoAuth && _demoAuthPaths.contains(path)) {
+        return unsignedLocation();
       }
       if (!capabilities.coachPreview && path == RoutePaths.coach) {
         return RoutePaths.today;
@@ -159,6 +184,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RoutePaths.onboarding,
         name: RouteNames.onboarding,
         builder: (context, state) => const OnboardingScreen(),
+      ),
+      GoRoute(
+        path: RoutePaths.welcome,
+        name: RouteNames.welcome,
+        builder: (context, state) => const AccountSignInScreen(),
       ),
       GoRoute(
         path: RoutePaths.signIn,

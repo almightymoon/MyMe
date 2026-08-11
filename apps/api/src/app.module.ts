@@ -6,6 +6,8 @@ import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
 import { GoalsModule } from './goals/goals.module';
 import { TodayModule } from './today/today.module';
+import { SyncModule } from './sync/sync.module';
+import { AssetsModule } from './assets/assets.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { TodayModule } from './today/today.module';
     HealthModule,
     GoalsModule,
     TodayModule,
+    SyncModule,
+    AssetsModule,
   ],
 })
 export class AppModule {}

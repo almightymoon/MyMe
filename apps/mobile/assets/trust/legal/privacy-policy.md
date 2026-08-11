@@ -7,6 +7,14 @@
 
 This draft describes how the MeMy mobile app handles information in the current build. It is provided for transparency while the product is in active development. It is **not** a claim of GDPR, HIPAA, or other regulatory certification.
 
+## Accounts and cloud sync (draft)
+
+Production sign-in uses **Google Sign-In** and **Sign in with Apple** (iOS). The stable identity is the provider plus provider subject, not email. Email is optional metadata and does not automatically link two providers.
+
+After the first online sign-in, MeMy keeps an offline cache on this device. App-owned records (profile, preferences, goals, finance, habits, wardrobe metadata, MeMy-owned calendar events) may synchronize to PostgreSQL on the operator’s VPS through the NestJS API. Wardrobe images use private object storage. Refresh tokens are stored in platform secure storage on the device and only as hashes on the server.
+
+**Not uploaded:** raw HealthKit / Health Connect samples, imported device calendar events, device calendar account identifiers, precise live location, support-report contents, or debug diagnostics payloads.
+
 ## What MeMy is
 
 MeMy is a personal life OS that helps you track goals, finance, habits, calendar, and (optionally) wellness summaries from your device health platforms.

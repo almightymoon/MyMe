@@ -27,9 +27,11 @@ class SecurityScreen extends StatelessWidget {
                 Text('What is available', style: AppTextStyles.titleMedium()),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  'MeMy stores most personal modules on this device. '
-                  'Device OS protections (app sandbox, lock screen) apply. '
-                  'Integration diagnostics are redacted.',
+                  'Production accounts use Google or Sign in with Apple. '
+                  'Refresh tokens stay in platform secure storage. Access tokens '
+                  'are short-lived. The API uses HTTPS. App-owned records can '
+                  'sync after sign-in; Health samples and imported calendars stay '
+                  'on this device. Diagnostics are redacted.',
                   style: AppTextStyles.bodyMedium(
                     color: AppColors.secondaryText,
                   ),
@@ -48,9 +50,9 @@ class SecurityScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  'MeMy does not claim end-to-end encryption, MFA, biometric '
-                  'app lock, GDPR certification, or HIPAA compliance. '
-                  'Password change is not available in the demo auth flow.',
+                  'MeMy does not claim end-to-end encryption, an encrypted '
+                  'local database, MFA, biometric app lock, GDPR certification, '
+                  'or HIPAA compliance.',
                   style: AppTextStyles.bodyMedium(
                     color: AppColors.secondaryText,
                   ),

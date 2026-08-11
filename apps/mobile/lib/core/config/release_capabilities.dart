@@ -54,8 +54,8 @@ class ReleaseCapabilities {
       notifications: false,
       weather: true,
       directWearables: false,
-      cloudAccount: false,
-      cloudSync: false,
+      cloudAccount: EnvironmentConfig.usesAccountAuth,
+      cloudSync: EnvironmentConfig.usesAccountAuth,
       debugIntegrationLab:
           !isProduction &&
           EnvironmentConfig.enableIntegrationLab &&
@@ -74,7 +74,7 @@ class ReleaseCapabilities {
   factory ReleaseCapabilities.production() {
     return const ReleaseCapabilities(
       environment: AppEnvironment.production,
-      authMode: AuthMode.none,
+      authMode: AuthMode.account,
       localOnboarding: true,
       goals: true,
       finance: true,
@@ -86,8 +86,8 @@ class ReleaseCapabilities {
       notifications: false,
       weather: true,
       directWearables: false,
-      cloudAccount: false,
-      cloudSync: false,
+      cloudAccount: true,
+      cloudSync: true,
       debugIntegrationLab: false,
       wardrobe: true,
       body: false,
@@ -138,8 +138,10 @@ class ReleaseCapabilities {
   /// Demo sign-in / sign-up / forgot-password screens are reachable.
   bool get demoAuth => authMode == AuthMode.demo && !isProduction;
 
-  /// Sign Out only makes sense while demo auth exists.
-  bool get showSignOut => demoAuth;
+  bool get accountAuth => authMode == AuthMode.account;
+
+  /// Sign out is available for demo auth and real accounts.
+  bool get showSignOut => demoAuth || accountAuth;
 }
 
 /// Override in tests to exercise the production IA.

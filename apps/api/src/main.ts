@@ -1,4 +1,5 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
+import helmet from 'helmet';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -16,6 +17,7 @@ async function bootstrap(): Promise<void> {
 
   const globalPrefix = config.get('globalPrefix', { infer: true });
   app.setGlobalPrefix(globalPrefix);
+  app.use(helmet());
 
   const corsOrigins = config.get('corsOrigins', { infer: true });
   const nodeEnv = config.get('nodeEnv', { infer: true });

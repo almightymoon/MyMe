@@ -92,10 +92,10 @@ void main() {
       }
     });
 
-    test('auth mode is forced to none even when demo is requested', () {
+    test('auth mode is forced to account even when demo is requested', () {
       expect(
         EnvironmentConfig.resolveAuthMode(environment: production, raw: 'demo'),
-        AuthMode.none,
+        AuthMode.account,
       );
     });
 
@@ -146,16 +146,17 @@ void main() {
       expect(capabilities.nutritionQuickAdd, isFalse);
       expect(capabilities.notifications, isFalse);
       expect(capabilities.directWearables, isFalse);
-      expect(capabilities.cloudAccount, isFalse);
-      expect(capabilities.cloudSync, isFalse);
+      expect(capabilities.cloudAccount, isTrue);
+      expect(capabilities.cloudSync, isTrue);
       expect(capabilities.debugIntegrationLab, isFalse);
       expect(capabilities.plannedSidebarItems, isFalse);
       expect(capabilities.exerciseSessions, isFalse);
     });
 
-    test('has no demo auth and therefore no sign out', () {
+    test('has account auth and no demo auth', () {
       expect(capabilities.demoAuth, isFalse);
-      expect(capabilities.showSignOut, isFalse);
+      expect(capabilities.accountAuth, isTrue);
+      expect(capabilities.showSignOut, isTrue);
     });
   });
 

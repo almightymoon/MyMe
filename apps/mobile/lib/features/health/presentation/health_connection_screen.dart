@@ -8,6 +8,7 @@ import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/integrations/domain/integration_availability.dart';
+import '../../../core/widgets/memy_busy_indicator.dart';
 import '../../../core/widgets/memy_module_scaffold.dart';
 import '../application/providers/health_providers.dart';
 import 'widgets/health_disclaimer_banner.dart';
@@ -63,7 +64,7 @@ class HealthConnectionScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.xxl),
           availabilityAsync.when(
             data: (availability) => _ContinueButton(availability: availability),
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const Center(child: MemyBusyIndicator()),
             error: (error, _) => const _ContinueButton(
               availability: IntegrationAvailability.unavailable,
             ),

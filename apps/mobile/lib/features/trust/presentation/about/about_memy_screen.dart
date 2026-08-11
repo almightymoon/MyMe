@@ -6,6 +6,7 @@ import '../../../../app/router/route_names.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
+import '../../../../core/widgets/memy_busy_indicator.dart';
 import '../../../../core/widgets/memy_card.dart';
 import '../../application/providers/trust_providers.dart';
 import '../widgets/trust_screen_scaffold.dart';
@@ -101,7 +102,7 @@ class WhatsNewScreen extends ConsumerWidget {
       title: "What's new",
       fallbackPath: RoutePaths.about,
       child: changelog.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: MemyBusyIndicator()),
         error: (_, _) => const Text(
           "Couldn't load the changelog right now. Please try again later.",
         ),

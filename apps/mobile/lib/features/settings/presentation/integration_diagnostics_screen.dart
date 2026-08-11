@@ -12,6 +12,7 @@ import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/integrations/domain/integration_diagnostics_report.dart';
+import '../../../core/widgets/memy_busy_indicator.dart';
 import '../../../core/widgets/memy_page_header.dart';
 import '../../calendar/application/providers/calendar_providers.dart';
 import '../application/providers/diagnostics_providers.dart';
@@ -45,7 +46,7 @@ class IntegrationDiagnosticsScreen extends ConsumerWidget {
             ),
             Expanded(
               child: async.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(child: MemyBusyIndicator()),
                 error: (error, _) => Center(
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.page),

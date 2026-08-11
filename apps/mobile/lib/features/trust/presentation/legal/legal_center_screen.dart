@@ -7,6 +7,7 @@ import '../../../../app/router/route_names.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
+import '../../../../core/widgets/memy_busy_indicator.dart';
 import '../../../../core/widgets/memy_card.dart';
 import '../../application/providers/trust_providers.dart';
 import '../../domain/entities/trust_document.dart';
@@ -89,8 +90,7 @@ class LegalDocumentScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final docAsync = ref.watch(trustDocumentProvider(type));
     return docAsync.when(
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () => const Scaffold(body: Center(child: MemyBusyIndicator())),
       error: (error, stackTrace) => TrustScreenScaffold(
         title: 'Legal',
         fallbackPath: RoutePaths.legal,

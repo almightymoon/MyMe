@@ -20,6 +20,8 @@ import 'package:memy/features/today/domain/services/device_location_service.dart
 import 'package:memy/features/today/domain/weather_exception.dart';
 import 'package:memy/features/auth/application/auth_session_controller.dart';
 import 'package:memy/features/auth/domain/secure_session_store.dart';
+import 'package:memy/features/health/application/providers/health_providers.dart';
+import 'package:memy/features/health/domain/entities/health_connection_config.dart';
 import 'package:memy/features/wardrobe/application/providers/wardrobe_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -125,9 +127,20 @@ Future<void> pumpMemyApp(
         seedFinance: seedFinance,
         seedHabits: seedHabits,
       );
-  final wardrobeRoot = await Directory.systemTemp.createTemp(
-    'memy_wardrobe_test',
+  // Real IO must run outside FakeAsync or pumpWidget never starts.
+  final wardrobeRoot = await tester.runAsync(
+    () => Directory.systemTemp.createTemp('memy_wardrobe_test'),
   );
+  if (wardrobeRoot == null) {
+    throw StateError('Could not create wardrobe test directory.');
+  }
+  addTearDown(() async {
+    await tester.runAsync(() async {
+      if (await wardrobeRoot.exists()) {
+        await wardrobeRoot.delete(recursive: true);
+      }
+    });
+  });
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -135,6 +148,9 @@ Future<void> pumpMemyApp(
         secureSessionStoreProvider.overrideWithValue(
           InMemorySecureSessionStore(),
         ),
+        sessionHydrationProvider.overrideWith((ref) async {
+          await ref.read(authSessionProvider.notifier).hydrate();
+        }),
         fakeRepositoryConfigProvider.overrideWithValue(
           config ?? createTestFakeConfig(),
         ),
@@ -142,6 +158,9 @@ Future<void> pumpMemyApp(
           () async => wardrobeRoot,
         ),
         deviceLocationServiceProvider.overrideWithValue(_TestLocationService()),
+        healthConnectionProvider.overrideWith(
+          (ref) => Stream.value(const HealthConnectionConfig()),
+        ),
         ...overrides,
       ],
       child: const MemyApp(),
@@ -151,14 +170,33 @@ Future<void> pumpMemyApp(
   await tester.pump();
 }
 
+Future<void> pumpUntilFound(
+  WidgetTester tester,
+  Finder finder, {
+  int maxPumps = 40,
+}) async {
+  for (var i = 0; i < maxPumps; i++) {
+    if (finder.evaluate().isNotEmpty) return;
+    await tester.pump(const Duration(milliseconds: 50));
+  }
+  throw TestFailure('Timed out waiting for $finder');
+}
+
 Future<void> signInToToday(WidgetTester tester) async {
-  await tester.pumpAndSettle();
   final signIn = find.byKey(const Key('continue_to_memy'));
+  await pumpUntilFound(tester, signIn);
   await tester.ensureVisible(signIn);
-  await tester.pumpAndSettle();
+  await tester.pump();
   await tester.tap(signIn);
-  await tester.pumpAndSettle();
+  await pumpUntilFound(tester, find.textContaining('Hi,'));
   expect(find.textContaining('Hi,'), findsOneWidget);
+  // Finish the sign-in route transition so shell nav is on-screen.
+  await pumpForNavigation(tester);
+}
+
+Future<void> pumpForNavigation(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 400));
 }
 
 /// Sets a valid future deadline on the Add Goal form.
@@ -172,5 +210,6 @@ Future<void> pickRequiredDeadline(WidgetTester tester) async {
   container
       .read(addGoalControllerProvider.notifier)
       .setDeadline(DateTime.now().add(const Duration(days: 30)));
-  await tester.pumpAndSettle();
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 50));
 }

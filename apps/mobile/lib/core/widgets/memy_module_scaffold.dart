@@ -8,6 +8,7 @@ import '../../app/theme/app_text_styles.dart';
 import '../../features/shell/presentation/memy_bottom_navigation.dart';
 import '../../features/shell/presentation/memy_drawer.dart';
 import '../../features/shell/presentation/quick_add_sheet.dart';
+import '../utils/ambient_motion.dart';
 import 'memy_chrome.dart';
 
 /// Prototype `.icon-plain` — no tooltip pill, no grey filled circle.
@@ -163,13 +164,7 @@ class MemyModuleScaffold extends StatelessWidget {
                       if (heroAsset != null) ...[
                         Align(
                           alignment: Alignment.centerRight,
-                          child: Image.asset(
-                            heroAsset!,
-                            width: heroSize,
-                            height: heroSize,
-                            fit: BoxFit.contain,
-                            errorBuilder: (_, _, _) => const SizedBox.shrink(),
-                          ),
+                          child: _HeroAsset(asset: heroAsset!, size: heroSize),
                         ),
                       ],
                       Expanded(child: child),
@@ -191,13 +186,7 @@ class MemyModuleScaffold extends StatelessWidget {
                     if (heroAsset != null) ...[
                       Align(
                         alignment: Alignment.centerRight,
-                        child: Image.asset(
-                          heroAsset!,
-                          width: heroSize,
-                          height: heroSize,
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, _, _) => const SizedBox.shrink(),
-                        ),
+                        child: _HeroAsset(asset: heroAsset!, size: heroSize),
                       ),
                     ],
                     child,
@@ -220,6 +209,27 @@ class MemyModuleScaffold extends StatelessWidget {
               onQuickAddPressed: () => showQuickAddSheet(context),
             )
           : null,
+    );
+  }
+}
+
+class _HeroAsset extends StatelessWidget {
+  const _HeroAsset({required this.asset, required this.size});
+
+  final String asset;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!ambientMotionEnabled(context)) {
+      return SizedBox(width: size, height: size);
+    }
+    return Image.asset(
+      asset,
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+      errorBuilder: (_, _, _) => const SizedBox.shrink(),
     );
   }
 }

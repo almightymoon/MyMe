@@ -9,6 +9,7 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../core/config/environment_config.dart';
+import '../../../../core/widgets/memy_busy_indicator.dart';
 import '../../../../core/widgets/memy_card.dart';
 import '../../../../core/widgets/memy_primary_button.dart';
 import '../../application/providers/trust_providers.dart';
@@ -58,7 +59,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
           const SizedBox(height: AppSpacing.sm),
           Expanded(
             child: articlesAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const Center(child: MemyBusyIndicator()),
               error: (e, _) =>
                   const Text('Could not load articles. Please try again.'),
               data: (articles) {
@@ -172,8 +173,7 @@ class SupportArticleDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final articlesAsync = ref.watch(supportArticlesProvider);
     return articlesAsync.when(
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () => const Scaffold(body: Center(child: MemyBusyIndicator())),
       error: (e, _) => const Scaffold(
         body: Center(child: Text('Could not load this article.')),
       ),

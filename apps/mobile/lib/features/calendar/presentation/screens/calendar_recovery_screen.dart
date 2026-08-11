@@ -8,6 +8,7 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/widgets/memy_busy_indicator.dart';
 import '../../../../core/widgets/memy_card.dart';
 import '../../../../core/widgets/memy_page_header.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -112,7 +113,7 @@ class _CalendarRecoveryScreenState
             ),
             Expanded(
               child: async.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(child: MemyBusyIndicator()),
                 error: (_, _) => Padding(
                   padding: const EdgeInsets.all(AppSpacing.page),
                   child: Center(

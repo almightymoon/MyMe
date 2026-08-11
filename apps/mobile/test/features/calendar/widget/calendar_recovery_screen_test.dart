@@ -32,7 +32,7 @@ void main() {
 
     final router = GoRouter.of(tester.element(find.textContaining('Hi,')));
     router.go(RoutePaths.calendarRecovery);
-    await tester.pumpAndSettle();
+    await pumpForNavigation(tester);
 
     expect(find.byKey(const Key('calendar_recovery')), findsOneWidget);
     expect(find.textContaining('No create-recovery cases'), findsOneWidget);
@@ -79,11 +79,17 @@ void main() {
 
     final router = GoRouter.of(tester.element(find.textContaining('Hi,')));
     router.go(RoutePaths.calendarRecovery);
-    await tester.pumpAndSettle();
+    await pumpForNavigation(tester);
 
     expect(find.byKey(const Key('calendar_recovery')), findsOneWidget);
     expect(find.byKey(const Key('recovery_case_case_1')), findsOneWidget);
     expect(find.textContaining('No match on device'), findsOneWidget);
-    expect(find.textContaining('Should not appear'), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('calendar_recovery')),
+        matching: find.textContaining('Should not appear'),
+      ),
+      findsNothing,
+    );
   });
 }

@@ -27,9 +27,15 @@ class _LoadingCardSkeletonState extends State<LoadingCardSkeleton>
       vsync: this,
       duration: const Duration(milliseconds: 1100),
     );
-    if (ambientMotionEnabled()) {
-      _controller.repeat(reverse: true);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (ambientMotionEnabled(context)) {
+      if (!_controller.isAnimating) _controller.repeat(reverse: true);
     } else {
+      _controller.stop();
       _controller.value = 0.5;
     }
   }

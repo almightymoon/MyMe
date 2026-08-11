@@ -163,6 +163,14 @@ void main() {
     expect(find.byKey(const Key('settings_units')), findsOneWidget);
     expect(find.byKey(const Key('settings_language')), findsOneWidget);
     expect(find.text('Change Password'), findsNothing);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('settings_logout')),
+      300,
+      scrollable: find.descendant(
+        of: find.byKey(const Key('settings_scroll')),
+        matching: find.byType(Scrollable),
+      ),
+    );
     expect(find.byKey(const Key('settings_logout')), findsOneWidget);
     expect(find.byKey(const Key('settings_reset_onboarding')), findsOneWidget);
   });

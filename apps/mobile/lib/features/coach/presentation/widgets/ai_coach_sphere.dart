@@ -1,14 +1,10 @@
-import 'dart:io' show Platform;
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
-
-/// `flutter test` sets the OS env var `FLUTTER_TEST` (not a dart-define).
-bool get _runningUnderFlutterTest =>
-    Platform.environment.containsKey('FLUTTER_TEST');
+import '../../../../core/utils/ambient_motion.dart';
 
 /// Clean glass orb for Coach. Drawn as true circles — no stacked clips.
 class AiCoachSphere extends StatefulWidget {
@@ -60,7 +56,7 @@ class _AiCoachSphereState extends State<AiCoachSphere>
     _idle = null;
   }
 
-  bool get _shouldAnimate => widget.animate && !_runningUnderFlutterTest;
+  bool get _shouldAnimate => widget.animate && ambientMotionEnabled();
 
   void _syncAnimation() {
     final idle = _idle;

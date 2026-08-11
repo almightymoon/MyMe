@@ -8,6 +8,7 @@ import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/integrations/domain/integration_connection_status.dart';
+import '../../../core/widgets/memy_busy_indicator.dart';
 import '../../../core/widgets/memy_module_scaffold.dart';
 import '../application/providers/health_providers.dart';
 import '../domain/entities/health_connection_config.dart';
@@ -54,7 +55,7 @@ class _HealthPermissionSelectionScreenState
         data: (connection) => _buildBody(context, connection),
         loading: () => const Padding(
           padding: EdgeInsets.only(top: 80),
-          child: Center(child: CircularProgressIndicator()),
+          child: Center(child: MemyBusyIndicator()),
         ),
         error: (error, _) =>
             _buildBody(context, const HealthConnectionConfig()),
@@ -160,7 +161,7 @@ class _HealthPermissionSelectionScreenState
                 ? const SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: MemyBusyIndicator(strokeWidth: 2),
                   )
                 : const Text('Grant access'),
           ),

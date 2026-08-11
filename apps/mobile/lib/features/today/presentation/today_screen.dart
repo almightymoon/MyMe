@@ -17,6 +17,7 @@ import '../../../core/widgets/empty_feature_card.dart';
 import '../../../core/widgets/inline_error_card.dart';
 import '../../../core/widgets/life_score_ring.dart';
 import '../../../core/widgets/loading_card_skeleton.dart';
+import '../../../core/widgets/memy_busy_indicator.dart';
 import '../../../core/widgets/memy_card.dart';
 import '../../../core/widgets/memy_chrome.dart';
 import '../../calendar/domain/entities/schedule_item.dart';
@@ -821,7 +822,7 @@ class _TodayHealthCard extends ConsumerWidget {
             child: SizedBox(
               width: 18,
               height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
+              child: MemyBusyIndicator(strokeWidth: 2),
             ),
           ),
         ),
@@ -877,7 +878,7 @@ class _TodayHealthCard extends ConsumerWidget {
             child: SizedBox(
               width: 18,
               height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
+              child: MemyBusyIndicator(strokeWidth: 2),
             ),
           ),
         ),

@@ -7,6 +7,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
+import '../../../core/widgets/memy_busy_indicator.dart';
 import '../../../core/widgets/memy_module_scaffold.dart';
 import '../application/providers/health_providers.dart';
 import '../domain/entities/health_metric_type.dart';
@@ -52,7 +53,7 @@ class HealthWorkoutsScreen extends ConsumerWidget {
         },
         loading: () => const Padding(
           padding: EdgeInsets.only(top: 80),
-          child: Center(child: CircularProgressIndicator()),
+          child: Center(child: MemyBusyIndicator()),
         ),
         error: (error, _) => Padding(
           padding: const EdgeInsets.only(top: 40),

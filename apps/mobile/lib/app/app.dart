@@ -21,7 +21,7 @@ class MemyApp extends ConsumerWidget {
     if (hydration.isLoading) {
       return const MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: Scaffold(body: Center(child: CircularProgressIndicator())),
+        home: Scaffold(body: SizedBox.expand(key: Key('session_hydrating'))),
       );
     }
     final router = ref.watch(appRouterProvider);
@@ -42,6 +42,7 @@ class MemyApp extends ConsumerWidget {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: themeMode,
+      themeAnimationDuration: Duration.zero,
       builder: (context, child) {
         AppColors.bindFromContext(context);
         final brightness = Theme.of(context).brightness;

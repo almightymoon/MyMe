@@ -9,6 +9,7 @@ import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/application/providers/core_providers.dart';
 import '../../../core/integrations/domain/integration_connection_status.dart';
+import '../../../core/widgets/memy_busy_indicator.dart';
 import '../../../core/widgets/memy_module_scaffold.dart';
 import '../../onboarding/data/onboarding_preferences.dart';
 import '../../user/application/providers/user_providers.dart';
@@ -64,7 +65,7 @@ class HealthOverviewScreen extends ConsumerWidget {
             _Body(connection: connection, summaryAsync: summaryAsync),
         loading: () => const Padding(
           padding: EdgeInsets.only(top: 80),
-          child: Center(child: CircularProgressIndicator()),
+          child: Center(child: MemyBusyIndicator()),
         ),
         error: (error, _) => _Body(
           connection: const HealthConnectionConfig(),
@@ -105,7 +106,7 @@ class _Body extends ConsumerWidget {
             ),
             loading: () => const Padding(
               padding: EdgeInsets.symmetric(vertical: 24),
-              child: Center(child: CircularProgressIndicator()),
+              child: Center(child: MemyBusyIndicator()),
             ),
             error: (error, _) => Container(
               key: const Key('health_error'),

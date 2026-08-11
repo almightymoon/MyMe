@@ -59,8 +59,15 @@ class _AuthWaveButtonState extends State<AuthWaveButton>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-    if (ambientMotionEnabled()) {
-      _wave.repeat();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (ambientMotionEnabled(context)) {
+      if (!_wave.isAnimating) _wave.repeat();
+    } else if (_wave.isAnimating) {
+      _wave.stop();
     }
   }
 

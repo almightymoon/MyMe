@@ -232,8 +232,15 @@ class _QuickAddButtonState extends State<_QuickAddButton>
       vsync: this,
       duration: const Duration(milliseconds: 140),
     );
-    if (ambientMotionEnabled()) {
-      _pulse.repeat();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (ambientMotionEnabled(context)) {
+      if (!_pulse.isAnimating) _pulse.repeat();
+    } else if (_pulse.isAnimating) {
+      _pulse.stop();
     }
   }
 

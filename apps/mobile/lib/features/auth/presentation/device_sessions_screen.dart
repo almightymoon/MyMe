@@ -5,6 +5,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/network/network_providers.dart';
+import '../../../core/widgets/memy_busy_indicator.dart';
 import '../../../core/widgets/memy_card.dart';
 import '../application/auth_session_controller.dart';
 import '../domain/auth_api.dart';
@@ -25,7 +26,7 @@ class DeviceSessionsScreen extends ConsumerWidget {
           }
           final devices = snapshot.data;
           if (devices == null) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: MemyBusyIndicator());
           }
           if (devices.isEmpty) {
             return const Center(child: Text('No active devices.'));

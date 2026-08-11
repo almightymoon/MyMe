@@ -87,6 +87,7 @@ class DataModuleContractValidator {
     DataModule.habits => DataModuleId.habits,
     DataModule.calendar => DataModuleId.calendar,
     DataModule.health => DataModuleId.health,
+    DataModule.wardrobe => DataModuleId.wardrobe,
     DataModule.profile => DataModuleId.profile,
     DataModule.preferences => DataModuleId.preferences,
     DataModule.diagnostics => DataModuleId.diagnostics,

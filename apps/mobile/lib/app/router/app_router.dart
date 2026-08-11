@@ -20,9 +20,19 @@ import '../../features/coach/presentation/coach_screen.dart';
 import '../../features/exercise/presentation/screens/exercise_library_screen.dart';
 import '../../features/exercise/presentation/screens/exercise_overview_screen.dart';
 import '../../features/exercise/presentation/screens/workout_session_placeholder_screen.dart';
+import '../../features/finance/presentation/screens/add_budget_screen.dart';
+import '../../features/finance/presentation/screens/add_money_owed_screen.dart';
 import '../../features/finance/presentation/screens/add_transaction_screen.dart';
+import '../../features/finance/presentation/screens/budget_detail_screen.dart';
+import '../../features/finance/presentation/screens/budgets_overview_screen.dart';
+import '../../features/finance/presentation/screens/edit_budget_screen.dart';
+import '../../features/finance/presentation/screens/edit_money_owed_screen.dart';
 import '../../features/finance/presentation/screens/edit_transaction_screen.dart';
+import '../../features/finance/presentation/screens/finance_categories_screen.dart';
 import '../../features/finance/presentation/screens/finance_overview_screen.dart';
+import '../../features/finance/presentation/screens/finance_reports_screen.dart';
+import '../../features/finance/presentation/screens/money_owed_detail_screen.dart';
+import '../../features/finance/presentation/screens/money_owed_overview_screen.dart';
 import '../../features/finance/presentation/screens/transaction_detail_screen.dart';
 import '../../features/finance/presentation/screens/transaction_history_screen.dart';
 import '../../features/goals/presentation/screens/add_goal_screen.dart';
@@ -40,6 +50,7 @@ import '../../features/more/presentation/more_screen.dart';
 import '../../features/onboarding/application/onboarding_providers.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/plan/presentation/plan_screen.dart';
+import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/settings/presentation/connected_apps_screen.dart';
 import '../../features/settings/presentation/integration_diagnostics_screen.dart';
@@ -58,7 +69,11 @@ import '../../features/trust/presentation/privacy/export_screen.dart';
 import '../../features/trust/presentation/privacy/privacy_data_center_screen.dart';
 import '../../features/trust/presentation/security/security_screen.dart';
 import '../../features/trust/presentation/support/help_support_screen.dart';
-import '../../features/wardrobe/presentation/wardrobe_placeholder_screen.dart';
+import '../../features/wardrobe/presentation/screens/wardrobe_flow_screens.dart';
+import '../../features/wardrobe/presentation/screens/wardrobe_item_form_screen.dart';
+import '../../features/wardrobe/presentation/screens/wardrobe_items_screen.dart';
+import '../../features/wardrobe/presentation/screens/wardrobe_overview_screen.dart';
+import '../../features/wardrobe/presentation/screens/wardrobe_settings_screen.dart';
 import '../../core/config/release_capabilities.dart';
 import '../../core/widgets/coming_soon_view.dart';
 import 'route_names.dart';
@@ -111,7 +126,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (!capabilities.coachPreview && path == RoutePaths.coach) {
         return RoutePaths.today;
       }
-      if (!capabilities.wardrobe && path == RoutePaths.wardrobe) {
+      if (!capabilities.wardrobe &&
+          (path == RoutePaths.wardrobe ||
+              path.startsWith('/wardrobe/') ||
+              path == RoutePaths.wardrobeSettings)) {
         return RoutePaths.today;
       }
       if (!capabilities.body && path == RoutePaths.body) {
@@ -291,6 +309,72 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.financeBudgets,
+        name: RouteNames.financeBudgets,
+        builder: (context, state) => const BudgetsOverviewScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.addBudget,
+        name: RouteNames.addBudget,
+        builder: (context, state) => const AddBudgetScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.budgetDetail,
+        name: RouteNames.budgetDetail,
+        builder: (context, state) =>
+            BudgetDetailScreen(budgetId: state.pathParameters['budgetId']!),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.editBudget,
+        name: RouteNames.editBudget,
+        builder: (context, state) =>
+            EditBudgetScreen(budgetId: state.pathParameters['budgetId']!),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.financeReports,
+        name: RouteNames.financeReports,
+        builder: (context, state) => const FinanceReportsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.financeCategories,
+        name: RouteNames.financeCategories,
+        builder: (context, state) => const FinanceCategoriesScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.financeMoneyOwed,
+        name: RouteNames.financeMoneyOwed,
+        builder: (context, state) => const MoneyOwedOverviewScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.addMoneyOwed,
+        name: RouteNames.addMoneyOwed,
+        builder: (context, state) => const AddMoneyOwedScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.moneyOwedDetail,
+        name: RouteNames.moneyOwedDetail,
+        builder: (context, state) => MoneyOwedDetailScreen(
+          positionId: state.pathParameters['positionId']!,
+        ),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.editMoneyOwed,
+        name: RouteNames.editMoneyOwed,
+        builder: (context, state) => EditMoneyOwedScreen(
+          positionId: state.pathParameters['positionId']!,
+        ),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
         path: RoutePaths.calendar,
         name: RouteNames.calendar,
         builder: (context, state) => const CalendarOverviewScreen(),
@@ -392,7 +476,80 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         path: RoutePaths.wardrobe,
         name: RouteNames.wardrobe,
-        builder: (context, state) => const WardrobePlaceholderScreen(),
+        builder: (context, state) => const WardrobeOverviewScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.wardrobeItems,
+        name: RouteNames.wardrobeItems,
+        builder: (context, state) => const WardrobeItemsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.addWardrobeItem,
+        name: RouteNames.addWardrobeItem,
+        builder: (context, state) => const AddWardrobeItemScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.wardrobeItemDetail,
+        name: RouteNames.wardrobeItemDetail,
+        builder: (context, state) =>
+            WardrobeItemDetailScreen(itemId: state.pathParameters['itemId']!),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.editWardrobeItem,
+        name: RouteNames.editWardrobeItem,
+        builder: (context, state) =>
+            EditWardrobeItemScreen(itemId: state.pathParameters['itemId']!),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.wardrobeOutfits,
+        name: RouteNames.wardrobeOutfits,
+        builder: (context, state) => const OutfitsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.addOutfit,
+        name: RouteNames.addOutfit,
+        builder: (context, state) => const OutfitFormScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.outfitDetail,
+        name: RouteNames.outfitDetail,
+        builder: (context, state) =>
+            OutfitDetailScreen(outfitId: state.pathParameters['outfitId']!),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.editOutfit,
+        name: RouteNames.editOutfit,
+        builder: (context, state) =>
+            OutfitFormScreen(outfitId: state.pathParameters['outfitId']),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.wardrobeSuggestions,
+        name: RouteNames.wardrobeSuggestions,
+        builder: (context, state) => const OutfitSuggestionsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.wardrobePlanner,
+        name: RouteNames.wardrobePlanner,
+        builder: (context, state) => OutfitPlannerScreen(
+          outfitId: state.uri.queryParameters['outfitId'],
+          eventId: state.uri.queryParameters['eventId'],
+        ),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.wardrobeHistory,
+        name: RouteNames.wardrobeHistory,
+        builder: (context, state) => const WardrobeHistoryScreen(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
@@ -405,6 +562,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RoutePaths.settings,
         name: RouteNames.settings,
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.wardrobeSettings,
+        name: RouteNames.wardrobeSettings,
+        builder: (context, state) => const WardrobeSettingsScreen(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
@@ -430,6 +593,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RoutePaths.profile,
         name: RouteNames.profile,
         builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: RoutePaths.editProfile,
+        name: RouteNames.editProfile,
+        builder: (context, state) => const EditProfileScreen(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

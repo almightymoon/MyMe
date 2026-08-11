@@ -4,6 +4,7 @@ class UserProfile {
     required this.displayName,
     required this.fullName,
     required this.initials,
+    this.avatarId,
     this.tagline,
     this.email,
   });
@@ -12,6 +13,7 @@ class UserProfile {
   final String displayName;
   final String fullName;
   final String initials;
+  final String? avatarId;
   final String? tagline;
   final String? email;
 
@@ -20,6 +22,7 @@ class UserProfile {
     displayName: 'Friend',
     fullName: 'Guest',
     initials: '?',
+    avatarId: null,
     tagline: null,
     email: null,
   );

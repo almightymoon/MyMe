@@ -14,6 +14,7 @@ import '../../../core/application/providers/app_info_providers.dart';
 import '../../../core/config/release_capabilities.dart';
 import '../../trust/domain/entities/sidebar_destination.dart';
 import '../../user/application/providers/user_providers.dart';
+import '../../user/presentation/widgets/profile_avatar_view.dart';
 import 'sidebar/sidebar_account_header.dart';
 import 'sidebar/sidebar_destinations.dart';
 import 'sidebar/sidebar_footer.dart';
@@ -89,6 +90,10 @@ class MemyDrawer extends ConsumerWidget {
               SidebarAccountHeader(
                 displayName: name,
                 emailLabel: emailLabel,
+                avatar: ProfileAvatarView(
+                  avatarId: ref.watch(selectedAvatarIdProvider),
+                  size: 52,
+                ),
                 onViewProfile: () {
                   Navigator.of(context).pop();
                   context.push(RoutePaths.profile);

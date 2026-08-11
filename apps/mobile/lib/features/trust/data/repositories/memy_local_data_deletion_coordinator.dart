@@ -14,6 +14,7 @@ import '../../../goals/domain/repositories/goal_repository.dart';
 import '../../../habits/data/repositories/fake_habit_repository.dart';
 import '../../../habits/data/repositories/local_habit_repository.dart';
 import '../../../habits/domain/repositories/habit_repository.dart';
+import '../../../wardrobe/domain/repositories/wardrobe_repository.dart';
 import '../../../health/domain/repositories/health_repository.dart';
 import '../../domain/entities/deletion_scope.dart';
 import '../../domain/services/local_data_deletion_coordinator.dart';
@@ -26,6 +27,7 @@ class MemyLocalDataDeletionCoordinator implements LocalDataDeletionCoordinator {
     this.goalRepository,
     this.financeRepository,
     this.habitRepository,
+    this.wardrobeRepository,
     this.calendarRepository,
     this.healthRepository,
     this.prefs,
@@ -35,6 +37,7 @@ class MemyLocalDataDeletionCoordinator implements LocalDataDeletionCoordinator {
   final GoalRepository? goalRepository;
   final FinanceRepository? financeRepository;
   final HabitRepository? habitRepository;
+  final WardrobeRepository? wardrobeRepository;
   final CalendarRepository? calendarRepository;
   final HealthRepository? healthRepository;
   final SharedPreferences? prefs;
@@ -112,15 +115,28 @@ class MemyLocalDataDeletionCoordinator implements LocalDataDeletionCoordinator {
               scope: DeletionScope.finance,
               label: 'Finance',
               whatWillBeDeleted:
-                  'Transactions on this device; custom categories reset '
-                  'to seed defaults',
-              whatWillRemain: 'Seed finance categories only',
+                  'Transactions, budgets, and money-owed entries on this '
+                  'device; custom categories reset to built-in defaults',
+              whatWillRemain: 'Built-in finance categories only',
               estimatedCount: count,
             ),
           );
           whatDeleted.add(
-            'Finance transactions (categories reset to defaults)',
+            'Finance transactions, budgets, and money owed (categories reset to defaults)',
           );
+        case DeletionScope.wardrobe:
+          final count = await _estimateWardrobe();
+          steps.add(
+            DeletionStep(
+              scope: DeletionScope.wardrobe,
+              label: 'Wardrobe',
+              whatWillBeDeleted:
+                  'Items, outfits, plans, wear history, and local photos',
+              whatWillRemain: 'Nothing Wardrobe-related remains locally',
+              estimatedCount: count,
+            ),
+          );
+          whatDeleted.add('Wardrobe metadata and local photos');
         case DeletionScope.habits:
           final count = await _estimateHabits();
           steps.add(
@@ -379,6 +395,7 @@ class MemyLocalDataDeletionCoordinator implements LocalDataDeletionCoordinator {
     return {
       DeletionScope.goals,
       DeletionScope.finance,
+      DeletionScope.wardrobe,
       DeletionScope.habits,
       DeletionScope.calendarImportedCache,
       DeletionScope.calendarMeMyLocalRecords,
@@ -396,6 +413,8 @@ class MemyLocalDataDeletionCoordinator implements LocalDataDeletionCoordinator {
         return _clearGoals();
       case DeletionScope.finance:
         return _clearFinance();
+      case DeletionScope.wardrobe:
+        return _clearWardrobe();
       case DeletionScope.habits:
         return _clearHabits();
       case DeletionScope.calendarCache:
@@ -439,7 +458,10 @@ class MemyLocalDataDeletionCoordinator implements LocalDataDeletionCoordinator {
     final repo = financeRepository;
     if (repo == null) return 0;
     try {
-      return (await repo.getTransactions()).length;
+      final txs = await repo.getTransactions();
+      final budgets = await repo.getBudgets();
+      final positions = await repo.getMoneyPositions();
+      return txs.length + budgets.length + positions.length;
     } catch (_) {
       return 0;
     }
@@ -480,16 +502,35 @@ class MemyLocalDataDeletionCoordinator implements LocalDataDeletionCoordinator {
   Future<int> _clearFinance() async {
     final repo = financeRepository;
     if (repo is LocalFinanceRepository) {
-      final before = (await repo.getTransactions()).length;
+      final before = await _estimateFinance();
       await repo.clearAllLocalData();
       return before;
     }
     if (repo is FakeFinanceRepository) {
-      final before = (await repo.getTransactions()).length;
+      final before = await _estimateFinance();
       await repo.clearAllLocalData();
       return before;
     }
     throw StateError('Finance repository unavailable or not clearable');
+  }
+
+  Future<int> _estimateWardrobe() async {
+    final repo = wardrobeRepository;
+    if (repo == null) return 0;
+    try {
+      return await repo.countExportableRecords();
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  Future<int> _clearWardrobe() async {
+    final repo = wardrobeRepository;
+    if (repo == null) {
+      throw StateError('Wardrobe repository unavailable');
+    }
+    final result = await repo.deleteLocalRecords();
+    return result.records;
   }
 
   Future<int> _clearHabits() async {

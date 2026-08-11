@@ -73,6 +73,7 @@ void main() {
             ),
           ),
           appVersionProvider.overrideWith((ref) async => '1.0.0'),
+          selectedAvatarIdProvider.overrideWithValue('ember'),
         ],
         child: MaterialApp.router(
           theme: ThemeData(
@@ -143,6 +144,7 @@ void main() {
         overrides: [
           userProfileProvider.overrideWith((ref) async => UserProfile.empty),
           appVersionProvider.overrideWith((ref) async => '9.9.9'),
+          selectedAvatarIdProvider.overrideWithValue('ember'),
         ],
         child: MaterialApp.router(routerConfig: router),
       ),

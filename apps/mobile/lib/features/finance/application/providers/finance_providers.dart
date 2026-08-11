@@ -5,11 +5,16 @@ import '../../../../core/config/environment_config.dart';
 import '../../data/repositories/fake_finance_repository.dart';
 import '../../data/repositories/local_finance_repository.dart';
 import '../../data/seed/finance_seed.dart';
+import '../../../../core/domain/value_objects/year_month.dart';
+import '../../domain/entities/finance_budget.dart';
 import '../../domain/entities/finance_category.dart';
 import '../../domain/entities/finance_enums.dart';
+import '../../domain/entities/finance_money_position.dart';
+import '../../domain/entities/finance_period_report.dart';
 import '../../domain/entities/finance_summary.dart';
 import '../../domain/entities/finance_transaction.dart';
 import '../../domain/repositories/finance_repository.dart';
+import '../../domain/services/finance_report_service.dart';
 import '../../domain/services/finance_summary_service.dart';
 
 /// Override in tests to force `fake` / `local` without dart-defines.
@@ -19,6 +24,12 @@ final financeDataSourceProvider = Provider<FinanceDataSource>((ref) {
 
 final financeSummaryServiceProvider = Provider<FinanceSummaryService>((ref) {
   return const FinanceSummaryService();
+});
+
+final financeReportServiceProvider = Provider<FinanceReportService>((ref) {
+  return FinanceReportService(
+    summaryService: ref.watch(financeSummaryServiceProvider),
+  );
 });
 
 final localFinanceRepositoryProvider = Provider<LocalFinanceRepository>((ref) {
@@ -59,14 +70,12 @@ final financePeriodProvider = StateProvider<FinancePeriod>((ref) {
 });
 
 final financeTransactionsProvider =
-    StreamProvider.autoDispose<List<FinanceTransaction>>((ref) {
-      return ref.watch(financeRepositoryProvider).watchTransactions();
+    FutureProvider.autoDispose<List<FinanceTransaction>>((ref) {
+      return ref.watch(financeRepositoryProvider).getTransactions();
     });
 
 final financeCategoriesProvider =
     FutureProvider.autoDispose<List<FinanceCategory>>((ref) {
-      // Re-read when transactions change so category lookups stay fresh after seed.
-      ref.watch(financeTransactionsProvider);
       return ref.watch(financeRepositoryProvider).getCategories();
     });
 
@@ -145,6 +154,146 @@ final todayFinanceSummaryProvider =
           transactions: txsAsync.requireValue,
           categories: catsAsync.requireValue,
           period: FinancePeriod.thisMonth,
+          currencyCode: FinanceSeed.baseCurrencyCode,
+        ),
+      );
+    });
+
+final financeBudgetsProvider = FutureProvider.autoDispose<List<FinanceBudget>>((
+  ref,
+) {
+  return ref.watch(financeRepositoryProvider).getBudgets();
+});
+
+final financeBudgetMonthProvider = StateProvider<YearMonth>((ref) {
+  return YearMonth.fromDateTime(DateTime.now());
+});
+
+final financeBudgetsForSelectedMonthProvider =
+    Provider.autoDispose<AsyncValue<List<FinanceBudgetProgress>>>((ref) {
+      final month = ref.watch(financeBudgetMonthProvider);
+      final budgetsAsync = ref.watch(financeBudgetsProvider);
+      final txsAsync = ref.watch(financeTransactionsProvider);
+      final report = ref.watch(financeReportServiceProvider);
+      if (budgetsAsync.isLoading || txsAsync.isLoading) {
+        return const AsyncValue.loading();
+      }
+      if (budgetsAsync.hasError) {
+        return AsyncValue.error(
+          budgetsAsync.error!,
+          budgetsAsync.stackTrace ?? StackTrace.current,
+        );
+      }
+      final txs = txsAsync.valueOrNull ?? const <FinanceTransaction>[];
+      final budgets = (budgetsAsync.valueOrNull ?? const <FinanceBudget>[])
+          .where((b) => !b.isArchived && b.month == month);
+      return AsyncValue.data([
+        for (final budget in budgets)
+          FinanceBudgetProgress(
+            budget: budget,
+            spentMinor: report.spentForBudget(
+              budget: budget,
+              transactions: txs,
+              currencyCode: FinanceSeed.baseCurrencyCode,
+            ),
+          ),
+      ]);
+    });
+
+final todayFinanceBudgetProgressProvider =
+    Provider.autoDispose<AsyncValue<FinanceBudgetProgress?>>((ref) {
+      final month = YearMonth.fromDateTime(DateTime.now());
+      final budgetsAsync = ref.watch(financeBudgetsProvider);
+      final txsAsync = ref.watch(financeTransactionsProvider);
+      final report = ref.watch(financeReportServiceProvider);
+      if (budgetsAsync.isLoading || txsAsync.isLoading) {
+        return const AsyncValue.loading();
+      }
+      if (budgetsAsync.hasError) {
+        return AsyncValue.error(
+          budgetsAsync.error!,
+          budgetsAsync.stackTrace ?? StackTrace.current,
+        );
+      }
+      final txs = txsAsync.valueOrNull ?? const <FinanceTransaction>[];
+      final budgets = budgetsAsync.valueOrNull ?? const <FinanceBudget>[];
+      FinanceBudget? overall;
+      for (final budget in budgets) {
+        if (!budget.isArchived && budget.month == month && budget.isOverall) {
+          overall = budget;
+          break;
+        }
+      }
+      if (overall == null) return const AsyncValue.data(null);
+      return AsyncValue.data(
+        FinanceBudgetProgress(
+          budget: overall,
+          spentMinor: report.spentForBudget(
+            budget: overall,
+            transactions: txs,
+            currencyCode: FinanceSeed.baseCurrencyCode,
+          ),
+        ),
+      );
+    });
+
+final financeBudgetByIdProvider = Provider.autoDispose
+    .family<AsyncValue<FinanceBudget?>, String>((ref, id) {
+      return ref.watch(financeBudgetsProvider).whenData((list) {
+        for (final budget in list) {
+          if (budget.id == id) return budget;
+        }
+        return null;
+      });
+    });
+
+final financeMoneyPositionsProvider =
+    FutureProvider.autoDispose<List<FinanceMoneyPosition>>((ref) {
+      return ref.watch(financeRepositoryProvider).getMoneyPositions();
+    });
+
+final financeMoneyPositionByIdProvider = Provider.autoDispose
+    .family<AsyncValue<FinanceMoneyPosition?>, String>((ref, id) {
+      return ref.watch(financeMoneyPositionsProvider).whenData((list) {
+        for (final position in list) {
+          if (position.id == id) return position;
+        }
+        return null;
+      });
+    });
+
+final financeMoneyOwedTotalsProvider =
+    Provider.autoDispose<AsyncValue<MoneyOwedTotals>>((ref) {
+      return ref.watch(financeMoneyPositionsProvider).whenData((list) {
+        return MoneyOwedTotals.fromPositions(
+          list,
+          currencyCode: FinanceSeed.baseCurrencyCode,
+        );
+      });
+    });
+
+final financePeriodReportProvider =
+    Provider.autoDispose<AsyncValue<FinancePeriodReport>>((ref) {
+      final period = ref.watch(financePeriodProvider);
+      final txsAsync = ref.watch(financeTransactionsProvider);
+      final catsAsync = ref.watch(financeCategoriesProvider);
+      final budgetsAsync = ref.watch(financeBudgetsProvider);
+      final report = ref.watch(financeReportServiceProvider);
+      if (txsAsync.isLoading || catsAsync.isLoading || budgetsAsync.isLoading) {
+        return const AsyncValue.loading();
+      }
+      if (txsAsync.hasError) {
+        return AsyncValue.error(
+          txsAsync.error!,
+          txsAsync.stackTrace ?? StackTrace.current,
+        );
+      }
+      return AsyncValue.data(
+        report.build(
+          transactions: txsAsync.requireValue,
+          categories: catsAsync.valueOrNull ?? const [],
+          budgets: budgetsAsync.valueOrNull ?? const [],
+          period: period,
           currencyCode: FinanceSeed.baseCurrencyCode,
         ),
       );

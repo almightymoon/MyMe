@@ -315,6 +315,14 @@ void main() {
         recoveryNeeded: false,
         backupAvailable: false,
       ),
+      wardrobe: const SupportWardrobeDiagnostics(
+        dataSource: 'local',
+        schemaVersion: 1,
+        itemCount: 0,
+        outfitCount: 0,
+        planCount: 0,
+        imageStorageBytes: 0,
+      ),
     );
 
     expectNoForbiddenFragments(report.toJson());

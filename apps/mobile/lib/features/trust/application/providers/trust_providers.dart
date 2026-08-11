@@ -4,10 +4,14 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/config/environment_config.dart';
+import '../../../onboarding/data/onboarding_preferences.dart';
+import '../../../../core/domain/value_objects/local_date.dart';
 import '../../../calendar/application/providers/calendar_providers.dart';
 import '../../../finance/application/providers/finance_providers.dart';
 import '../../../goals/application/providers/goal_providers.dart';
 import '../../../habits/application/providers/habit_providers.dart';
+import '../../../wardrobe/application/providers/wardrobe_providers.dart';
+import '../../../wardrobe/data/repositories/local_wardrobe_repository.dart';
 import '../../../health/application/providers/health_providers.dart';
 import '../../../settings/application/providers/diagnostics_providers.dart';
 import '../../data/repositories/asset_trust_content_repository.dart';
@@ -88,9 +92,14 @@ final localDataExportServiceProvider = Provider<LocalDataExportService>((ref) {
     goalRepository: ref.watch(goalRepositoryProvider),
     financeRepository: ref.watch(financeRepositoryProvider),
     habitRepository: ref.watch(habitRepositoryProvider),
+    wardrobeRepository: ref.watch(wardrobeRepositoryProvider),
     calendarRepository: ref.watch(calendarRepositoryProvider),
     healthRepository: ref.watch(healthRepositoryProvider),
     preferencesReader: () async => AppearancePreferences.exportMap(prefs),
+    profileReader: () async => {
+      'displayName': OnboardingPreferences.readDisplayName(prefs),
+      'avatarId': OnboardingPreferences.readAvatarId(prefs),
+    },
     appVersionProvider: () => packageInfo.asData?.value.version ?? 'unknown',
     buildNumberProvider: () =>
         packageInfo.asData?.value.buildNumber ?? 'unknown',
@@ -105,6 +114,7 @@ final localDataDeletionCoordinatorProvider =
         goalRepository: ref.watch(goalRepositoryProvider),
         financeRepository: ref.watch(financeRepositoryProvider),
         habitRepository: ref.watch(habitRepositoryProvider),
+        wardrobeRepository: ref.watch(wardrobeRepositoryProvider),
         calendarRepository: ref.watch(calendarRepositoryProvider),
         healthRepository: ref.watch(healthRepositoryProvider),
         prefs: ref.watch(sharedPreferencesProvider),
@@ -116,7 +126,35 @@ final supportReportBuilderProvider = Provider<SupportReportBuilder>((ref) {
     diagnosticsProvider: () async {
       try {
         final report = await ref.read(integrationDiagnosticsProvider.future);
-        return SupportDiagnosticsReport.fromIntegration(report: report);
+        try {
+          final wardrobeRepo = ref.read(wardrobeRepositoryProvider);
+          final store = ref.read(wardrobeImageStoreProvider);
+          final items = await wardrobeRepo.getItems();
+          final outfits = await wardrobeRepo.getOutfits();
+          final plans = await wardrobeRepo.getPlansForDateRange(
+            start: LocalDate(2000, 1, 1),
+            endInclusive: LocalDate(2100, 12, 31),
+          );
+          final bytes = await store.calculateStorageUsage();
+          return SupportDiagnosticsReport.fromIntegration(
+            report: report,
+            wardrobe: SupportWardrobeDiagnostics(
+              dataSource: 'local',
+              schemaVersion: LocalWardrobeRepository.schemaVersion,
+              itemCount: items.length,
+              outfitCount: outfits.length,
+              planCount: plans.length,
+              imageStorageBytes: bytes,
+            ),
+          );
+        } catch (_) {
+          return SupportDiagnosticsReport.fromIntegration(
+            report: report,
+            wardrobe: const SupportWardrobeDiagnostics(
+              lastErrorCode: 'persistenceRecoveryNeeded',
+            ),
+          );
+        }
       } catch (_) {
         return null;
       }

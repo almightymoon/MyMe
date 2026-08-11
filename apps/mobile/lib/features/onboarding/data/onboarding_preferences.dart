@@ -1,5 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../user/domain/entities/profile_avatar.dart';
+
 /// Unit system captured during first-run setup.
 enum MeasurementUnits { metric, imperial }
 
@@ -14,6 +16,7 @@ enum WeekStart { monday, sunday }
 abstract final class OnboardingPreferences {
   static const String completeKey = 'memy_onboarding_complete_v1';
   static const String displayNameKey = 'memy_display_name_v1';
+  static const String avatarIdKey = 'memy_avatar_id_v1';
   static const String baseCurrencyKey = 'memy_base_currency_v1';
   static const String unitsKey = 'memy_units_v1';
   static const String weekStartKey = 'memy_week_start_v1';
@@ -35,6 +38,7 @@ abstract final class OnboardingPreferences {
   static const List<String> allKeys = [
     completeKey,
     displayNameKey,
+    avatarIdKey,
     baseCurrencyKey,
     unitsKey,
     weekStartKey,
@@ -74,6 +78,17 @@ abstract final class OnboardingPreferences {
       return;
     }
     await prefs.setString(displayNameKey, trimmed);
+  }
+
+  static String readAvatarId(SharedPreferences prefs) {
+    return ProfileAvatarCatalog.resolve(prefs.getString(avatarIdKey));
+  }
+
+  static Future<void> writeAvatarId(
+    SharedPreferences prefs,
+    String value,
+  ) async {
+    await prefs.setString(avatarIdKey, ProfileAvatarCatalog.resolve(value));
   }
 
   static String readBaseCurrency(SharedPreferences prefs) {
@@ -138,6 +153,7 @@ abstract final class OnboardingPreferences {
     return {
       'onboardingComplete': isComplete(prefs),
       'displayName': readDisplayName(prefs),
+      'avatarId': readAvatarId(prefs),
       'baseCurrency': readBaseCurrency(prefs),
       'units': readUnits(prefs).name,
       'weekStart': readWeekStart(prefs).name,

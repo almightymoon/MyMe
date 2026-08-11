@@ -24,8 +24,8 @@ Updated with the final application-completion honesty pass.
 
 | Surface | Verdict | Notes |
 |---|---|---|
-| Today | Live | Greeting from onboarding display name; modules from live providers; no Life Score / fake focus in production |
-| Plan | Live | Goals/Habits/Finance/Health/Calendar from live providers; Wardrobe/Body/Nutrition/Coach strip hidden |
+| Today | Live | Greeting from onboarding display name; modules from live providers; glance weather from device location + Open-Meteo; no Life Score / fake focus in production |
+| Plan | Live | Goals/Habits/Finance/Health/Calendar/Wardrobe from live providers; Body/Nutrition/Coach strip hidden |
 | Quick Add FAB | Live | Single sheet; no stacking |
 | More (Insights) | Live shell | Honest weekly summary copy; no fabricated PKR/goals track tiles as live metrics |
 | Coach | Removed | Hidden; `/coach` → Today |
@@ -43,7 +43,7 @@ Updated with the final application-completion honesty pass.
 Profile, Goals, Finance, Habits, Calendar, Health, Exercise, Connected Apps,
 Appearance, Settings, Privacy, Security, Help, Legal, About — **Live**.
 
-Coach, Wardrobe, Body, Notifications, Sign Out — **Removed**.
+Coach, Body, Notifications, Sign Out — **Removed**. Wardrobe is production-visible.
 
 ## Exercise
 
@@ -73,7 +73,7 @@ Integration Lab — **Removed** in production.
 | Control | Resolution |
 |---|---|
 | Plan “95 bpm” / “Team Meeting” hardcodes | Replaced with `todayHealthSummaryProvider` / `todayCalendarEventsProvider` |
-| Plan Wardrobe / Nutrition / Body / Coach strip in production | Hidden via `ReleaseCapabilities` |
+| Plan Nutrition / Body / Coach strip in production | Hidden via `ReleaseCapabilities` |
 | Today greeting “Emma” from `FakeTodayRepository` | `displayNameProvider` + local onboarding prefs; production base summary has no seed focus |
 | Production Start Workout | Hidden; session route redirects to Exercise |
 | `/settings/notifications` deep link | Redirects to Settings |

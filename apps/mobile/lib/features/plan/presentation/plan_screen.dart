@@ -22,6 +22,7 @@ import '../../health/application/providers/health_providers.dart';
 import '../../health/domain/entities/daily_health_summary.dart';
 import '../../shell/presentation/memy_bottom_navigation.dart';
 import '../../today/application/providers/today_providers.dart';
+import '../../wardrobe/application/providers/wardrobe_providers.dart';
 
 class PlanScreen extends ConsumerWidget {
   const PlanScreen({super.key});
@@ -43,6 +44,7 @@ class PlanScreen extends ConsumerWidget {
               .round();
 
     final financeAsync = ref.watch(todayFinanceSummaryProvider);
+    final financeBudgetAsync = ref.watch(todayFinanceBudgetProgressProvider);
     final habitsOverview = ref.watch(habitsOverviewProvider).valueOrNull;
     final healthAsync = ref.watch(todayHealthSummaryProvider);
     final calendarAsync = ref.watch(todayCalendarEventsProvider);
@@ -86,14 +88,21 @@ class PlanScreen extends ConsumerWidget {
               subColor: AppColors.finance,
             );
           }
+          final budget = financeBudgetAsync.valueOrNull;
+          final spentToday =
+              'Today ${MoneyFormat.formatMinor(summary.spentTodayMinor, summary.currencyCode)}';
+          final budgetLine = budget == null
+              ? spentToday
+              : budget.isOverspent
+              ? 'Budget overspent'
+              : 'Budget remaining ${MoneyFormat.formatSignedMinor(budget.remainingSigned, budget.budget.currencyCode)}';
           return _StaticModuleCopy(
             stat: 'Balance',
             big: MoneyFormat.formatSignedMinor(
               summary.currentBalanceMinor,
               summary.currencyCode,
             ),
-            sub:
-                'Today ${MoneyFormat.formatMinor(summary.spentTodayMinor, summary.currencyCode)}',
+            sub: budgetLine,
             subColor: AppColors.finance,
           );
         },
@@ -120,26 +129,26 @@ class PlanScreen extends ConsumerWidget {
           title: 'Wardrobe',
           imageAsset: 'assets/images/modules/mod-wardrobe.png',
           path: RoutePaths.wardrobe,
-          builder: (context) => const _StaticModuleCopy(
-            stat: 'Preview',
-            big: 'Not shipping',
-            sub: 'Internal only',
-            subColor: AppColors.ember,
-            bigSmall: true,
-          ),
-        ),
-      if (capabilities.nutritionQuickAdd)
-        _DashModule(
-          keyName: 'dashboard_module_nutrition',
-          title: 'Nutrition',
-          imageAsset: 'assets/images/modules/mod-nutrition.png',
-          path: RoutePaths.nutritionComingSoon,
-          builder: (context) => const _StaticModuleCopy(
-            stat: 'Preview',
-            big: 'Coming later',
-            sub: 'Not in v1',
-            subColor: AppColors.ember,
-          ),
+          builder: (context) {
+            final plans =
+                ref.watch(upcomingOutfitPlansProvider).valueOrNull ?? const [];
+            if (plans.isEmpty) {
+              return const _StaticModuleCopy(
+                stat: 'Wardrobe',
+                big: 'Plan',
+                sub: 'Open wardrobe',
+                subColor: AppColors.ember,
+                bigSmall: true,
+              );
+            }
+            return _StaticModuleCopy(
+              stat: 'Next look',
+              big: plans.first.localDate.toIso8601String(),
+              sub: plans.first.occasion.label,
+              subColor: AppColors.ember,
+              bigSmall: true,
+            );
+          },
         ),
       if (capabilities.body)
         _DashModule(

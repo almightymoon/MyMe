@@ -19,6 +19,7 @@ import '../../../goals/domain/repositories/goal_repository.dart';
 import '../../../habits/data/repositories/fake_habit_repository.dart';
 import '../../../habits/data/repositories/local_habit_repository.dart';
 import '../../../habits/domain/repositories/habit_repository.dart';
+import '../../../wardrobe/domain/repositories/wardrobe_repository.dart';
 import '../../../health/domain/repositories/health_repository.dart';
 import '../../domain/entities/data_catalog.dart';
 import '../../domain/entities/export_request.dart';
@@ -34,9 +35,11 @@ class MemyLocalDataExportService implements LocalDataExportService {
     this.goalRepository,
     this.financeRepository,
     this.habitRepository,
+    this.wardrobeRepository,
     this.calendarRepository,
     this.healthRepository,
     this.preferencesReader,
+    this.profileReader,
     this.tempDirectoryOverride,
     this.clock,
     this.appVersionProvider,
@@ -53,11 +56,15 @@ class MemyLocalDataExportService implements LocalDataExportService {
   final GoalRepository? goalRepository;
   final FinanceRepository? financeRepository;
   final HabitRepository? habitRepository;
+  final WardrobeRepository? wardrobeRepository;
   final CalendarRepository? calendarRepository;
   final HealthRepository? healthRepository;
 
   /// Optional map of non-secret preference keys → values.
   final Future<Map<String, Object?>> Function()? preferencesReader;
+
+  /// Display name and avatar id only — never a photo.
+  final Future<Map<String, Object?>> Function()? profileReader;
 
   /// Tests can inject a temp directory to avoid path_provider plugins.
   final Future<Directory> Function()? tempDirectoryOverride;
@@ -89,6 +96,8 @@ class MemyLocalDataExportService implements LocalDataExportService {
             modules['finance'] = await _exportFinance(warnings, recordCounts);
           case DataModule.habits:
             modules['habits'] = await _exportHabits(warnings, recordCounts);
+          case DataModule.wardrobe:
+            modules['wardrobe'] = await _exportWardrobe(warnings, recordCounts);
           case DataModule.calendar:
             modules['calendar'] = await _exportCalendar(
               request,
@@ -107,11 +116,7 @@ class MemyLocalDataExportService implements LocalDataExportService {
               recordCounts,
             );
           case DataModule.profile:
-            modules['profile'] = {
-              'note': 'Profile export is summary-only / planned in this build.',
-            };
-            recordCounts['profile'] = 0;
-            warnings.add('Profile export is limited in this build.');
+            modules['profile'] = await _exportProfile(recordCounts);
           case DataModule.diagnostics:
             modules['diagnostics'] = {
               'note':
@@ -235,12 +240,37 @@ class MemyLocalDataExportService implements LocalDataExportService {
     }
     final txs = await repo.getTransactions();
     final cats = await repo.getCategories();
-    recordCounts['finance'] = txs.length;
+    final budgets = await repo.getBudgets();
+    final positions = await repo.getMoneyPositions();
+    recordCounts['finance'] =
+        txs.length + cats.length + budgets.length + positions.length;
     return {
       'transactionCount': txs.length,
+      'budgetCount': budgets.length,
+      'moneyPositionCount': positions.length,
       'categories': cats.map((c) => c.toJson()).toList(growable: false),
       'transactions': txs.map((t) => t.toJson()).toList(growable: false),
+      'budgets': budgets.map((b) => b.toJson()).toList(growable: false),
+      'moneyPositions': positions
+          .map((p) => p.toJson())
+          .toList(growable: false),
     };
+  }
+
+  Future<Object?> _exportWardrobe(
+    List<String> warnings,
+    Map<String, int> recordCounts,
+  ) async {
+    final repo = wardrobeRepository;
+    if (repo == null) {
+      warnings.add('Wardrobe repository unavailable.');
+      recordCounts['wardrobe'] = 0;
+      return null;
+    }
+    final payload = await repo.exportLocalRecords();
+    recordCounts['wardrobe'] = await repo.countExportableRecords();
+    warnings.add('Wardrobe image files are not included in this export.');
+    return payload;
   }
 
   Future<Object?> _exportHabits(
@@ -344,6 +374,17 @@ class MemyLocalDataExportService implements LocalDataExportService {
         },
       },
     };
+  }
+
+  Future<Object?> _exportProfile(Map<String, int> recordCounts) async {
+    final reader = profileReader;
+    if (reader == null) {
+      recordCounts['profile'] = 0;
+      return {'displayName': null, 'avatarId': null};
+    }
+    final profile = await reader();
+    recordCounts['profile'] = profile.values.where((v) => v != null).length;
+    return profile;
   }
 
   Future<Object?> _exportPreferences(

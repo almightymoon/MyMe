@@ -8,6 +8,7 @@ class FinanceCategory {
     required this.type,
     required this.iconKey,
     required this.isCustom,
+    this.isArchived = false,
     this.createdAt,
   });
 
@@ -16,7 +17,27 @@ class FinanceCategory {
   final TransactionType type;
   final String iconKey;
   final bool isCustom;
+  final bool isArchived;
   final DateTime? createdAt;
+
+  bool get isBuiltIn => !isCustom;
+
+  FinanceCategory copyWith({
+    String? name,
+    TransactionType? type,
+    String? iconKey,
+    bool? isArchived,
+  }) {
+    return FinanceCategory(
+      id: id,
+      name: name ?? this.name,
+      type: type ?? this.type,
+      iconKey: iconKey ?? this.iconKey,
+      isCustom: isCustom,
+      isArchived: isArchived ?? this.isArchived,
+      createdAt: createdAt,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -24,6 +45,7 @@ class FinanceCategory {
     'type': type.toJson(),
     'iconKey': iconKey,
     'isCustom': isCustom,
+    'isArchived': isArchived,
     'createdAt': createdAt?.toUtc().toIso8601String(),
   };
 
@@ -53,6 +75,7 @@ class FinanceCategory {
         type: type,
         iconKey: iconKey,
         isCustom: isCustom,
+        isArchived: json['isArchived'] == true,
         createdAt: createdAt,
       );
     } catch (_) {

@@ -58,6 +58,7 @@ void main() {
       find.byKey(const Key('onboarding_display_name')),
       'Moon',
     );
+    await tapStep(tester, const Key('profile_avatar_memy_3d_02'));
     await tapStep(tester, const Key('onboarding_preferences_next'));
 
     await tapStep(tester, const Key('onboarding_calendar_skip'));
@@ -67,6 +68,7 @@ void main() {
     expect(find.textContaining('Hi,'), findsOneWidget);
     expect(OnboardingPreferences.isComplete(prefs), isTrue);
     expect(OnboardingPreferences.readDisplayName(prefs), 'Moon');
+    expect(OnboardingPreferences.readAvatarId(prefs), 'memy_3d_02');
     expect(OnboardingPreferences.readBaseCurrency(prefs), 'PKR');
   });
 

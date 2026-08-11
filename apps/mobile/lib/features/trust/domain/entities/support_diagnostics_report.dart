@@ -19,6 +19,7 @@ class SupportDiagnosticsReport {
     required this.healthDataSource,
     required this.calendar,
     required this.health,
+    required this.wardrobe,
   });
 
   final DateTime generatedAtUtc;
@@ -34,9 +35,11 @@ class SupportDiagnosticsReport {
   final String healthDataSource;
   final SupportCalendarDiagnostics calendar;
   final SupportHealthDiagnostics health;
+  final SupportWardrobeDiagnostics wardrobe;
 
   factory SupportDiagnosticsReport.fromIntegration({
     required IntegrationDiagnosticsReport report,
+    SupportWardrobeDiagnostics wardrobe = const SupportWardrobeDiagnostics(),
   }) {
     return SupportDiagnosticsReport(
       generatedAtUtc: report.generatedAtUtc,
@@ -52,6 +55,7 @@ class SupportDiagnosticsReport {
       healthDataSource: EnvironmentConfig.healthDataSource.name,
       calendar: SupportCalendarDiagnostics.fromSection(report.calendar),
       health: SupportHealthDiagnostics.fromSection(report.health),
+      wardrobe: wardrobe,
     );
   }
 
@@ -70,6 +74,37 @@ class SupportDiagnosticsReport {
     'healthDataSource': healthDataSource,
     'calendar': calendar.toJson(),
     'health': health.toJson(),
+    'wardrobe': wardrobe.toJson(),
+  };
+}
+
+class SupportWardrobeDiagnostics {
+  const SupportWardrobeDiagnostics({
+    this.dataSource = 'local',
+    this.schemaVersion = 1,
+    this.itemCount = 0,
+    this.outfitCount = 0,
+    this.planCount = 0,
+    this.imageStorageBytes = 0,
+    this.lastErrorCode,
+  });
+
+  final String dataSource;
+  final int schemaVersion;
+  final int itemCount;
+  final int outfitCount;
+  final int planCount;
+  final int imageStorageBytes;
+  final String? lastErrorCode;
+
+  Map<String, Object?> toJson() => {
+    'dataSource': dataSource,
+    'schemaVersion': schemaVersion,
+    'itemCount': itemCount,
+    'outfitCount': outfitCount,
+    'planCount': planCount,
+    'imageStorageBytes': imageStorageBytes,
+    'lastErrorCode': lastErrorCode,
   };
 }
 

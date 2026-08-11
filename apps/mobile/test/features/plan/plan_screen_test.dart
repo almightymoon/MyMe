@@ -19,7 +19,7 @@ void main() {
     expect(find.byKey(const Key('dashboard_module_health')), findsOneWidget);
     expect(find.byKey(const Key('dashboard_module_calendar')), findsOneWidget);
     expect(find.byKey(const Key('dashboard_module_wardrobe')), findsOneWidget);
-    expect(find.byKey(const Key('dashboard_module_nutrition')), findsOneWidget);
+    expect(find.byKey(const Key('dashboard_module_nutrition')), findsNothing);
     expect(find.byKey(const Key('dashboard_module_body')), findsOneWidget);
     expect(find.byKey(const Key('dashboard_module_insights')), findsOneWidget);
     expect(find.byKey(const Key('dashboard_coach_strip')), findsOneWidget);

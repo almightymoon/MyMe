@@ -41,6 +41,7 @@ class PrivacyDataCatalogService {
     DataModuleId.habits => DataModule.habits,
     DataModuleId.calendar => DataModule.calendar,
     DataModuleId.health => DataModule.health,
+    DataModuleId.wardrobe => DataModule.wardrobe,
     DataModuleId.profile => DataModule.profile,
     DataModuleId.preferences => DataModule.preferences,
     DataModuleId.diagnostics => DataModule.diagnostics,
@@ -53,6 +54,7 @@ class PrivacyDataCatalogService {
         if (d.backendTransfer) DataStorageLocation.memyBackend,
       ],
       DataModuleId.finance ||
+      DataModuleId.wardrobe ||
       DataModuleId.habits ||
       DataModuleId.preferences ||
       DataModuleId.profile ||

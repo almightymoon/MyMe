@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/router/app_navigation.dart';
 import '../../app/theme/app_colors.dart';
+import '../../features/user/application/providers/user_providers.dart';
+import '../../features/user/presentation/widgets/profile_avatar_view.dart';
 
 /// Soft circular menu control (prototype `.icon-circle`).
 ///
@@ -37,13 +40,14 @@ class MemyMenuButton extends StatelessWidget {
 }
 
 /// Circular profile avatar that opens Profile.
-class MemyAvatarButton extends StatelessWidget {
+class MemyAvatarButton extends ConsumerWidget {
   const MemyAvatarButton({super.key, this.size = 44});
 
   final double size;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final avatarId = ref.watch(selectedAvatarIdProvider);
     return Material(
       color: Colors.transparent,
       shape: const CircleBorder(),
@@ -51,25 +55,7 @@ class MemyAvatarButton extends StatelessWidget {
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: () => openMemyProfile(context),
-        child: Ink(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: AppColors.orangeSoft,
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x1A000000),
-                blurRadius: 14,
-                offset: Offset(0, 4),
-              ),
-            ],
-            image: const DecorationImage(
-              image: AssetImage('assets/images/branding/avatar.png'),
-              fit: BoxFit.cover,
-            ),
-          ),
-        ),
+        child: ProfileAvatarView(avatarId: avatarId, size: size),
       ),
     );
   }

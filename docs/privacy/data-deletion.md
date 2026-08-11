@@ -13,7 +13,8 @@
 | Scope | Clears | Leaves |
 |-------|--------|--------|
 | `goals` / `goalsLocalCache` | Local Goals or API Goals cache | Backend Goals when `GOALS_DATA_SOURCE=api` |
-| `finance` | Transactions; categories reset to seed defaults | Seed category catalog |
+| `finance` | Transactions, budgets, and money-owed entries; categories reset to built-ins | Built-in category catalog; no transaction reseed |
+| `wardrobe` | Items, outfits, plans, wear history, private photos | No reseed |
 | `habits` | Habits + check-ins | — |
 | `calendarImportedCache` | Imported external event cache + related links | MeMy-owned events, connection config, device calendars |
 | `calendarMeMyLocalRecords` | MeMy-authored local events + related links | Imported cache, connection config, device calendars |
@@ -22,7 +23,7 @@
 | `healthDerivedCache` | In-memory daily summaries | Connection prefs + platform Health |
 | `healthConnectionConfiguration` | MeMy Health connection prefs (incl. legacy key) + derived cache | HealthKit / Health Connect |
 | `preferences` | Appearance / reduce-motion prefs | Other SharedPreferences keys |
-| `allLocalMeMyData` | Expands to goals, finance, habits, calendar imported + MeMy records + integration state, health derived + connection, preferences | Device calendar events, platform Health, backend Goals |
+| `allLocalMeMyData` | Expands to goals, finance, wardrobe, habits, calendar imported + MeMy records + integration state, health derived + connection, preferences | Device calendar events, platform Health, backend Goals |
 | `calendarDeviceEvents` | **Never** part of global wipe | Separate Calendar path only |
 
 ## Boundaries

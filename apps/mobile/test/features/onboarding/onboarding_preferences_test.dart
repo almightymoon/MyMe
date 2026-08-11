@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:memy/features/goals/data/repositories/local_goal_repository.dart';
 import 'package:memy/features/onboarding/data/onboarding_preferences.dart';
+import 'package:memy/features/user/domain/entities/profile_avatar.dart';
 import 'package:memy/features/trust/domain/services/memy_owned_preference_keys.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -46,6 +47,26 @@ void main() {
     expect(OnboardingPreferences.readWeekStart(prefs), WeekStart.sunday);
     expect(OnboardingPreferences.readTimezone(prefs), 'PKT');
     expect(OnboardingPreferences.readDisplayName(prefs), 'Moon');
+  });
+
+  test('avatar id persists and unknown values fall back', () async {
+    final prefs = await freshPrefs();
+    expect(
+      OnboardingPreferences.readAvatarId(prefs),
+      ProfileAvatarCatalog.defaultId,
+    );
+
+    await OnboardingPreferences.writeAvatarId(prefs, 'sky');
+    expect(OnboardingPreferences.readAvatarId(prefs), 'memy_3d_01');
+
+    await OnboardingPreferences.writeAvatarId(prefs, 'memy_3d_08');
+    expect(OnboardingPreferences.readAvatarId(prefs), 'memy_3d_08');
+
+    await OnboardingPreferences.writeAvatarId(prefs, 'not-a-real-avatar');
+    expect(
+      OnboardingPreferences.readAvatarId(prefs),
+      ProfileAvatarCatalog.defaultId,
+    );
   });
 
   test('blank display name is cleared rather than stored', () async {

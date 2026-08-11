@@ -24,6 +24,7 @@ older than 24 hours are cleaned on app startup.
     "goals": "local|api|fake",
     "finance": "local|fake",
     "habits": "local|fake",
+    "wardrobe": "local",
     "calendar": "fake|system",
     "health": "fake|system"
   },
@@ -36,14 +37,17 @@ older than 24 hours are cleaned on app startup.
 
 ## Included when selected
 - Preferences metadata
+- Profile display name and avatar id (no photo)
 - Goals (API mode: local cache snapshot only, with an explicit warning)
-- Finance transactions (monetary minor units as strings) and categories
+- Finance transactions, categories, budgets, and money-owed entries (monetary minor units as strings)
+- Wardrobe items/outfits/plans/wear metadata (image files not included)
 - Habits and check-ins
 - MeMy-owned calendar events (optional)
 - Calendar / Health connection configuration summaries
 - App metadata
 
 ## Excluded
+- Wardrobe original/thumbnail image files
 - Raw Health samples / values
 - External Calendar titles, notes, locations, attendees (default)
 - Auth secrets, API tokens, passwords

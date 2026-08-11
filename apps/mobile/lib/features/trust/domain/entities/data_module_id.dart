@@ -5,6 +5,7 @@ enum DataModuleId {
   habits,
   calendar,
   health,
+  wardrobe,
   profile,
   preferences,
   diagnostics,

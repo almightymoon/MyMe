@@ -33,6 +33,13 @@ otherwise `context.go('/today')`. Tab branches preserve stack via
 | `/finance/history` | Finance → See All | `TransactionHistoryScreen` | Live — chronological list | Pop → Finance |
 | `/finance/tx/:transactionId` | History / after save | `TransactionDetailScreen` | Live — detail, edit, delete | Pop or go history |
 | `/finance/tx/:transactionId/edit` | Detail → Edit | `EditTransactionScreen` | Live — update + validate | Pop → detail |
+| `/finance/budgets` | Finance → Budgets | `BudgetsOverviewScreen` | Live — monthly limits | Pop → Finance |
+| `/finance/reports` | Finance → Reports | `FinanceReportsScreen` | Live — derived period report | Pop → Finance |
+| `/finance/categories` | Finance → Categories | `FinanceCategoriesScreen` | Live — custom categories | Pop → Finance |
+| `/finance/owed` | Finance → Money owed | `MoneyOwedOverviewScreen` | Live — local money-owed ledger | Pop → Finance |
+| `/finance/owed/new` | Money owed + | `AddMoneyOwedScreen` | Live — create + validate | Pop → previous |
+| `/finance/owed/:positionId` | Money owed row | `MoneyOwedDetailScreen` | Live — payments, edit, delete | Pop or go list |
+| `/finance/owed/:positionId/edit` | Detail → Edit | `EditMoneyOwedScreen` | Live — update + validate | Pop → detail |
 | `/calendar` | Plan → Calendar; Settings → Connections | `CalendarOverviewScreen` | Live — fake/system device calendars | Pop → Plan |
 | `/calendar/new` | Quick Add → Add Event | `AddCalendarEventScreen` | Live — MeMy event + pending push | Pop → previous |
 | `/calendar/connect` | Calendar banner / Connections | `CalendarConnectionScreen` | Live — permission + connect | Pop |
@@ -65,7 +72,11 @@ otherwise `context.go('/today')`. Tab branches preserve stack via
 | `/settings/notifications` | Drawer / Settings | Notifications | Planned (honest) | Pop |
 | `/settings/accessibility` | Drawer / Settings | Appearance | Live — theme System/Light | Pop |
 | `/exercise` | More → Exercise | `ExercisePlaceholderScreen` | Explicit Coming Soon placeholder | Pop → More (or Today) |
-| `/wardrobe` | More → Wardrobe | `WardrobePlaceholderScreen` | Explicit Coming Soon placeholder | Pop → More (or Today) |
+| `/wardrobe` | More → Wardrobe | `WardrobeOverviewScreen` | Live local wardrobe | Pop → More (or Today) |
+| `/wardrobe/items` … `/wardrobe/history` | Wardrobe | Items, outfits, suggestions, planner, history | Live local | Pop |
+| `/settings/wardrobe` | Settings → Wardrobe | `WardrobeSettingsScreen` | Live local prefs + storage | Pop |
+| `/profile` | Avatar / More card / Drawer | `ProfileScreen` | Live local name + avatar | Pop |
+| `/profile/edit` | Profile → Edit | `EditProfileScreen` | Live — name + avatar catalog | Pop → Profile |
 | `/settings` | More → Settings | `SettingsScreen` | Explicit Coming Soon placeholder | Pop → More (or Today) |
 | `/nutrition/coming-soon` | Quick Add → Log Meal | Nutrition Coming Soon view | Explicit labeled placeholder | Pop → previous |
 

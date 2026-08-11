@@ -189,6 +189,8 @@ class TransactionDetailScreen extends ConsumerWidget {
                             await ref
                                 .read(financeRepositoryProvider)
                                 .deleteTransaction(tx.id);
+                            ref.invalidate(financeTransactionsProvider);
+                            ref.invalidate(financeBudgetsProvider);
                             if (!context.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(

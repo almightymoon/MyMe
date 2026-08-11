@@ -16,6 +16,7 @@ import '../../../core/widgets/memy_chrome.dart';
 import '../../shell/presentation/memy_bottom_navigation.dart';
 import '../../user/application/providers/user_providers.dart';
 import '../../user/domain/entities/user_profile.dart';
+import '../../user/presentation/widgets/profile_avatar_view.dart';
 import '../../../app/theme/app_radii.dart';
 
 class MoreScreen extends ConsumerWidget {
@@ -207,6 +208,8 @@ class MoreScreen extends ConsumerWidget {
               ),
               data: (profile) => _ProfileCard(
                 profile: profile,
+                displayName: ref.watch(displayNameProvider),
+                avatarId: ref.watch(selectedAvatarIdProvider),
                 showDemoBadge: capabilities.demoAuth,
               ),
             ),
@@ -328,9 +331,16 @@ const _moduleItems = <_MoreItem>[
 ];
 
 class _ProfileCard extends StatelessWidget {
-  const _ProfileCard({required this.profile, required this.showDemoBadge});
+  const _ProfileCard({
+    required this.profile,
+    required this.displayName,
+    required this.avatarId,
+    required this.showDemoBadge,
+  });
 
   final UserProfile profile;
+  final String displayName;
+  final String avatarId;
   final bool showDemoBadge;
 
   @override
@@ -340,31 +350,13 @@ class _ProfileCard extends StatelessWidget {
       onTap: () => context.push(RoutePaths.profile),
       child: Row(
         children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.orangeSoft,
-              image: const DecorationImage(
-                image: AssetImage('assets/images/branding/avatar.png'),
-                fit: BoxFit.cover,
-              ),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x1A000000),
-                  blurRadius: 12,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-          ),
+          ProfileAvatarView(avatarId: avatarId, size: 56),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(profile.fullName, style: AppTextStyles.titleMedium()),
+                Text(displayName, style: AppTextStyles.titleMedium()),
                 Text(
                   profile.tagline ?? AppStrings.demoContentLabel,
                   style: AppTextStyles.bodySmall(),

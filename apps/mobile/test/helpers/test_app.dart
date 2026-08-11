@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,7 +15,24 @@ import 'package:memy/features/goals/application/controllers/add_goal_controller.
 import 'package:memy/features/goals/data/repositories/local_goal_repository.dart';
 import 'package:memy/features/habits/application/providers/habit_providers.dart';
 import 'package:memy/features/habits/data/repositories/local_habit_repository.dart';
+import 'package:memy/features/today/application/providers/weather_providers.dart';
+import 'package:memy/features/today/domain/services/device_location_service.dart';
+import 'package:memy/features/today/domain/weather_exception.dart';
+import 'package:memy/features/wardrobe/application/providers/wardrobe_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+class _TestLocationService implements DeviceLocationService {
+  @override
+  Future<DeviceCoordinates> currentCoordinates() async {
+    throw const WeatherException(
+      kind: WeatherFailureKind.locationUnavailable,
+      message: 'Location is unavailable in tests.',
+    );
+  }
+
+  @override
+  Future<bool> openLocationSettings() async => false;
+}
 
 FakeRepositoryConfig createTestFakeConfig({
   Duration delay = Duration.zero,
@@ -105,6 +123,9 @@ Future<void> pumpMemyApp(
         seedFinance: seedFinance,
         seedHabits: seedHabits,
       );
+  final wardrobeRoot = await Directory.systemTemp.createTemp(
+    'memy_wardrobe_test',
+  );
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -112,6 +133,10 @@ Future<void> pumpMemyApp(
         fakeRepositoryConfigProvider.overrideWithValue(
           config ?? createTestFakeConfig(),
         ),
+        wardrobeDocumentsDirectoryProvider.overrideWithValue(
+          () async => wardrobeRoot,
+        ),
+        deviceLocationServiceProvider.overrideWithValue(_TestLocationService()),
         ...overrides,
       ],
       child: const MemyApp(),

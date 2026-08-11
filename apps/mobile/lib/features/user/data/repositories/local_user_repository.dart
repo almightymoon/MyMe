@@ -23,6 +23,7 @@ class LocalUserRepository implements UserRepository {
       displayName: name,
       fullName: name,
       initials: _initialsFor(name),
+      avatarId: OnboardingPreferences.readAvatarId(prefs),
       tagline: null,
       email: null,
     );

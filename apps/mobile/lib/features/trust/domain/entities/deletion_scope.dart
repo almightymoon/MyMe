@@ -10,6 +10,7 @@ enum DeletionScope {
   goalsLocalCache,
 
   finance,
+  wardrobe,
   habits,
 
   /// UI / legacy: imported cache + MeMy local records (never device gateway).

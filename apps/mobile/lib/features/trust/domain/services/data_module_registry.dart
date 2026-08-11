@@ -47,8 +47,14 @@ class DataModuleRegistry {
         id: DataModuleId.finance,
         title: 'Finance',
         summary:
-            'Manual transactions and categories stay on this device. '
-            'No MeMy backend sync and no AI transfer.',
+            'Manual transactions, categories, monthly budgets, and money '
+            'owed stay on this device. No MeMy backend sync and no AI transfer.',
+        notes: [
+          'Export includes transactions, categories, budgets, and money-owed '
+              'entries as minor-unit strings. No formatted money labels.',
+          'Local deletion clears transactions, budgets, and money owed and '
+              'restores built-in categories. Demo transactions are not reseeded.',
+        ],
         rawExport: true,
         summaryExport: true,
         localRecordDeletion: true,
@@ -56,6 +62,25 @@ class DataModuleRegistry {
         backendDeletion: false,
         backendTransfer: false,
         aiTransfer: false,
+      ),
+      const DataModuleDescriptor(
+        id: DataModuleId.wardrobe,
+        title: 'Wardrobe',
+        summary:
+            'Items, outfits, plans, wear history, and app-private photos '
+            'stay on this device. No backend or AI transfer.',
+        rawExport: true,
+        summaryExport: true,
+        localRecordDeletion: true,
+        localCacheClear: false,
+        backendDeletion: false,
+        backendTransfer: false,
+        aiTransfer: false,
+        notes: [
+          'Export includes metadata only. Wardrobe image files are not '
+              'included in this export.',
+          'Local deletion removes metadata and image files on this device.',
+        ],
       ),
       const DataModuleDescriptor(
         id: DataModuleId.habits,
@@ -123,7 +148,12 @@ class DataModuleRegistry {
         id: DataModuleId.profile,
         title: 'Profile',
         summary:
-            'Demo profile fields used in this build are local / seed data.',
+            'Display name and chosen avatar stay on this device. No photo '
+            'upload and no MeMy account.',
+        notes: [
+          'Export includes display name and avatar id only.',
+          'Avatar is picked from a local catalog — never a camera or gallery photo.',
+        ],
         rawExport: false,
         summaryExport: true,
         localRecordDeletion: false,

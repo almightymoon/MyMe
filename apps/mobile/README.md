@@ -12,7 +12,7 @@ flutter pub get
 flutter run --dart-define=APP_ENV=production
 ```
 
-Production forces: local Goals/Finance/Habits, system Calendar/Health, no demo
+Production forces: local Goals/Finance/Habits/Wardrobe, system Calendar/Health, no demo
 auth, no Integration Lab, no Coach Preview, empty first-run module seed.
 
 ## Run (development / CI default)

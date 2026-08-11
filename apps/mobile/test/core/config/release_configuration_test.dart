@@ -136,15 +136,15 @@ void main() {
       expect(capabilities.platformHealth, isTrue);
       expect(capabilities.exercise, isTrue);
       expect(capabilities.localOnboarding, isTrue);
+      expect(capabilities.weather, isTrue);
     });
 
     test('everything not shippable in v1 is off', () {
       expect(capabilities.coachPreview, isFalse);
-      expect(capabilities.wardrobe, isFalse);
+      expect(capabilities.wardrobe, isTrue);
       expect(capabilities.body, isFalse);
       expect(capabilities.nutritionQuickAdd, isFalse);
       expect(capabilities.notifications, isFalse);
-      expect(capabilities.weather, isFalse);
       expect(capabilities.directWearables, isFalse);
       expect(capabilities.cloudAccount, isFalse);
       expect(capabilities.cloudSync, isFalse);
@@ -173,7 +173,7 @@ void main() {
       expect(idsFor(SidebarSectionId.primary), ['today', 'plan']);
     });
 
-    test('life areas keep the six live modules only', () {
+    test('life areas keep the live modules including Wardrobe', () {
       expect(idsFor(SidebarSectionId.lifeAreas), [
         'goals',
         'finance',
@@ -181,6 +181,7 @@ void main() {
         'calendar',
         'health',
         'exercise',
+        'wardrobe',
       ]);
     });
 

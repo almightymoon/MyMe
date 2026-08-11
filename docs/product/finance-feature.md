@@ -62,7 +62,7 @@ Override `financeDataSourceProvider` in tests.
 SharedPreferences keys:
 
 - `memy_finance_initialized_v1`
-- `memy_finance_v1` — `{ schemaVersion, baseCurrencyCode, categories, transactions }`
+- `memy_finance_v1` — `{ schemaVersion, baseCurrencyCode, categories, transactions, budgets, moneyPositions }`
 
 Money fields are digit strings. Timestamps are ISO-8601 UTC on disk, local on display.
 
@@ -70,7 +70,7 @@ Demo seed runs **only** when the initialized flag is absent. Deleting all transa
 
 ## Deferred
 
-Loans / lending UI is a **Planned feature** card (not fake live data). Bank sync, recurring txs, receipts, and API mode are out of scope.
+Bank sync, recurring txs, receipts, interest-bearing loans, and API mode are out of scope. Money owed is a simple local ledger.
 
 ## Tests
 

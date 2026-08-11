@@ -62,7 +62,7 @@ class _TransactionFormBodyState extends ConsumerState<TransactionFormBody> {
     final categoriesAsync = ref.watch(financeCategoriesProvider);
     final categories = categoriesAsync.valueOrNull ?? const <FinanceCategory>[];
     final typeCategories = categories
-        .where((c) => c.type == form.type)
+        .where((c) => c.type == form.type && !c.isArchived)
         .toList(growable: false);
 
     return Column(

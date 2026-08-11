@@ -13,12 +13,14 @@ class SidebarAccountHeader extends StatelessWidget {
     required this.displayName,
     required this.emailLabel,
     required this.onViewProfile,
+    required this.avatar,
     this.showDemoBadge = true,
   });
 
   final String displayName;
   final String emailLabel;
   final VoidCallback onViewProfile;
+  final Widget avatar;
   final bool showDemoBadge;
 
   @override
@@ -52,25 +54,7 @@ class SidebarAccountHeader extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.orangeSoft,
-                boxShadow: [
-                  BoxShadow(
-                    color: Color(0x1A000000),
-                    blurRadius: 12,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-                image: DecorationImage(
-                  image: AssetImage('assets/images/branding/avatar.png'),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
+            avatar,
             const SizedBox(width: 12),
             Expanded(
               child: Column(

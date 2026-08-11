@@ -10,6 +10,7 @@ import '../../../../app/router/route_names.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
+import '../../../../core/config/release_capabilities.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/inline_error_card.dart';
 import '../../../../core/widgets/loading_card_skeleton.dart';
@@ -279,6 +280,23 @@ class _CalendarEventDetailScreenState
                                 style: AppTextStyles.bodyMedium(),
                               ),
                             ],
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                      ],
+                      if (ref.watch(releaseCapabilitiesProvider).wardrobe) ...[
+                        MemyCard(
+                          onTap: () => context.push(
+                            '${RoutePaths.wardrobePlanner}?eventId=${event.id}',
+                          ),
+                          child: const ListTile(
+                            key: Key('event_plan_outfit'),
+                            contentPadding: EdgeInsets.zero,
+                            title: Text('Plan outfit'),
+                            subtitle: Text(
+                              'Choose occasion and dress code in Wardrobe. This event stays unchanged.',
+                            ),
+                            trailing: Icon(Icons.checkroom_outlined),
                           ),
                         ),
                         const SizedBox(height: AppSpacing.md),

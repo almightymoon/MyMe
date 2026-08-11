@@ -5,9 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:memy/app/router/route_names.dart';
 import 'package:memy/core/domain/services/money_format.dart';
 import 'package:memy/core/domain/value_objects/money_minor.dart';
+import 'package:memy/core/domain/value_objects/year_month.dart';
 import 'package:memy/features/finance/application/controllers/transaction_form_controller.dart';
 import 'package:memy/features/finance/application/providers/finance_providers.dart';
 import 'package:memy/features/finance/data/repositories/local_finance_repository.dart';
+import 'package:memy/features/finance/domain/entities/finance_budget.dart';
 import 'package:memy/features/finance/domain/entities/finance_enums.dart';
 
 import '../../../helpers/test_app.dart';
@@ -46,7 +48,8 @@ void main() {
     expect(find.byKey(const Key('finance_overview')), findsOneWidget);
     expect(find.byKey(const Key('finance_populated')), findsOneWidget);
     expect(find.byKey(const Key('finance_balance_value')), findsOneWidget);
-    expect(find.byKey(const Key('finance_planned_feature')), findsOneWidget);
+    expect(find.byKey(const Key('finance_nav_budgets')), findsOneWidget);
+    expect(find.byKey(const Key('finance_nav_reports')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('finance_period_selector')));
     await tester.pumpAndSettle();
@@ -162,6 +165,47 @@ void main() {
     );
   });
 
+  testWidgets('budgets reports and categories screens load', (tester) async {
+    await pumpMemyApp(tester, seedFinance: false, seedGoals: false);
+    await signInToToday(tester);
+    final router = GoRouter.of(tester.element(find.textContaining('Hi,')));
+
+    router.go(RoutePaths.financeBudgets);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('budgets_overview')), findsOneWidget);
+    expect(find.byKey(const Key('budgets_empty')), findsOneWidget);
+
+    router.go(RoutePaths.addBudget);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('budget_form')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('budget_save_button')));
+    await tester.pumpAndSettle();
+    expect(find.text('Amount is required'), findsOneWidget);
+
+    router.go(RoutePaths.financeReports);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('finance_reports')), findsOneWidget);
+    expect(find.byKey(const Key('reports_empty')), findsOneWidget);
+
+    router.go(RoutePaths.financeCategories);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('finance_categories')), findsOneWidget);
+    expect(find.byKey(const Key('categories_populated')), findsOneWidget);
+
+    router.go(RoutePaths.financeMoneyOwed);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('money_owed_overview')), findsOneWidget);
+    expect(find.byKey(const Key('money_owed_empty')), findsOneWidget);
+
+    router.go(RoutePaths.addMoneyOwed);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('money_owed_form')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('money_owed_save_button')));
+    await tester.pumpAndSettle();
+    expect(find.text('Who this is with is required'), findsOneWidget);
+    expect(find.text('Amount is required'), findsOneWidget);
+  });
+
   testWidgets('Today finance card updates after expense', (tester) async {
     await pumpMemyApp(tester, seedFinance: false, seedGoals: false);
     await signInToToday(tester);
@@ -257,9 +301,55 @@ void main() {
       findsWidgets,
     );
 
+    final month = YearMonth.fromDateTime(DateTime.now());
+    await repo.createBudget(
+      FinanceBudget(
+        id: 'food-budget',
+        name: 'Food',
+        categoryId: 'cat_food',
+        month: month,
+        amountMinor: MoneyMinor.fromInt(4000000),
+        currencyCode: 'PKR',
+        warningThresholdBasisPoints: 8000,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+    var report = await repo.getPeriodReport(period: FinancePeriod.thisMonth);
+    expect(report.budgetProgress, isNotEmpty);
+    expect(report.budgetProgress.first.spentMinor, MoneyMinor.fromInt(2500000));
+
+    final existing = txs.first;
+    await repo.updateTransaction(
+      existing.copyWith(amountMinor: MoneyMinor.fromInt(3000000)),
+    );
+    report = await repo.getPeriodReport(period: FinancePeriod.thisMonth);
+    expect(report.expenseMinor, MoneyMinor.fromInt(3000000));
+    expect(report.budgetProgress.first.spentMinor, MoneyMinor.fromInt(3000000));
+
+    router.go(RoutePaths.financeReports);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('finance_reports')), findsOneWidget);
+
+    router.go(RoutePaths.transactionHistory);
+    await tester.pumpAndSettle();
+    router.go(RoutePaths.transactionDetailPath(existing.id));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('transaction_detail_scroll')), findsOneWidget);
+
+    await repo.deleteTransaction(existing.id);
+    expect(await repo.getTransactions(), isEmpty);
+    report = await repo.getPeriodReport(period: FinancePeriod.thisMonth);
+    expect(report.expenseMinor, MoneyMinor.zero);
+
     final reopened = LocalFinanceRepository(prefs: prefs);
     final persisted = await reopened.getTransactions();
-    expect(persisted, hasLength(1));
-    expect(persisted.first.amountMinor, MoneyMinor.fromInt(2500000));
+    expect(persisted, isEmpty);
+    expect(await reopened.getBudget('food-budget'), isNotNull);
+    await reopened.clearAllLocalData();
+    expect(await reopened.getTransactions(), isEmpty);
+    expect(await reopened.getBudgets(), isEmpty);
+    final afterClear = LocalFinanceRepository(prefs: prefs);
+    expect(await afterClear.getTransactions(), isEmpty);
   });
 }

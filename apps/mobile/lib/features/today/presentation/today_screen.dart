@@ -8,6 +8,7 @@ import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/config/release_capabilities.dart';
+import '../../../core/domain/value_objects/local_date.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/domain/services/money_format.dart';
 import '../../../core/errors/app_exception.dart';
@@ -20,6 +21,8 @@ import '../../../core/widgets/memy_card.dart';
 import '../../../core/widgets/memy_chrome.dart';
 import '../../calendar/domain/entities/schedule_item.dart';
 import '../../finance/application/providers/finance_providers.dart';
+import '../../wardrobe/application/providers/wardrobe_providers.dart';
+import '../../wardrobe/domain/entities/wardrobe_models.dart';
 import '../../finance/domain/entities/finance_summary.dart';
 import '../../goals/application/providers/goal_providers.dart';
 import '../../goals/domain/entities/goal_summary.dart';
@@ -30,12 +33,16 @@ import '../../health/application/providers/health_providers.dart';
 import '../../health/domain/entities/daily_health_summary.dart';
 import '../../health/domain/entities/health_connection_config.dart';
 import '../../health/presentation/widgets/health_format.dart';
+import '../../onboarding/data/onboarding_preferences.dart';
 import '../../shell/presentation/memy_bottom_navigation.dart';
 import '../application/providers/today_providers.dart';
 import '../application/providers/today_tasks_provider.dart';
+import '../application/providers/weather_providers.dart';
 import '../domain/entities/daily_focus.dart';
 import '../domain/entities/today_summary.dart';
 import '../domain/entities/today_task.dart';
+import '../domain/entities/weather_snapshot.dart';
+import '../domain/weather_exception.dart';
 
 /// Home screen aligned to prototype `data-screen="home"`:
 /// greeting → Life Score → Focus → shortcuts → Glance → Today's Tasks,
@@ -256,6 +263,10 @@ class _TodayPopulatedBody extends ConsumerWidget {
         ],
         const SizedBox(height: 12),
         const _TodayHealthCard(),
+        if (capabilities.wardrobe) ...[
+          const SizedBox(height: 12),
+          const _TodayWardrobeCard(),
+        ],
       ],
     );
   }
@@ -681,7 +692,108 @@ class _TodayFinanceCard extends StatelessWidget {
             key: const Key('today_finance_period'),
             style: AppTextStyles.bodySmall(color: AppColors.faintText),
           ),
+          const _TodayFinanceBudgetLine(),
         ],
+      ),
+    );
+  }
+}
+
+class _TodayWardrobeCard extends ConsumerWidget {
+  const _TodayWardrobeCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final planAsync = ref.watch(todayOutfitPlanProvider);
+    final itemsAsync = ref.watch(wardrobeItemsProvider);
+    final outfits = ref.watch(wardrobeOutfitsProvider).valueOrNull ?? const [];
+    final plan = planAsync.valueOrNull;
+    final itemCount = itemsAsync.valueOrNull?.length ?? 0;
+    if (plan == null && itemCount < 2) {
+      return const SizedBox.shrink();
+    }
+    Outfit? outfit;
+    if (plan != null) {
+      for (final candidate in outfits) {
+        if (candidate.id == plan.outfitId) outfit = candidate;
+      }
+    }
+    return MemyCard(
+      key: const Key('today_wardrobe_card'),
+      onTap: () => context.push(RoutePaths.wardrobe),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            outfit == null ? 'Plan an outfit' : 'Today’s outfit',
+            style: AppTextStyles.titleSmall().copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            outfit?.name ?? 'Choose a look from items on this device.',
+            style: AppTextStyles.bodySmall(color: AppColors.faintText),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              if (outfit != null)
+                TextButton(
+                  key: const Key('today_wardrobe_worn'),
+                  onPressed: () async {
+                    final selected = outfit;
+                    if (selected == null) return;
+                    final repo = ref.read(wardrobeRepositoryProvider);
+                    final clock = ref.read(appClockProvider);
+                    final now = clock.now();
+                    await repo.recordWear(
+                      WearRecord(
+                        id: ref.read(uuidProvider).v4(),
+                        localDate: LocalDate.fromDateTime(now),
+                        outfitId: selected.id,
+                        itemIds: selected.itemIds,
+                        createdAt: now,
+                        updatedAt: now,
+                      ),
+                    );
+                    invalidateWardrobe(ref);
+                  },
+                  child: const Text('Mark as worn'),
+                ),
+              TextButton(
+                key: const Key('today_wardrobe_change'),
+                onPressed: () => context.push(RoutePaths.wardrobePlanner),
+                child: Text(
+                  outfit == null ? 'Plan an outfit' : 'Change outfit',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TodayFinanceBudgetLine extends ConsumerWidget {
+  const _TodayFinanceBudgetLine();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final budgetAsync = ref.watch(todayFinanceBudgetProgressProvider);
+    final progress = budgetAsync.valueOrNull;
+    if (progress == null) return const SizedBox.shrink();
+    final currency = progress.budget.currencyCode;
+    final label = progress.isOverspent
+        ? 'Budget overspent ${MoneyFormat.formatSignedMinor(progress.remainingSigned.abs(), currency)}'
+        : 'Budget remaining ${MoneyFormat.formatSignedMinor(progress.remainingSigned, currency)}';
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Text(
+        label,
+        key: const Key('today_finance_budget'),
+        style: AppTextStyles.bodySmall(color: AppColors.faintText),
       ),
     );
   }
@@ -1014,7 +1126,7 @@ class _FocusSection extends StatelessWidget {
   }
 }
 
-class _GlanceSection extends StatelessWidget {
+class _GlanceSection extends ConsumerWidget {
   const _GlanceSection({required this.items, this.showWeather = false});
 
   final List<ScheduleItem> items;
@@ -1028,8 +1140,7 @@ class _GlanceSection extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    // Prototype glance shows Team Meeting + Gym Workout.
+  Widget build(BuildContext context, WidgetRef ref) {
     final events = _prototypeEvents(items);
 
     return MemyCard(
@@ -1051,43 +1162,7 @@ class _GlanceSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (showWeather) ...[
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        AppStrings.weather,
-                        style: AppTextStyles.bodySmall().copyWith(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.faintText,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        AppStrings.samplePreviewCaption,
-                        style: AppTextStyles.kicker(),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        '22°C',
-                        style: AppTextStyles.displayMedium().copyWith(
-                          fontSize: 34,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -1,
-                          height: 1.1,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Cloudy',
-                        style: AppTextStyles.bodyMedium(
-                          color: AppColors.faintText,
-                        ).copyWith(fontSize: 14, fontWeight: FontWeight.w500),
-                      ),
-                    ],
-                  ),
-                ),
+                const Expanded(child: _GlanceWeatherColumn()),
                 const SizedBox(width: 16),
               ],
               Flexible(
@@ -1136,6 +1211,110 @@ class _GlanceSection extends StatelessWidget {
     final gym = byId('gym');
     if (team != null && gym != null) return [team, gym];
     return items.take(2).toList(growable: false);
+  }
+}
+
+class _GlanceWeatherColumn extends ConsumerWidget {
+  const _GlanceWeatherColumn();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final weatherAsync = ref.watch(todayWeatherProvider);
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final metric =
+        OnboardingPreferences.readUnits(prefs) == MeasurementUnits.metric;
+
+    return Column(
+      key: const Key('today_glance_weather'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          AppStrings.weather,
+          style: AppTextStyles.bodySmall().copyWith(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: AppColors.faintText,
+          ),
+        ),
+        const SizedBox(height: 6),
+        weatherAsync.when(
+          loading: () => Text(
+            '…',
+            key: const Key('today_weather_loading'),
+            style: AppTextStyles.displayMedium().copyWith(
+              fontSize: 34,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -1,
+              height: 1.1,
+            ),
+          ),
+          error: (error, _) {
+            final weatherError = error is WeatherException
+                ? error
+                : WeatherException(
+                    kind: WeatherFailureKind.unknown,
+                    message: userFacingErrorMessage(error),
+                  );
+            return Column(
+              key: const Key('today_weather_error'),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  weatherError.message,
+                  style: AppTextStyles.bodySmall(
+                    color: AppColors.secondaryText,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    TextButton(
+                      key: const Key('today_weather_retry'),
+                      onPressed: () => ref.invalidate(todayWeatherProvider),
+                      child: const Text('Retry'),
+                    ),
+                    if (weatherError.openSettings)
+                      TextButton(
+                        key: const Key('today_weather_open_settings'),
+                        onPressed: () {
+                          ref
+                              .read(deviceLocationServiceProvider)
+                              .openLocationSettings();
+                        },
+                        child: const Text('Settings'),
+                      ),
+                  ],
+                ),
+              ],
+            );
+          },
+          data: (WeatherSnapshot snapshot) => Column(
+            key: const Key('today_weather_data'),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                snapshot.temperatureLabel(metric: metric),
+                style: AppTextStyles.displayMedium().copyWith(
+                  fontSize: 34,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -1,
+                  height: 1.1,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                snapshot.conditionLabel,
+                style: AppTextStyles.bodyMedium(
+                  color: AppColors.faintText,
+                ).copyWith(fontSize: 14, fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
 

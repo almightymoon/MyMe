@@ -61,10 +61,16 @@ class SettingsScreen extends ConsumerWidget {
             _Section(
               title: 'Account',
               rows: [
-                _SetRow(
-                  icon: Icons.person_outline_rounded,
-                  label: 'Profile Information',
+                const _SetRow(
+                  key: Key('settings_edit_profile'),
+                  icon: Icons.edit_outlined,
+                  label: 'Edit profile',
                   isFirst: true,
+                  routePath: RoutePaths.editProfile,
+                ),
+                const _SetRow(
+                  icon: Icons.person_outline_rounded,
+                  label: 'Profile',
                   routePath: RoutePaths.profile,
                 ),
                 if (capabilities.demoAuth)
@@ -119,6 +125,13 @@ class SettingsScreen extends ConsumerWidget {
                     icon: Icons.notifications_none_rounded,
                     label: 'Notifications',
                     routePath: RoutePaths.notifications,
+                  ),
+                if (capabilities.wardrobe)
+                  const _SetRow(
+                    key: Key('settings_wardrobe'),
+                    icon: Icons.checkroom_outlined,
+                    label: 'Wardrobe',
+                    routePath: RoutePaths.wardrobeSettings,
                   ),
                 const _SetRow(
                   icon: Icons.privacy_tip_outlined,

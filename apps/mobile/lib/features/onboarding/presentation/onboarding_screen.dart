@@ -13,6 +13,8 @@ import '../../../core/widgets/memy_card.dart';
 import '../../../core/widgets/memy_primary_button.dart';
 import '../application/onboarding_providers.dart';
 import '../data/onboarding_preferences.dart';
+import '../../user/domain/entities/profile_avatar.dart';
+import '../../user/presentation/widgets/profile_avatar_view.dart';
 
 /// Local first-run setup. No account, no network, no permission prompts —
 /// the Calendar and Health steps only offer to open their connection screens.
@@ -33,6 +35,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   late MeasurementUnits _units;
   late WeekStart _weekStart;
   late String _timezone;
+  late String _avatarId;
+  bool _avatarChosen = false;
+  String? _avatarError;
   bool _finishing = false;
 
   @override
@@ -44,6 +49,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     _weekStart = OnboardingPreferences.readWeekStart(prefs);
     _timezone = OnboardingPreferences.readTimezone(prefs);
     _nameController.text = OnboardingPreferences.readDisplayName(prefs) ?? '';
+    _avatarId = OnboardingPreferences.readAvatarId(prefs);
+    _avatarChosen = prefs.containsKey(OnboardingPreferences.avatarIdKey);
   }
 
   @override
@@ -73,6 +80,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     await OnboardingPreferences.writeWeekStart(prefs, _weekStart);
     await OnboardingPreferences.writeTimezone(prefs, _timezone);
     await OnboardingPreferences.writeDisplayName(prefs, _nameController.text);
+    await OnboardingPreferences.writeAvatarId(prefs, _avatarId);
   }
 
   Future<void> _finish() async {
@@ -244,11 +252,40 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               hintText: 'What should MeMy call you?',
             ),
           ),
+          const SizedBox(height: AppSpacing.lg),
+          _FieldLabel('Avatar'),
+          Text(
+            'Pick one of these. MeMy does not use a profile photo.',
+            style: AppTextStyles.bodySmall(color: AppColors.faintText),
+          ),
+          if (_avatarError != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              _avatarError!,
+              key: const Key('onboarding_avatar_error'),
+              style: AppTextStyles.bodySmall(color: AppColors.health),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.sm),
+          ProfileAvatarPicker(
+            selectedId: _avatarChosen
+                ? ProfileAvatarCatalog.resolve(_avatarId)
+                : '',
+            onSelected: (id) => setState(() {
+              _avatarId = id;
+              _avatarChosen = true;
+              _avatarError = null;
+            }),
+          ),
         ],
       ),
       primaryLabel: 'Continue',
       primaryKey: const Key('onboarding_preferences_next'),
       onPrimary: () async {
+        if (!_avatarChosen) {
+          setState(() => _avatarError = 'Choose an avatar to continue');
+          return;
+        }
         await _savePreferences();
         if (mounted) _next();
       },

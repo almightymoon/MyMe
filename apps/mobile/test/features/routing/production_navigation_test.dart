@@ -57,7 +57,7 @@ void main() {
     expect(router.state.uri.path, RoutePaths.more);
     expect(find.byKey(const Key('insights_life_trend')), findsOneWidget);
     expect(find.byKey(const Key('more_body')), findsNothing);
-    expect(find.byKey(const Key('more_wardrobe')), findsNothing);
+    expect(find.byKey(const Key('more_wardrobe')), findsOneWidget);
     expect(find.byKey(const Key('more_coach_preview')), findsNothing);
   });
 
@@ -89,7 +89,7 @@ void main() {
       expect(find.byKey(const Key('drawer_privacy')), findsOneWidget);
 
       expect(find.byKey(const Key('drawer_coach')), findsNothing);
-      expect(find.byKey(const Key('drawer_wardrobe')), findsNothing);
+      expect(find.byKey(const Key('drawer_wardrobe')), findsOneWidget);
       expect(find.byKey(const Key('drawer_body')), findsNothing);
       expect(find.byKey(const Key('drawer_notifications')), findsNothing);
       expect(find.byKey(const Key('drawer_logout')), findsNothing);
@@ -106,7 +106,6 @@ void main() {
     );
     for (final path in [
       RoutePaths.coach,
-      RoutePaths.wardrobe,
       RoutePaths.body,
       RoutePaths.nutritionComingSoon,
       RoutePaths.workoutSession,

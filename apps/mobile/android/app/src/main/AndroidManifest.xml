@@ -19,6 +19,10 @@
          the Calendar connection flow — never at app startup. -->
     <uses-permission android:name="android.permission.READ_CALENDAR"/>
     <uses-permission android:name="android.permission.WRITE_CALENDAR"/>
+    <!-- Coarse location for Today glance weather (Open-Meteo). Requested
+         only when weather is shown / user enables it — not at startup. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="MeMy"
         android:name="${applicationName}"

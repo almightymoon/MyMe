@@ -94,6 +94,13 @@ class TransactionFormController extends StateNotifier<TransactionFormState> {
 
   final Ref _ref;
 
+  void _invalidateFinance() {
+    _ref
+      ..invalidate(financeTransactionsProvider)
+      ..invalidate(financeCategoriesProvider)
+      ..invalidate(financeBudgetsProvider);
+  }
+
   static const int maxMerchantLength = 80;
   static const int maxNoteLength = 280;
 
@@ -230,6 +237,7 @@ class TransactionFormController extends StateNotifier<TransactionFormState> {
             updatedAt: now,
           ),
         );
+        _invalidateFinance();
         state = state.copyWith(isSubmitting: false);
         return updated.id;
       }
@@ -250,6 +258,7 @@ class TransactionFormController extends StateNotifier<TransactionFormState> {
           updatedAt: now,
         ),
       );
+      _invalidateFinance();
       state = state.copyWith(isSubmitting: false);
       return created.id;
     } catch (error) {

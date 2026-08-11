@@ -25,6 +25,7 @@ class _PrivacyExportScreenState extends ConsumerState<PrivacyExportScreen> {
   final Set<DataModule> _selected = {
     DataModule.goals,
     DataModule.finance,
+    DataModule.wardrobe,
     DataModule.habits,
     DataModule.calendar,
     DataModule.health,
@@ -99,6 +100,7 @@ class _PrivacyExportScreenState extends ConsumerState<PrivacyExportScreen> {
   static const _selectableModules = [
     DataModule.goals,
     DataModule.finance,
+    DataModule.wardrobe,
     DataModule.habits,
     DataModule.calendar,
     DataModule.health,
@@ -108,6 +110,7 @@ class _PrivacyExportScreenState extends ConsumerState<PrivacyExportScreen> {
   String _label(DataModule module) => switch (module) {
     DataModule.goals => 'Goals',
     DataModule.finance => 'Finance',
+    DataModule.wardrobe => 'Wardrobe (metadata; photos not included)',
     DataModule.habits => 'Habits',
     DataModule.calendar => 'Calendar (config / optional MeMy events)',
     DataModule.health => 'Health connection summary',

@@ -41,6 +41,7 @@ abstract final class MemyOwnedPreferenceKeys {
   static const Set<String> onboarding = {
     OnboardingPreferences.completeKey,
     OnboardingPreferences.displayNameKey,
+    OnboardingPreferences.avatarIdKey,
     OnboardingPreferences.baseCurrencyKey,
     OnboardingPreferences.unitsKey,
     OnboardingPreferences.weekStartKey,

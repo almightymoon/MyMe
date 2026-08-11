@@ -14,6 +14,7 @@ import '../../../core/widgets/memy_module_scaffold.dart';
 import '../../onboarding/application/onboarding_providers.dart';
 import '../../onboarding/data/onboarding_preferences.dart';
 import '../../user/application/providers/user_providers.dart';
+import '../../user/presentation/widgets/profile_avatar_view.dart';
 import '../../../core/application/providers/core_providers.dart';
 
 /// Profile screen matching prototype `data-screen="profile"`.
@@ -23,12 +24,9 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final capabilities = ref.watch(releaseCapabilitiesProvider);
-    final profile = ref.watch(userProfileProvider).asData?.value;
     final prefs = ref.watch(sharedPreferencesProvider);
-    final displayName =
-        OnboardingPreferences.readDisplayName(prefs) ??
-        profile?.fullName ??
-        'MeMy';
+    final displayName = ref.watch(displayNameProvider);
+    final avatarId = ref.watch(selectedAvatarIdProvider);
     final subtitle = OnboardingPreferences.readDisplayName(prefs) != null
         ? 'On this device · ${OnboardingPreferences.readBaseCurrency(prefs)}'
         : 'Local profile on this device';
@@ -83,17 +81,11 @@ class ProfileScreen extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
               child: Column(
                 children: [
-                  Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.orangeSoft,
-                      image: const DecorationImage(
-                        image: AssetImage('assets/images/branding/avatar.png'),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
+                  InkWell(
+                    key: const Key('profile_avatar_tap'),
+                    customBorder: const CircleBorder(),
+                    onTap: () => context.push(RoutePaths.editProfile),
+                    child: ProfileAvatarView(avatarId: avatarId, size: 72),
                   ),
                   const SizedBox(height: 12),
                   Text(displayName, style: AppTextStyles.titleLarge()),
@@ -104,6 +96,11 @@ class ProfileScreen extends ConsumerWidget {
                       color: AppColors.faintText,
                     ),
                   ),
+                  TextButton(
+                    key: const Key('profile_edit_button'),
+                    onPressed: () => context.push(RoutePaths.editProfile),
+                    child: const Text('Edit profile'),
+                  ),
                 ],
               ),
             ),
@@ -113,11 +110,19 @@ class ProfileScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   _ProfileRow(
+                    keyName: 'profile_row_edit',
+                    label: 'Edit profile',
+                    value: 'Name & avatar',
+                    mutedValue: true,
+                    isFirst: true,
+                    onTap: () => context.push(RoutePaths.editProfile),
+                  ),
+                  Divider(height: 1, color: AppColors.line),
+                  _ProfileRow(
                     keyName: 'profile_row_settings',
                     label: 'Settings',
                     value: 'Manage',
                     mutedValue: true,
-                    isFirst: true,
                     onTap: () => context.push(RoutePaths.settings),
                   ),
                   Divider(height: 1, color: AppColors.line),

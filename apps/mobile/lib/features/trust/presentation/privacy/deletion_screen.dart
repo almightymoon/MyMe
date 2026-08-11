@@ -186,6 +186,7 @@ class _PrivacyDeletionScreenState extends ConsumerState<PrivacyDeletionScreen> {
   static const _scopes = [
     DeletionScope.goals,
     DeletionScope.finance,
+    DeletionScope.wardrobe,
     DeletionScope.habits,
     DeletionScope.calendarImportedCache,
     DeletionScope.calendarMeMyLocalRecords,
@@ -199,7 +200,8 @@ class _PrivacyDeletionScreenState extends ConsumerState<PrivacyDeletionScreen> {
   String _label(DeletionScope scope) => switch (scope) {
     DeletionScope.goals => 'Goals',
     DeletionScope.goalsLocalCache => 'Goals local cache',
-    DeletionScope.finance => 'Finance transactions',
+    DeletionScope.finance => 'Finance transactions, budgets, and money owed',
+    DeletionScope.wardrobe => 'Wardrobe and local photos',
     DeletionScope.habits => 'Habits',
     DeletionScope.calendarCache => 'Calendar local cache',
     DeletionScope.calendarImportedCache => 'Calendar imported cache',

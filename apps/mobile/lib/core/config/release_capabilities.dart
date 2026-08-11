@@ -52,7 +52,7 @@ class ReleaseCapabilities {
       exercise: true,
       coachPreview: EnvironmentConfig.enableAiPreview,
       notifications: false,
-      weather: false,
+      weather: true,
       directWearables: false,
       cloudAccount: false,
       cloudSync: false,
@@ -60,7 +60,7 @@ class ReleaseCapabilities {
           !isProduction &&
           EnvironmentConfig.enableIntegrationLab &&
           (kDebugMode || environment == AppEnvironment.internal),
-      wardrobe: !isProduction,
+      wardrobe: true,
       body: !isProduction,
       nutritionQuickAdd: !isProduction,
       plannedSidebarItems: showPlanned,
@@ -84,12 +84,12 @@ class ReleaseCapabilities {
       exercise: true,
       coachPreview: false,
       notifications: false,
-      weather: false,
+      weather: true,
       directWearables: false,
       cloudAccount: false,
       cloudSync: false,
       debugIntegrationLab: false,
-      wardrobe: false,
+      wardrobe: true,
       body: false,
       nutritionQuickAdd: false,
       plannedSidebarItems: false,
@@ -114,6 +114,8 @@ class ReleaseCapabilities {
 
   /// Reminders/notifications scheduling. Not built for v1.
   final bool notifications;
+
+  /// Live Open-Meteo glance weather using device location (no API key).
   final bool weather;
 
   /// Direct wearable SDKs (as opposed to reading platform Health).

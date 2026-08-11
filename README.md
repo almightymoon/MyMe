@@ -1,7 +1,7 @@
 # MeMy
 
 MeMy is a **local-first personal life companion** by **MoonTech** — goals,
-habits, calendar, finance, health, and daily planning on your device.
+habits, calendar, finance, wardrobe, health, and daily planning on your device.
 
 Tagline: **Your Personal Life Companion.**
 
@@ -18,7 +18,7 @@ The HTML application is the design prototype. Do not convert it line-for-line in
 Production mobile (`--dart-define=APP_ENV=production`):
 
 - Local onboarding (no demo Sign In)
-- Local Goals, Finance, Habits
+- Local Goals, Finance, Habits, Wardrobe (photos stay on device)
 - System Device Calendar and read-only HealthKit / Health Connect
 - Privacy export/deletion, Help, Legal drafts, About
 - **No** cloud account, cloud sync, live AI, Integration Lab, or fake repositories

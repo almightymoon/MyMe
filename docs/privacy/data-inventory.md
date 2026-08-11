@@ -2,9 +2,10 @@
 
 | Module | Stored in MeMy | Source of truth | Backend | AI | Export | Delete |
 |--------|----------------|-----------------|---------|----|--------|--------|
-| Profile / prefs | Device | MeMy | No* | No | Yes (prefs) | Preferences with wipe |
+| Profile / prefs | Device | MeMy | No* | No | Yes (name + avatar id, no photo) | Preferences with wipe |
 | Goals | Device (default) | MeMy / API when configured | Only if `GOALS_DATA_SOURCE=api` | No | Yes (API: cache snapshot + warning) | Module / wipe (cache-only in API mode) |
-| Finance | Device | MeMy | No | No | Yes | Wipe transactions; reset categories to seed |
+| Finance | Device | MeMy | No | No | Yes | Wipe transactions/budgets/money owed; restore built-in categories |
+| Wardrobe | Device (JSON + private photos) | MeMy | No | No | Metadata only (images excluded) | Metadata + image files; no reseed |
 | Habits | Device | MeMy | No | No | Yes | Module / wipe |
 | Calendar imported cache | Device SQLite | Device calendars | No | No | Off by default | `calendarImportedCache` (keeps config) |
 | Calendar MeMy events | Device SQLite | MeMy | No | No | Optional MeMy-owned | `calendarMeMyLocalRecords` |

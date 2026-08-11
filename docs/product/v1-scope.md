@@ -12,11 +12,12 @@ Tagline: **Your Personal Life Companion.**
 |---|---|---|
 | Onboarding | Local first-run setup: welcome, privacy, preferences (currency, units, week start, timezone, optional display name), optional Calendar, optional Health, finish | SharedPreferences |
 | Goals | Create, edit, archive, milestones, progress and forecasts | Local (SharedPreferences JSON) |
-| Finance | Income/expense transactions, categories, period summaries | Local |
+| Finance | Income/expense transactions, categories, monthly budgets, reports, money owed | Local |
 | Habits | Habits, schedules, check-ins, streaks and history | Local |
 | Calendar | Read and write device calendar events via `device_calendar`, conflict and recovery handling | Device calendar + local SQLite (Drift) |
 | Health | Read-only steps, distance, calories, heart rate, sleep, weight, workouts from HealthKit / Health Connect | Platform Health (never written) |
 | Exercise | Category browsing, exercise library with safety notes, labelled workout-session placeholder | Bundled content |
+| Wardrobe | Items, private photos, outfits, local suggestions, date plans, wear history | Local JSON + app-private files |
 | Trust | Privacy & Data centre, export, deletion, diagnostics, legal, help, about | Local |
 | Appearance | Theme mode and reduce motion | SharedPreferences |
 
@@ -28,9 +29,9 @@ Frozen out of the production build entirely — the code may exist behind
 - **Coach / live AI.** No model is contacted. The local scripted Coach Preview
   is internal-only.
 - **Notifications and reminders.** No scheduling engine exists.
-- **Weather.** No provider is integrated.
 - **Nutrition / Log Meal.** No food database or logging model.
-- **Wardrobe** and **Body composition**. Placeholder-quality only.
+- **Body composition**. Placeholder-quality only.
+- **Wardrobe AI, cloud photos, shopping, or live weather-driven outfits.** Suggestions are on-device rules only.
 - **Direct wearable SDKs** (Garmin, Fitbit, Whoop). Health data comes only
   from the platform Health store.
 - **Cloud account, cloud sync, OAuth, bank connections.**

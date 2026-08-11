@@ -15,7 +15,7 @@ Route hub: `/privacy`
 flags. Do not hardcode export/deletion claims in the UI separately.
 
 Key facts in this milestone:
-- Finance / Habits: on-device only; not sent to backend or AI
+- Finance / Habits / Wardrobe: on-device only; not sent to backend or AI. Wardrobe photos stay in app-private storage; export is metadata-only.
 - Goals: local by default; backend only when `GOALS_DATA_SOURCE=api`
 - Calendar: MeMy cache on device; source of truth may be device calendars
 - Health: HealthKit / Health Connect is source of truth; MeMy stores connection

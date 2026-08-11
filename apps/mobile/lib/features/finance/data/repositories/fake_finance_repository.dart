@@ -35,7 +35,7 @@ class FakeFinanceRepository implements FinanceRepository {
          initialMoneyPositions ?? const [],
        );
 
-  final String baseCurrencyCode;
+  String baseCurrencyCode;
   final FinanceSummaryService summaryService;
   final FinanceReportService reportService;
 
@@ -357,6 +357,11 @@ class FakeFinanceRepository implements FinanceRepository {
       currencyCode: baseCurrencyCode,
       asOf: asOf,
     );
+  }
+
+  @override
+  Future<void> setBaseCurrencyCode(String code) async {
+    baseCurrencyCode = code.trim().toUpperCase();
   }
 
   @override

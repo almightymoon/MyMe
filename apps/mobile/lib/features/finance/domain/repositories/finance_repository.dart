@@ -79,4 +79,7 @@ abstract class FinanceRepository {
   });
 
   Future<void> refresh();
+
+  /// Updates the ledger's base currency. Does not rewrite existing amounts.
+  Future<void> setBaseCurrencyCode(String code);
 }

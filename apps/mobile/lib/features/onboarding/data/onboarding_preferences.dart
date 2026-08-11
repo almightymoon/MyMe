@@ -1,5 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/l10n/app_language.dart';
 import '../../user/domain/entities/profile_avatar.dart';
 
 /// Unit system captured during first-run setup.
@@ -19,6 +20,7 @@ abstract final class OnboardingPreferences {
   static const String avatarIdKey = 'memy_avatar_id_v1';
   static const String baseCurrencyKey = 'memy_base_currency_v1';
   static const String unitsKey = 'memy_units_v1';
+  static const String languageKey = 'memy_language_v1';
   static const String weekStartKey = 'memy_week_start_v1';
   static const String timezoneKey = 'memy_timezone_v1';
 
@@ -41,6 +43,7 @@ abstract final class OnboardingPreferences {
     avatarIdKey,
     baseCurrencyKey,
     unitsKey,
+    languageKey,
     weekStartKey,
     timezoneKey,
   ];
@@ -92,16 +95,24 @@ abstract final class OnboardingPreferences {
   }
 
   static String readBaseCurrency(SharedPreferences prefs) {
-    final value = prefs.getString(baseCurrencyKey)?.trim();
-    if (value == null || value.isEmpty) return defaultCurrency;
-    return value.toUpperCase();
+    final value = prefs.getString(baseCurrencyKey)?.trim().toUpperCase();
+    if (value == null ||
+        value.isEmpty ||
+        !supportedCurrencies.contains(value)) {
+      return defaultCurrency;
+    }
+    return value;
   }
 
   static Future<void> writeBaseCurrency(
     SharedPreferences prefs,
     String value,
   ) async {
-    await prefs.setString(baseCurrencyKey, value.trim().toUpperCase());
+    final code = value.trim().toUpperCase();
+    final resolved = supportedCurrencies.contains(code)
+        ? code
+        : defaultCurrency;
+    await prefs.setString(baseCurrencyKey, resolved);
   }
 
   static MeasurementUnits readUnits(SharedPreferences prefs) {
@@ -115,6 +126,17 @@ abstract final class OnboardingPreferences {
     MeasurementUnits value,
   ) async {
     await prefs.setString(unitsKey, value.name);
+  }
+
+  static AppLanguage readLanguage(SharedPreferences prefs) {
+    return AppLanguage.resolve(prefs.getString(languageKey));
+  }
+
+  static Future<void> writeLanguage(
+    SharedPreferences prefs,
+    String value,
+  ) async {
+    await prefs.setString(languageKey, AppLanguage.resolve(value).code);
   }
 
   static WeekStart readWeekStart(SharedPreferences prefs) {
@@ -156,6 +178,7 @@ abstract final class OnboardingPreferences {
       'avatarId': readAvatarId(prefs),
       'baseCurrency': readBaseCurrency(prefs),
       'units': readUnits(prefs).name,
+      'language': readLanguage(prefs).code,
       'weekStart': readWeekStart(prefs).name,
       'timezone': prefs.getString(timezoneKey),
     };

@@ -4,6 +4,7 @@ import '../../../../core/application/providers/core_providers.dart';
 import '../../../../core/domain/services/money_format.dart';
 import '../../../../core/domain/value_objects/money_minor.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../../../user/application/providers/user_providers.dart';
 import '../../domain/entities/finance_enums.dart';
 import '../../domain/entities/finance_transaction.dart';
 import '../providers/finance_providers.dart';
@@ -76,7 +77,10 @@ class TransactionFormController extends StateNotifier<TransactionFormState> {
   TransactionFormController(this._ref, {FinanceTransaction? existing})
     : super(
         existing == null
-            ? TransactionFormState(occurredAt: DateTime.now())
+            ? TransactionFormState(
+                occurredAt: DateTime.now(),
+                currencyCode: _ref.read(baseCurrencyProvider),
+              )
             : TransactionFormState(
                 type: existing.type,
                 amountText: MoneyFormat.majorStringFromMinor(

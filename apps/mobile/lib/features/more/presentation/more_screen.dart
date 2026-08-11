@@ -274,7 +274,7 @@ List<_MoreItem> _visibleModuleItems(ReleaseCapabilities capabilities) {
       })
         item,
     if (capabilities.coachPreview)
-      const _MoreItem(
+      _MoreItem(
         keyName: 'more_coach_preview',
         title: AppStrings.coachPreview,
         subtitle: 'Local scripted demo — no live AI',

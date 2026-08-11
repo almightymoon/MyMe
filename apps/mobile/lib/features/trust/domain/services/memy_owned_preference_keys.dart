@@ -44,6 +44,7 @@ abstract final class MemyOwnedPreferenceKeys {
     OnboardingPreferences.avatarIdKey,
     OnboardingPreferences.baseCurrencyKey,
     OnboardingPreferences.unitsKey,
+    OnboardingPreferences.languageKey,
     OnboardingPreferences.weekStartKey,
     OnboardingPreferences.timezoneKey,
   };

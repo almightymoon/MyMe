@@ -360,4 +360,24 @@ void main() {
       isFalse,
     );
   });
+
+  test('setBaseCurrencyCode persists without rewriting amounts', () async {
+    final txs = await repo.getTransactions();
+    expect(txs, isNotEmpty);
+    expect(txs.first.currencyCode, 'PKR');
+
+    await repo.setBaseCurrencyCode('USD');
+    expect(repo.baseCurrencyCode, 'USD');
+
+    final reloaded = LocalFinanceRepository(
+      prefs: prefs,
+      seedBuilder: () => [],
+    );
+    expect((await reloaded.getTransactions()).first.currencyCode, 'PKR');
+    expect(reloaded.baseCurrencyCode, 'USD');
+    expect(
+      (await reloaded.getSummary(period: FinancePeriod.thisMonth)).currencyCode,
+      'USD',
+    );
+  });
 }

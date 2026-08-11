@@ -10,6 +10,8 @@ import '../../../app/theme/app_text_styles.dart';
 import '../../../core/application/providers/core_providers.dart';
 import '../../../core/integrations/domain/integration_connection_status.dart';
 import '../../../core/widgets/memy_module_scaffold.dart';
+import '../../onboarding/data/onboarding_preferences.dart';
+import '../../user/application/providers/user_providers.dart';
 import '../application/providers/health_providers.dart';
 import '../domain/entities/daily_health_summary.dart';
 import '../domain/entities/health_connection_config.dart';
@@ -177,7 +179,7 @@ class _ConnectCallout extends StatelessWidget {
   }
 }
 
-class _ConnectedContent extends StatelessWidget {
+class _ConnectedContent extends ConsumerWidget {
   const _ConnectedContent({
     required this.summary,
     required this.connection,
@@ -189,7 +191,9 @@ class _ConnectedContent extends StatelessWidget {
   final DateTime now;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final metric =
+        ref.watch(measurementUnitsProvider) == MeasurementUnits.metric;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -278,7 +282,10 @@ class _ConnectedContent extends StatelessWidget {
               label: 'Distance',
               value: summary.distanceMeters == null
                   ? null
-                  : HealthFormat.distanceKm(summary.distanceMeters!),
+                  : HealthFormat.distance(
+                      summary.distanceMeters!,
+                      metric: metric,
+                    ),
               icon: Icons.map_outlined,
               isPermitted: summary.isAvailable(
                 HealthMetricType.distanceWalkingRunning,
@@ -288,8 +295,8 @@ class _ConnectedContent extends StatelessWidget {
               label: 'Weight',
               value: summary.weightKg == null
                   ? null
-                  : HealthFormat.weightKg(summary.weightKg!),
-              unit: 'kg',
+                  : HealthFormat.weightValue(summary.weightKg!, metric: metric),
+              unit: HealthFormat.weightUnit(metric: metric),
               icon: Icons.monitor_weight_outlined,
               isPermitted: summary.isAvailable(HealthMetricType.weight),
             ),

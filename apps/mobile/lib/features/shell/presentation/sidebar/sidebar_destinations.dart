@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/router/route_names.dart';
 import '../../../../core/config/release_capabilities.dart';
-import '../../../../core/constants/app_strings.dart';
 import '../../../trust/domain/entities/sidebar_destination.dart';
 
 /// Canonical MeMy sidebar destinations (trust/support IA).
@@ -39,7 +38,7 @@ abstract final class SidebarDestinations {
     ),
     SidebarDestination(
       id: 'coach',
-      label: AppStrings.coachPreview,
+      label: 'Coach Preview',
       icon: Icons.shield_outlined,
       shellTabIndex: 2,
       routePath: RoutePaths.coach,

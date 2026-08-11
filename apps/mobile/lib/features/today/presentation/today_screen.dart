@@ -34,6 +34,7 @@ import '../../health/domain/entities/daily_health_summary.dart';
 import '../../health/domain/entities/health_connection_config.dart';
 import '../../health/presentation/widgets/health_format.dart';
 import '../../onboarding/data/onboarding_preferences.dart';
+import '../../user/application/providers/user_providers.dart';
 import '../../shell/presentation/memy_bottom_navigation.dart';
 import '../application/providers/today_providers.dart';
 import '../application/providers/today_tasks_provider.dart';
@@ -77,8 +78,8 @@ class TodayScreen extends ConsumerWidget {
           if (!summary.hasDailyInformation) {
             return _TodayScaffold(
               greetingName: summary.greetingName,
-              child: const EmptyFeatureCard(
-                key: Key('today_empty'),
+              child: EmptyFeatureCard(
+                key: const Key('today_empty'),
                 title: AppStrings.dayAtAGlance,
                 message: AppStrings.todayEmptyMessage,
                 icon: Icons.wb_sunny_outlined,
@@ -1220,9 +1221,8 @@ class _GlanceWeatherColumn extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final weatherAsync = ref.watch(todayWeatherProvider);
-    final prefs = ref.watch(sharedPreferencesProvider);
     final metric =
-        OnboardingPreferences.readUnits(prefs) == MeasurementUnits.metric;
+        ref.watch(measurementUnitsProvider) == MeasurementUnits.metric;
 
     return Column(
       key: const Key('today_glance_weather'),

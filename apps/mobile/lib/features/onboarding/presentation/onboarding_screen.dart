@@ -9,6 +9,7 @@ import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/application/providers/core_providers.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/l10n/app_language.dart';
 import '../../../core/widgets/memy_card.dart';
 import '../../../core/widgets/memy_primary_button.dart';
 import '../application/onboarding_providers.dart';
@@ -32,6 +33,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   _Step _step = _Step.welcome;
   late String _currency;
+  late AppLanguage _language;
   late MeasurementUnits _units;
   late WeekStart _weekStart;
   late String _timezone;
@@ -45,6 +47,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     super.initState();
     final prefs = ref.read(sharedPreferencesProvider);
     _currency = OnboardingPreferences.readBaseCurrency(prefs);
+    _language = OnboardingPreferences.readLanguage(prefs);
     _units = OnboardingPreferences.readUnits(prefs);
     _weekStart = OnboardingPreferences.readWeekStart(prefs);
     _timezone = OnboardingPreferences.readTimezone(prefs);
@@ -76,6 +79,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Future<void> _savePreferences() async {
     final prefs = ref.read(sharedPreferencesProvider);
     await OnboardingPreferences.writeBaseCurrency(prefs, _currency);
+    await OnboardingPreferences.writeLanguage(prefs, _language.code);
     await OnboardingPreferences.writeUnits(prefs, _units);
     await OnboardingPreferences.writeWeekStart(prefs, _weekStart);
     await OnboardingPreferences.writeTimezone(prefs, _timezone);
@@ -169,12 +173,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   Widget _buildPreferences() {
     return _StepBody(
-      title: 'Set your basics',
-      subtitle: 'You can change these later in Settings',
+      title: AppStrings.t('Set your basics'),
+      subtitle: AppStrings.t('You can change these later in Settings'),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _FieldLabel('Base currency'),
+          _FieldLabel(AppStrings.t('Base currency')),
           DropdownButtonFormField<String>(
             key: const Key('onboarding_currency'),
             initialValue: _currency,
@@ -189,36 +193,63 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             },
           ),
           const SizedBox(height: AppSpacing.lg),
-          _FieldLabel('Units'),
+          _FieldLabel(AppStrings.t('Language')),
+          DropdownButtonFormField<String>(
+            key: const Key('onboarding_language'),
+            initialValue: _language.code,
+            decoration: _fieldDecoration(),
+            items: [
+              for (final language in AppLanguage.supported)
+                DropdownMenuItem(
+                  value: language.code,
+                  child: Text(language.nativeName),
+                ),
+            ],
+            onChanged: (value) {
+              if (value == null) return;
+              setState(() {
+                _language = AppLanguage.resolve(value);
+                AppStrings.setLanguageCode(_language.code);
+              });
+            },
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          _FieldLabel(AppStrings.t('Units')),
           SegmentedButton<MeasurementUnits>(
             key: const Key('onboarding_units'),
-            segments: const [
+            segments: [
               ButtonSegment(
                 value: MeasurementUnits.metric,
-                label: Text('Metric'),
+                label: Text(AppStrings.t('Metric')),
               ),
               ButtonSegment(
                 value: MeasurementUnits.imperial,
-                label: Text('Imperial'),
+                label: Text(AppStrings.t('Imperial')),
               ),
             ],
             selected: {_units},
             onSelectionChanged: (value) => setState(() => _units = value.first),
           ),
           const SizedBox(height: AppSpacing.lg),
-          _FieldLabel('Week starts on'),
+          _FieldLabel(AppStrings.t('Week starts on')),
           SegmentedButton<WeekStart>(
             key: const Key('onboarding_week_start'),
-            segments: const [
-              ButtonSegment(value: WeekStart.monday, label: Text('Monday')),
-              ButtonSegment(value: WeekStart.sunday, label: Text('Sunday')),
+            segments: [
+              ButtonSegment(
+                value: WeekStart.monday,
+                label: Text(AppStrings.t('Monday')),
+              ),
+              ButtonSegment(
+                value: WeekStart.sunday,
+                label: Text(AppStrings.t('Sunday')),
+              ),
             ],
             selected: {_weekStart},
             onSelectionChanged: (value) =>
                 setState(() => _weekStart = value.first),
           ),
           const SizedBox(height: AppSpacing.lg),
-          _FieldLabel('Time zone'),
+          _FieldLabel(AppStrings.t('Time zone')),
           MemyCard(
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.lg,

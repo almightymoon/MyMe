@@ -9,11 +9,24 @@ abstract final class HealthFormat {
     return '${km.toStringAsFixed(km >= 10 ? 0 : 1)} km';
   }
 
+  static String distance(double meters, {required bool metric}) {
+    if (metric) return distanceKm(meters);
+    final miles = meters / 1609.344;
+    return '${miles.toStringAsFixed(miles >= 10 ? 0 : 1)} mi';
+  }
+
   static String kilocalories(double value) => _thousands(value.round());
 
   static String beatsPerMinute(double value) => value.round().toString();
 
   static String weightKg(double value) => value.toStringAsFixed(1);
+
+  static String weightValue(double kg, {required bool metric}) {
+    if (metric) return weightKg(kg);
+    return (kg * 2.2046226218).toStringAsFixed(1);
+  }
+
+  static String weightUnit({required bool metric}) => metric ? 'kg' : 'lb';
 
   static String minutes(double value) => value.round().toString();
 

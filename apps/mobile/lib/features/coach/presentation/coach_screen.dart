@@ -120,8 +120,8 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
                   ),
                   data: (prompts) {
                     if (prompts.isEmpty) {
-                      return const EmptyFeatureCard(
-                        key: Key('coach_prompts_empty'),
+                      return EmptyFeatureCard(
+                        key: const Key('coach_prompts_empty'),
                         title: 'Suggested prompts',
                         message: AppStrings.sectionEmptyMessage,
                         icon: Icons.chat_bubble_outline_rounded,

@@ -85,7 +85,8 @@ class AppearanceAccessibilityScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.md),
           MemyCard(
             child: Text(
-              'Units, language, and fuller accessibility controls are planned.',
+              'Units and language live in Settings. Fuller accessibility '
+              'controls are planned.',
               style: AppTextStyles.bodyMedium(color: AppColors.secondaryText),
             ),
           ),

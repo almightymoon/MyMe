@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/application/providers/core_providers.dart';
 import '../../../../core/config/release_capabilities.dart';
 import '../../../../core/data/fake_repository_config.dart';
+import '../../../../core/l10n/app_language.dart';
 import '../../../onboarding/data/onboarding_preferences.dart';
 import '../../data/repositories/fake_user_repository.dart';
 import '../../data/repositories/local_user_repository.dart';
@@ -42,6 +43,25 @@ final selectedAvatarIdProvider = Provider<String>((ref) {
   ref.watch(profileTickProvider);
   final prefs = ref.watch(sharedPreferencesProvider);
   return OnboardingPreferences.readAvatarId(prefs);
+});
+
+/// Device base currency for new money amounts. Existing rows keep their code.
+final baseCurrencyProvider = Provider<String>((ref) {
+  ref.watch(profileTickProvider);
+  final prefs = ref.watch(sharedPreferencesProvider);
+  return OnboardingPreferences.readBaseCurrency(prefs);
+});
+
+final measurementUnitsProvider = Provider<MeasurementUnits>((ref) {
+  ref.watch(profileTickProvider);
+  final prefs = ref.watch(sharedPreferencesProvider);
+  return OnboardingPreferences.readUnits(prefs);
+});
+
+final appLanguageProvider = Provider<AppLanguage>((ref) {
+  ref.watch(profileTickProvider);
+  final prefs = ref.watch(sharedPreferencesProvider);
+  return OnboardingPreferences.readLanguage(prefs);
 });
 
 final userProfileProvider = FutureProvider.autoDispose<UserProfile>((

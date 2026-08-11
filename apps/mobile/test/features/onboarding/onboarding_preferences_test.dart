@@ -18,6 +18,7 @@ void main() {
 
     expect(OnboardingPreferences.isComplete(prefs), isFalse);
     expect(OnboardingPreferences.readBaseCurrency(prefs), 'PKR');
+    expect(OnboardingPreferences.readLanguage(prefs).code, 'en');
     expect(OnboardingPreferences.readUnits(prefs), MeasurementUnits.metric);
     expect(OnboardingPreferences.readWeekStart(prefs), WeekStart.monday);
     expect(OnboardingPreferences.readDisplayName(prefs), isNull);
@@ -37,16 +38,34 @@ void main() {
     final prefs = await freshPrefs();
 
     await OnboardingPreferences.writeBaseCurrency(prefs, 'usd');
+    await OnboardingPreferences.writeLanguage(prefs, 'ur');
     await OnboardingPreferences.writeUnits(prefs, MeasurementUnits.imperial);
     await OnboardingPreferences.writeWeekStart(prefs, WeekStart.sunday);
     await OnboardingPreferences.writeTimezone(prefs, 'PKT');
     await OnboardingPreferences.writeDisplayName(prefs, '  Moon  ');
 
     expect(OnboardingPreferences.readBaseCurrency(prefs), 'USD');
+    expect(OnboardingPreferences.readLanguage(prefs).code, 'ur');
     expect(OnboardingPreferences.readUnits(prefs), MeasurementUnits.imperial);
     expect(OnboardingPreferences.readWeekStart(prefs), WeekStart.sunday);
     expect(OnboardingPreferences.readTimezone(prefs), 'PKT');
     expect(OnboardingPreferences.readDisplayName(prefs), 'Moon');
+  });
+
+  test('unsupported language falls back to English', () async {
+    final prefs = await freshPrefs();
+
+    await OnboardingPreferences.writeLanguage(prefs, 'xx');
+
+    expect(OnboardingPreferences.readLanguage(prefs).code, 'en');
+  });
+
+  test('unsupported currency falls back to PKR', () async {
+    final prefs = await freshPrefs();
+
+    await OnboardingPreferences.writeBaseCurrency(prefs, 'xyz');
+
+    expect(OnboardingPreferences.readBaseCurrency(prefs), 'PKR');
   });
 
   test('avatar id persists and unknown values fall back', () async {

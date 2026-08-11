@@ -8,11 +8,17 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
+import '../../../core/application/providers/core_providers.dart';
 import '../../../core/config/release_capabilities.dart';
+import '../../../core/constants/app_strings.dart';
+import '../../../core/l10n/app_language.dart';
 import '../../../core/widgets/memy_card.dart';
+import '../../finance/application/providers/finance_providers.dart';
 import '../../onboarding/application/onboarding_providers.dart';
+import '../../onboarding/data/onboarding_preferences.dart';
 import '../../trust/application/providers/trust_providers.dart';
 import '../../trust/domain/entities/trust_document.dart';
+import '../../user/application/providers/user_providers.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -21,12 +27,18 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final version = ref.watch(appVersionLabelProvider);
     final capabilities = ref.watch(releaseCapabilitiesProvider);
+    final currency = ref.watch(baseCurrencyProvider);
+    final units = ref.watch(measurementUnitsProvider);
+    final language = ref.watch(appLanguageProvider);
     final themeMode = ref.watch(themeModePreferenceProvider);
     final appearanceValue = switch (themeMode) {
-      ThemeMode.light => 'Light',
-      ThemeMode.dark => 'Dark',
-      ThemeMode.system => 'System',
+      ThemeMode.light => AppStrings.t('Light'),
+      ThemeMode.dark => AppStrings.t('Dark'),
+      ThemeMode.system => AppStrings.t('System'),
     };
+    final unitsValue = units == MeasurementUnits.metric
+        ? AppStrings.t('Metric')
+        : AppStrings.t('Imperial');
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
@@ -49,7 +61,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 Expanded(
                   child: Text(
-                    'Settings',
+                    AppStrings.t('Settings'),
                     textAlign: TextAlign.center,
                     style: AppTextStyles.titleLarge().copyWith(fontSize: 18),
                   ),
@@ -59,24 +71,24 @@ class SettingsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             _Section(
-              title: 'Account',
+              title: AppStrings.t('Account'),
               rows: [
-                const _SetRow(
-                  key: Key('settings_edit_profile'),
+                _SetRow(
+                  key: const Key('settings_edit_profile'),
                   icon: Icons.edit_outlined,
-                  label: 'Edit profile',
+                  label: AppStrings.t('Edit profile'),
                   isFirst: true,
                   routePath: RoutePaths.editProfile,
                 ),
-                const _SetRow(
+                _SetRow(
                   icon: Icons.person_outline_rounded,
-                  label: 'Profile',
+                  label: AppStrings.t('Profile'),
                   routePath: RoutePaths.profile,
                 ),
                 if (capabilities.demoAuth)
                   _SetRow(
                     icon: Icons.lock_outline_rounded,
-                    label: 'Change Password',
+                    label: AppStrings.t('Change Password'),
                     onTap: () => _showPasswordUnavailable(context),
                   ),
                 const _SetRow(
@@ -84,10 +96,10 @@ class SettingsScreen extends ConsumerWidget {
                   label: 'Security',
                   routePath: RoutePaths.security,
                 ),
-                const _SetRow(
-                  key: Key('settings_connected_apps'),
+                _SetRow(
+                  key: const Key('settings_connected_apps'),
                   icon: Icons.link_rounded,
-                  label: 'Connected Apps',
+                  label: AppStrings.t('Connected Apps'),
                   isLast: true,
                   routePath: RoutePaths.connectedApps,
                 ),
@@ -95,47 +107,52 @@ class SettingsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             _Section(
-              title: 'Preferences',
+              title: AppStrings.t('Preferences'),
               rows: [
                 _SetRow(
                   icon: Icons.wb_sunny_outlined,
-                  label: 'Appearance',
+                  label: AppStrings.t('Appearance'),
                   value: appearanceValue,
                   isFirst: true,
                   routePath: RoutePaths.appearance,
                 ),
-                if (capabilities.plannedSidebarItems) ...[
-                  const _SetRow(
-                    icon: Icons.straighten_rounded,
-                    label: 'Units',
-                    value: 'Metric',
-                    onTapMessage:
-                        'Units preference is planned for a later build.',
-                  ),
-                  const _SetRow(
-                    icon: Icons.language_rounded,
-                    label: 'Language',
-                    value: 'English',
-                    onTapMessage:
-                        'Language selection is planned for a later build.',
-                  ),
-                ],
+                _SetRow(
+                  key: const Key('settings_currency'),
+                  icon: Icons.payments_outlined,
+                  label: AppStrings.t('Currency'),
+                  value: currency,
+                  onTap: () => _pickCurrency(context, ref, currency),
+                ),
+                _SetRow(
+                  key: const Key('settings_units'),
+                  icon: Icons.straighten_rounded,
+                  label: AppStrings.t('Units'),
+                  value: unitsValue,
+                  onTap: () => _pickUnits(context, ref, units),
+                ),
+                _SetRow(
+                  key: const Key('settings_language'),
+                  icon: Icons.language_rounded,
+                  label: AppStrings.t('Language'),
+                  value: language.nativeName,
+                  onTap: () => _pickLanguage(context, ref, language),
+                ),
                 if (capabilities.notifications)
-                  const _SetRow(
+                  _SetRow(
                     icon: Icons.notifications_none_rounded,
-                    label: 'Notifications',
+                    label: AppStrings.t('Notifications'),
                     routePath: RoutePaths.notifications,
                   ),
                 if (capabilities.wardrobe)
-                  const _SetRow(
-                    key: Key('settings_wardrobe'),
+                  _SetRow(
+                    key: const Key('settings_wardrobe'),
                     icon: Icons.checkroom_outlined,
-                    label: 'Wardrobe',
+                    label: AppStrings.t('Wardrobe'),
                     routePath: RoutePaths.wardrobeSettings,
                   ),
-                const _SetRow(
+                _SetRow(
                   icon: Icons.privacy_tip_outlined,
-                  label: 'Privacy',
+                  label: AppStrings.t('Privacy'),
                   isLast: true,
                   routePath: RoutePaths.privacy,
                 ),
@@ -143,31 +160,31 @@ class SettingsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             _Section(
-              title: 'More',
+              title: AppStrings.t('More'),
               rows: [
-                const _SetRow(
+                _SetRow(
                   icon: Icons.help_outline_rounded,
-                  label: 'Help & Support',
+                  label: AppStrings.t('Help & Support'),
                   isFirst: true,
                   routePath: RoutePaths.support,
                 ),
                 _SetRow(
                   icon: Icons.description_outlined,
-                  label: 'Terms & Conditions',
+                  label: AppStrings.t('Terms & Conditions'),
                   routePath: RoutePaths.legalDocumentPath(
                     TrustDocumentType.termsOfUse.name,
                   ),
                 ),
                 _SetRow(
                   icon: Icons.policy_outlined,
-                  label: 'Privacy Policy',
+                  label: AppStrings.t('Privacy Policy'),
                   routePath: RoutePaths.legalDocumentPath(
                     TrustDocumentType.privacyPolicy.name,
                   ),
                 ),
                 _SetRow(
                   icon: Icons.info_outline_rounded,
-                  label: 'About MeMy',
+                  label: AppStrings.t('About MeMy'),
                   value: version.when(
                     data: (v) => v,
                     loading: () => '…',
@@ -178,7 +195,7 @@ class SettingsScreen extends ConsumerWidget {
                 _SetRow(
                   key: const Key('settings_reset_onboarding'),
                   icon: Icons.restart_alt_rounded,
-                  label: 'Reset onboarding',
+                  label: AppStrings.t('Reset onboarding'),
                   isLast: true,
                   onTap: () => _confirmResetOnboarding(context, ref),
                 ),
@@ -199,7 +216,7 @@ class SettingsScreen extends ConsumerWidget {
                     Icon(Icons.logout_rounded, color: AppColors.health),
                     const SizedBox(width: 8),
                     Text(
-                      'Log Out',
+                      AppStrings.t('Log Out'),
                       style: AppTextStyles.titleMedium(
                         color: AppColors.health,
                       ).copyWith(fontSize: 15),
@@ -212,6 +229,157 @@ class SettingsScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _pickCurrency(
+    BuildContext context,
+    WidgetRef ref,
+    String current,
+  ) async {
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Text(
+                  AppStrings.t('Currency'),
+                  style: AppTextStyles.titleMedium().copyWith(fontSize: 16),
+                ),
+              ),
+              for (final code in OnboardingPreferences.supportedCurrencies)
+                ListTile(
+                  key: Key('settings_currency_$code'),
+                  title: Text(code),
+                  trailing: code == current
+                      ? const Icon(Icons.check_rounded)
+                      : null,
+                  onTap: () => Navigator.pop(sheetContext, code),
+                ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+    if (selected == null || selected == current || !context.mounted) return;
+
+    final prefs = ref.read(sharedPreferencesProvider);
+    await OnboardingPreferences.writeBaseCurrency(prefs, selected);
+    await ref.read(financeRepositoryProvider).setBaseCurrencyCode(selected);
+    ref.read(profileTickProvider.notifier).state++;
+
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'New amounts use $selected. Existing entries keep their original currency.',
+        ),
+        duration: const Duration(milliseconds: 2200),
+      ),
+    );
+  }
+
+  Future<void> _pickUnits(
+    BuildContext context,
+    WidgetRef ref,
+    MeasurementUnits current,
+  ) async {
+    final selected = await showModalBottomSheet<MeasurementUnits>(
+      context: context,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Text(
+                  AppStrings.t('Units'),
+                  style: AppTextStyles.titleMedium().copyWith(fontSize: 16),
+                ),
+              ),
+              for (final units in MeasurementUnits.values)
+                ListTile(
+                  key: Key('settings_units_${units.name}'),
+                  title: Text(
+                    units == MeasurementUnits.metric
+                        ? AppStrings.t('Metric')
+                        : AppStrings.t('Imperial'),
+                  ),
+                  subtitle: Text(
+                    units == MeasurementUnits.metric
+                        ? AppStrings.t('°C, kg, km')
+                        : AppStrings.t('°F, lb, mi'),
+                  ),
+                  trailing: units == current
+                      ? const Icon(Icons.check_rounded)
+                      : null,
+                  onTap: () => Navigator.pop(sheetContext, units),
+                ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+    if (selected == null || selected == current || !context.mounted) return;
+
+    final prefs = ref.read(sharedPreferencesProvider);
+    await OnboardingPreferences.writeUnits(prefs, selected);
+    ref.read(profileTickProvider.notifier).state++;
+  }
+
+  Future<void> _pickLanguage(
+    BuildContext context,
+    WidgetRef ref,
+    AppLanguage current,
+  ) async {
+    final selected = await showModalBottomSheet<AppLanguage>(
+      context: context,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Text(
+                    AppStrings.t('Language'),
+                    style: AppTextStyles.titleMedium().copyWith(fontSize: 16),
+                  ),
+                ),
+                for (final language in AppLanguage.supported)
+                  ListTile(
+                    key: Key('settings_language_${language.code}'),
+                    title: Text(language.nativeName),
+                    subtitle: language.code == 'en'
+                        ? null
+                        : Text(language.englishName),
+                    trailing: language.code == current.code
+                        ? const Icon(Icons.check_rounded)
+                        : null,
+                    onTap: () => Navigator.pop(sheetContext, language),
+                  ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    if (selected == null || selected.code == current.code || !context.mounted) {
+      return;
+    }
+
+    final prefs = ref.read(sharedPreferencesProvider);
+    await OnboardingPreferences.writeLanguage(prefs, selected.code);
+    AppStrings.setLanguageCode(selected.code);
+    ref.read(profileTickProvider.notifier).state++;
   }
 
   Future<void> _confirmResetOnboarding(
@@ -312,7 +480,6 @@ class _SetRow extends StatelessWidget {
     this.isLast = false,
     this.routePath,
     this.onTap,
-    this.onTapMessage,
   });
 
   final IconData icon;
@@ -322,7 +489,6 @@ class _SetRow extends StatelessWidget {
   final bool isLast;
   final String? routePath;
   final VoidCallback? onTap;
-  final String? onTapMessage;
 
   BorderRadius get _inkRadius {
     if (isFirst && isLast) return AppRadii.cardRadius;
@@ -353,7 +519,7 @@ class _SetRow extends StatelessWidget {
           }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(onTapMessage ?? '$label — planned'),
+              content: Text('$label — planned'),
               duration: const Duration(milliseconds: 1200),
             ),
           );

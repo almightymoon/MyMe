@@ -4,8 +4,8 @@ import '../../../../core/application/providers/core_providers.dart';
 import '../../../../core/config/environment_config.dart';
 import '../../data/repositories/fake_finance_repository.dart';
 import '../../data/repositories/local_finance_repository.dart';
-import '../../data/seed/finance_seed.dart';
 import '../../../../core/domain/value_objects/year_month.dart';
+import '../../../user/application/providers/user_providers.dart';
 import '../../domain/entities/finance_budget.dart';
 import '../../domain/entities/finance_category.dart';
 import '../../domain/entities/finance_enums.dart';
@@ -120,7 +120,7 @@ final financeSummaryProvider = Provider.autoDispose<AsyncValue<FinanceSummary>>(
         transactions: transactions,
         categories: categories,
         period: period,
-        currencyCode: FinanceSeed.baseCurrencyCode,
+        currencyCode: ref.watch(baseCurrencyProvider),
       ),
     );
   },
@@ -154,7 +154,7 @@ final todayFinanceSummaryProvider =
           transactions: txsAsync.requireValue,
           categories: catsAsync.requireValue,
           period: FinancePeriod.thisMonth,
-          currencyCode: FinanceSeed.baseCurrencyCode,
+          currencyCode: ref.watch(baseCurrencyProvider),
         ),
       );
     });
@@ -194,7 +194,7 @@ final financeBudgetsForSelectedMonthProvider =
             spentMinor: report.spentForBudget(
               budget: budget,
               transactions: txs,
-              currencyCode: FinanceSeed.baseCurrencyCode,
+              currencyCode: ref.watch(baseCurrencyProvider),
             ),
           ),
       ]);
@@ -231,7 +231,7 @@ final todayFinanceBudgetProgressProvider =
           spentMinor: report.spentForBudget(
             budget: overall,
             transactions: txs,
-            currencyCode: FinanceSeed.baseCurrencyCode,
+            currencyCode: ref.watch(baseCurrencyProvider),
           ),
         ),
       );
@@ -267,7 +267,7 @@ final financeMoneyOwedTotalsProvider =
       return ref.watch(financeMoneyPositionsProvider).whenData((list) {
         return MoneyOwedTotals.fromPositions(
           list,
-          currencyCode: FinanceSeed.baseCurrencyCode,
+          currencyCode: ref.watch(baseCurrencyProvider),
         );
       });
     });
@@ -294,7 +294,7 @@ final financePeriodReportProvider =
           categories: catsAsync.valueOrNull ?? const [],
           budgets: budgetsAsync.valueOrNull ?? const [],
           period: period,
-          currencyCode: FinanceSeed.baseCurrencyCode,
+          currencyCode: ref.watch(baseCurrencyProvider),
         ),
       );
     });

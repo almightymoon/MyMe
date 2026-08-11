@@ -5,7 +5,7 @@ import '../../../../core/domain/services/money_format.dart';
 import '../../../../core/domain/value_objects/local_date.dart';
 import '../../../../core/domain/value_objects/money_minor.dart';
 import '../../../../core/errors/app_exception.dart';
-import '../../data/seed/finance_seed.dart';
+import '../../../user/application/providers/user_providers.dart';
 import '../../domain/entities/finance_money_position.dart';
 import '../providers/finance_providers.dart';
 
@@ -182,7 +182,7 @@ class MoneyOwedFormController extends StateNotifier<MoneyOwedFormState> {
           direction: state.direction,
           counterparty: state.counterparty.trim(),
           originalAmountMinor: amount,
-          currencyCode: FinanceSeed.baseCurrencyCode,
+          currencyCode: _ref.read(baseCurrencyProvider),
           note: note.isEmpty ? null : note,
           dueDate: state.dueDate,
           createdAt: now,

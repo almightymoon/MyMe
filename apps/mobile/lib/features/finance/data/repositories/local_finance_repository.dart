@@ -17,6 +17,7 @@ import '../../domain/entities/finance_transaction.dart';
 import '../../domain/repositories/finance_repository.dart';
 import '../../domain/services/finance_report_service.dart';
 import '../../domain/services/finance_summary_service.dart';
+import '../../../onboarding/data/onboarding_preferences.dart';
 import '../seed/finance_seed.dart';
 
 /// Local JSON persistence for finance (SharedPreferences).
@@ -85,7 +86,7 @@ class LocalFinanceRepository implements FinanceRepository {
       );
       _budgets = const [];
       _moneyPositions = const [];
-      _baseCurrencyCode = FinanceSeed.baseCurrencyCode;
+      _baseCurrencyCode = OnboardingPreferences.readBaseCurrency(prefs);
       await _persist();
       await prefs.setBool(initializedKey, true);
       return;
@@ -665,6 +666,18 @@ class LocalFinanceRepository implements FinanceRepository {
       currencyCode: _baseCurrencyCode,
       asOf: asOf,
     );
+  }
+
+  @override
+  Future<void> setBaseCurrencyCode(String code) async {
+    await _requireReady();
+    final next = code.trim().toUpperCase();
+    if (next.length != 3) {
+      throw AppException.validation('Use a 3-letter currency code.');
+    }
+    if (_baseCurrencyCode == next) return;
+    _baseCurrencyCode = next;
+    await _persist();
   }
 
   @override

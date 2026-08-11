@@ -7,14 +7,10 @@ import '../../app/theme/app_text_styles.dart';
 import '../constants/app_strings.dart';
 
 class RetryButton extends StatelessWidget {
-  const RetryButton({
-    super.key,
-    required this.onPressed,
-    this.label = AppStrings.retry,
-  });
+  const RetryButton({super.key, required this.onPressed, this.label});
 
   final VoidCallback onPressed;
-  final String label;
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +18,7 @@ class RetryButton extends StatelessWidget {
       key: const Key('retry_button'),
       onPressed: onPressed,
       icon: const Icon(Icons.refresh_rounded, size: 18),
-      label: Text(label),
+      label: Text(label ?? AppStrings.retry),
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.emberDark,
         side: BorderSide(color: AppColors.ember),

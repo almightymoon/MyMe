@@ -41,7 +41,7 @@ class ComingSoonView extends StatelessWidget {
               onPressed:
                   onBack ?? () => memyBack(context, fallback: fallbackPath),
               icon: const Icon(Icons.arrow_back_rounded),
-              label: const Text(AppStrings.back),
+              label: Text(AppStrings.back),
             ),
           ),
           const Spacer(),

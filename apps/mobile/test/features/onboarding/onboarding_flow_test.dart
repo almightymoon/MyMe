@@ -70,6 +70,8 @@ void main() {
     expect(OnboardingPreferences.readDisplayName(prefs), 'Moon');
     expect(OnboardingPreferences.readAvatarId(prefs), 'memy_3d_02');
     expect(OnboardingPreferences.readBaseCurrency(prefs), 'PKR');
+    expect(OnboardingPreferences.readLanguage(prefs).code, 'en');
+    expect(OnboardingPreferences.readUnits(prefs), MeasurementUnits.metric);
   });
 
   testWidgets('a completed device skips onboarding on next launch', (

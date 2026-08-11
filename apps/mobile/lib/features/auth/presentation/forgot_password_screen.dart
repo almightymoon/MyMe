@@ -43,7 +43,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     });
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text(AppStrings.resetLinkSentDemo)));
+    ).showSnackBar(SnackBar(content: Text(AppStrings.resetLinkSentDemo)));
   }
 
   @override

@@ -12,13 +12,13 @@ class InlineErrorCard extends StatelessWidget {
   const InlineErrorCard({
     super.key,
     required this.onRetry,
-    this.title = AppStrings.couldNotLoad,
+    this.title,
     this.message,
     this.retryButtonKey,
   });
 
   final VoidCallback onRetry;
-  final String title;
+  final String? title;
   final String? message;
   final Key? retryButtonKey;
 
@@ -29,7 +29,7 @@ class InlineErrorCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SectionHeader(title: title),
+          SectionHeader(title: title ?? AppStrings.couldNotLoad),
           Text(
             message ?? AppStrings.demoLoadFailed,
             style: AppTextStyles.bodyMedium(),

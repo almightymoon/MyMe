@@ -5,7 +5,7 @@ import '../../../../core/domain/services/money_format.dart';
 import '../../../../core/domain/value_objects/money_minor.dart';
 import '../../../../core/domain/value_objects/year_month.dart';
 import '../../../../core/errors/app_exception.dart';
-import '../../data/seed/finance_seed.dart';
+import '../../../user/application/providers/user_providers.dart';
 import '../../domain/entities/finance_budget.dart';
 import '../providers/finance_providers.dart';
 
@@ -185,7 +185,7 @@ class BudgetFormController extends StateNotifier<BudgetFormState> {
         categoryId: state.isOverall ? null : state.categoryId,
         month: state.month!,
         amountMinor: amount,
-        currencyCode: FinanceSeed.baseCurrencyCode,
+        currencyCode: _ref.read(baseCurrencyProvider),
         warningThresholdBasisPoints: state.warningThresholdBasisPoints,
         createdAt: now,
         updatedAt: now,

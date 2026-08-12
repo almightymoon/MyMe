@@ -13,8 +13,82 @@ export const envValidationSchema = Joi.object({
     .default('development'),
   API_PORT: Joi.number().port().default(3000),
   API_GLOBAL_PREFIX: Joi.string().default('api/v1'),
-  CORS_ORIGINS: Joi.string().allow('').default('*'),
+  CORS_ORIGINS: Joi.string()
+    .allow('')
+    .when('NODE_ENV', {
+      is: 'production',
+      then: Joi.string().invalid('*').required(),
+      otherwise: Joi.string().default('*'),
+    }),
+
   DATABASE_URL: Joi.string().uri().required(),
+
+  // Public URL is used by clients + used for safe production config checks.
+  API_PUBLIC_URL: Joi.string()
+    .uri({ scheme: ['https'] })
+    .custom((value, helpers) => {
+      const host = new URL(value).hostname;
+      if (host.includes('.invalid')) {
+        return helpers.error('any.invalid');
+      }
+      const lowered = host.toLowerCase();
+      if (
+        lowered === 'localhost' ||
+        lowered === '127.0.0.1' ||
+        lowered.endsWith('.local') ||
+        lowered.startsWith('10.') ||
+        lowered.startsWith('192.168.') ||
+        lowered.startsWith('172.16.') ||
+        lowered.startsWith('172.17.') ||
+        lowered.startsWith('172.18.') ||
+        lowered.startsWith('172.19.') ||
+        lowered.startsWith('172.2') || // matches 172.20-172.29
+        lowered.startsWith('172.3') || // matches 172.30-172.31
+        lowered.startsWith('169.254.')
+      ) {
+        return helpers.error('any.invalid');
+      }
+      return value;
+    })
+    .when('NODE_ENV', {
+      is: 'production',
+      then: Joi.required(),
+      otherwise: Joi.optional(),
+    }),
+
+  OBJECT_STORAGE_ENDPOINT: Joi.string().min(1).when('NODE_ENV', {
+    is: 'production',
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  }),
+  OBJECT_STORAGE_REGION: Joi.string().allow('').optional(),
+  OBJECT_STORAGE_ACCESS_KEY: Joi.string().min(8).when('NODE_ENV', {
+    is: 'production',
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  }),
+  OBJECT_STORAGE_SECRET_KEY: Joi.string().min(8).when('NODE_ENV', {
+    is: 'production',
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  }),
+  OBJECT_STORAGE_BUCKET: Joi.string()
+    .pattern(/^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])?$/)
+    .when('NODE_ENV', {
+      is: 'production',
+      then: Joi.required(),
+      otherwise: Joi.optional(),
+    }),
+  OBJECT_STORAGE_SIGNED_URL_SECONDS: Joi.number()
+    .integer()
+    .min(60)
+    .max(3600)
+    .when('NODE_ENV', {
+      is: 'production',
+      then: Joi.required(),
+      otherwise: Joi.optional(),
+    }),
+
   DEV_USER_ID: Joi.string().uuid().when('NODE_ENV', {
     is: 'production',
     then: Joi.optional(),

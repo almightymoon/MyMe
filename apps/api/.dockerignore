@@ -1,0 +1,18 @@
+node_modules
+dist
+coverage
+.env
+.env.*
+.github
+logs
+test
+scripts
+prisma/migrations
+*.tsbuildinfo
+npm-debug.log*
+Dockerfile
+
+# Local/dev-only artefacts
+build
+.DS_Store
+

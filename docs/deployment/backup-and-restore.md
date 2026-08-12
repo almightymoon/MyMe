@@ -19,12 +19,11 @@ Run on the VPS, not from developer laptops:
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
+ENVIRONMENT="${1:-production}"
 STAMP=$(date -u +%Y%m%d)
-DIR=/var/backups/memy/$STAMP
+DIR=/var/backups/memy-${ENVIRONMENT}/$STAMP
 mkdir -p "$DIR"
-docker compose -f docker-compose.production.yml exec -T postgres \
-  pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" | gzip > "$DIR/postgres.sql.gz"
-# Object storage: copy the MinIO volume or `mc mirror` to an off-server bucket.
+./scripts/backup.sh "$ENVIRONMENT"
 ```
 
 Retention and off-server encryption are owner configuration.

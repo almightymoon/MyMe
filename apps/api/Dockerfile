@@ -10,6 +10,7 @@ RUN npx prisma generate && npm run build
 FROM node:20.18.1-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
+RUN apk add --no-cache wget
 RUN addgroup -S memy && adduser -S memy -G memy
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev

@@ -9,6 +9,7 @@ describe('envValidationSchema', () => {
     NODE_ENV: 'test',
     DATABASE_URL:
       'postgresql://memy:memy_dev_password@localhost:5433/memy_test?schema=public',
+    API_PUBLIC_URL: 'https://api.example.com/api/v1',
     DEV_USER_ID: '00000000-0000-4000-8000-000000000001',
     DEV_USER_EMAIL: 'emma@example.com',
     DEV_USER_DISPLAY_NAME: 'Emma Chen',
@@ -65,14 +66,120 @@ describe('envValidationSchema', () => {
       {
         NODE_ENV: 'production',
         DATABASE_URL: base.DATABASE_URL,
+        API_PUBLIC_URL: 'https://api.example.com/api/v1',
         JWT_ACCESS_SECRET: 'production-access-secret-min-32-chars',
         REFRESH_TOKEN_PEPPER: 'production-pepper',
-        CORS_ORIGINS: 'https://app.example.invalid',
+        CORS_ORIGINS: 'https://app.example.com',
+        OBJECT_STORAGE_ENDPOINT: 'http://minio:9000',
+        OBJECT_STORAGE_ACCESS_KEY: 'minio-access-key',
+        OBJECT_STORAGE_SECRET_KEY: 'minio-secret-key',
+        OBJECT_STORAGE_BUCKET: 'memy-private',
+        OBJECT_STORAGE_SIGNED_URL_SECONDS: 300,
       },
       { abortEarly: false, allowUnknown: true },
     );
     expect(error).toBeUndefined();
     expect(value.JWT_ACCESS_SECRET).toContain('production-access');
+  });
+
+  it('rejects CORS_ORIGINS=* in production', () => {
+    const { error } = envValidationSchema.validate(
+      {
+        NODE_ENV: 'production',
+        DATABASE_URL: base.DATABASE_URL,
+        API_PUBLIC_URL: 'https://api.example.com/api/v1',
+        JWT_ACCESS_SECRET: 'production-access-secret-min-32-chars',
+        REFRESH_TOKEN_PEPPER: 'production-pepper',
+        CORS_ORIGINS: '*',
+        OBJECT_STORAGE_ENDPOINT: 'http://minio:9000',
+        OBJECT_STORAGE_ACCESS_KEY: 'minio-access-key',
+        OBJECT_STORAGE_SECRET_KEY: 'minio-secret-key',
+        OBJECT_STORAGE_BUCKET: 'memy-private',
+        OBJECT_STORAGE_SIGNED_URL_SECONDS: 300,
+      },
+      { abortEarly: false, allowUnknown: true },
+    );
+    expect(error).toBeDefined();
+  });
+
+  it('rejects placeholder `.invalid` API_PUBLIC_URL in production', () => {
+    const { error } = envValidationSchema.validate(
+      {
+        NODE_ENV: 'production',
+        DATABASE_URL: base.DATABASE_URL,
+        API_PUBLIC_URL: 'https://api.example.invalid/api/v1',
+        JWT_ACCESS_SECRET: 'production-access-secret-min-32-chars',
+        REFRESH_TOKEN_PEPPER: 'production-pepper',
+        CORS_ORIGINS: 'https://app.example.com',
+        OBJECT_STORAGE_ENDPOINT: 'http://minio:9000',
+        OBJECT_STORAGE_ACCESS_KEY: 'minio-access-key',
+        OBJECT_STORAGE_SECRET_KEY: 'minio-secret-key',
+        OBJECT_STORAGE_BUCKET: 'memy-private',
+        OBJECT_STORAGE_SIGNED_URL_SECONDS: 300,
+      },
+      { abortEarly: false, allowUnknown: true },
+    );
+    expect(error).toBeDefined();
+  });
+
+  it('rejects non-https API_PUBLIC_URL in production', () => {
+    const { error } = envValidationSchema.validate(
+      {
+        NODE_ENV: 'production',
+        DATABASE_URL: base.DATABASE_URL,
+        API_PUBLIC_URL: 'http://api.example.com/api/v1',
+        JWT_ACCESS_SECRET: 'production-access-secret-min-32-chars',
+        REFRESH_TOKEN_PEPPER: 'production-pepper',
+        CORS_ORIGINS: 'https://app.example.com',
+        OBJECT_STORAGE_ENDPOINT: 'http://minio:9000',
+        OBJECT_STORAGE_ACCESS_KEY: 'minio-access-key',
+        OBJECT_STORAGE_SECRET_KEY: 'minio-secret-key',
+        OBJECT_STORAGE_BUCKET: 'memy-private',
+        OBJECT_STORAGE_SIGNED_URL_SECONDS: 300,
+      },
+      { abortEarly: false, allowUnknown: true },
+    );
+    expect(error).toBeDefined();
+  });
+
+  it('rejects out-of-bounds signed URL expiry in production', () => {
+    const { error } = envValidationSchema.validate(
+      {
+        NODE_ENV: 'production',
+        DATABASE_URL: base.DATABASE_URL,
+        API_PUBLIC_URL: 'https://api.example.com/api/v1',
+        JWT_ACCESS_SECRET: 'production-access-secret-min-32-chars',
+        REFRESH_TOKEN_PEPPER: 'production-pepper',
+        CORS_ORIGINS: 'https://app.example.com',
+        OBJECT_STORAGE_ENDPOINT: 'http://minio:9000',
+        OBJECT_STORAGE_ACCESS_KEY: 'minio-access-key',
+        OBJECT_STORAGE_SECRET_KEY: 'minio-secret-key',
+        OBJECT_STORAGE_BUCKET: 'memy-private',
+        OBJECT_STORAGE_SIGNED_URL_SECONDS: 30,
+      },
+      { abortEarly: false, allowUnknown: true },
+    );
+    expect(error).toBeDefined();
+  });
+
+  it('rejects invalid bucket names in production', () => {
+    const { error } = envValidationSchema.validate(
+      {
+        NODE_ENV: 'production',
+        DATABASE_URL: base.DATABASE_URL,
+        API_PUBLIC_URL: 'https://api.example.com/api/v1',
+        JWT_ACCESS_SECRET: 'production-access-secret-min-32-chars',
+        REFRESH_TOKEN_PEPPER: 'production-pepper',
+        CORS_ORIGINS: 'https://app.example.com',
+        OBJECT_STORAGE_ENDPOINT: 'http://minio:9000',
+        OBJECT_STORAGE_ACCESS_KEY: 'minio-access-key',
+        OBJECT_STORAGE_SECRET_KEY: 'minio-secret-key',
+        OBJECT_STORAGE_BUCKET: 'Invalid_Bucket',
+        OBJECT_STORAGE_SIGNED_URL_SECONDS: 300,
+      },
+      { abortEarly: false, allowUnknown: true },
+    );
+    expect(error).toBeDefined();
   });
 
   it('fails when DATABASE_URL is not a URI', () => {

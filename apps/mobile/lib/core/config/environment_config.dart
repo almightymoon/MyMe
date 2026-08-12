@@ -441,6 +441,11 @@ class EnvironmentConfig {
     if (authMode != AuthMode.account) {
       problems.add('AUTH_MODE must resolve to account in production');
     }
+    try {
+      validateApiBaseUrl();
+    } on EnvironmentConfigError catch (e) {
+      problems.add(e.message);
+    }
     if (bool.hasEnvironment('STORE_SCREENSHOT_MODE') &&
         storeScreenshotModeRaw.trim().toLowerCase() == 'true') {
       problems.add('STORE_SCREENSHOT_MODE=true');
@@ -460,4 +465,59 @@ class EnvironmentConfig {
   static const bool _authModeExplicitlyDemo =
       bool.hasEnvironment('AUTH_MODE') &&
       String.fromEnvironment('AUTH_MODE') == 'demo';
+
+  /// Runtime validation for production API endpoint wiring.
+  ///
+  /// Ensures the app will only attempt to connect to the production/staging
+  /// API over HTTPS and rejects common placeholder / local-dev hosts.
+  static void validateApiBaseUrl({
+    AppEnvironment? environment,
+    String? apiBaseUrlOverride,
+  }) {
+    final env = environment ?? appEnvironment;
+    if (env != AppEnvironment.production) return;
+
+    final raw = (apiBaseUrlOverride ?? apiBaseUrl).trim();
+    if (raw.isEmpty) {
+      throw EnvironmentConfigError('API_BASE_URL must be non-empty.');
+    }
+
+    final uri = Uri.tryParse(raw);
+    if (uri == null) {
+      throw EnvironmentConfigError('API_BASE_URL must be a valid URL.');
+    }
+    if (uri.scheme != 'https') {
+      throw EnvironmentConfigError('API_BASE_URL must use HTTPS in production.');
+    }
+
+    final host = uri.host.trim().toLowerCase();
+    if (host.isEmpty) {
+      throw EnvironmentConfigError('API_BASE_URL host must be non-empty.');
+    }
+    if (host == 'localhost' || host == '127.0.0.1' || host == '::1') {
+      throw EnvironmentConfigError('API_BASE_URL must not point to localhost.');
+    }
+    if (host.contains('.invalid') || host.endsWith('.invalid')) {
+      throw EnvironmentConfigError('API_BASE_URL must not use .invalid hosts.');
+    }
+    if (host.startsWith('10.') ||
+        host.startsWith('192.168.') ||
+        host.startsWith('169.254.') ||
+        host.startsWith('172.16.') ||
+        host.startsWith('172.17.') ||
+        host.startsWith('172.18.') ||
+        host.startsWith('172.19.') ||
+        host.startsWith('172.2') || // 172.20–172.29
+        host.startsWith('172.3')) { // 172.30–172.31
+      throw EnvironmentConfigError('API_BASE_URL must not point to private LAN.');
+    }
+
+    // Production expects the full prefix including `/api/v1`.
+    const expectedPath = '/api/v1';
+    if (!uri.path.endsWith(expectedPath)) {
+      throw EnvironmentConfigError(
+        'API_BASE_URL must end with $expectedPath in production.',
+      );
+    }
+  }
 }

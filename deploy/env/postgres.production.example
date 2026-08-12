@@ -1,0 +1,4 @@
+# Copy to /etc/memy/production/postgres.env on the VPS. Never commit real values.
+POSTGRES_DB=memy
+POSTGRES_USER=memy
+POSTGRES_PASSWORD=change-me

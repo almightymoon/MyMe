@@ -1,11 +1,11 @@
-# Copy to /etc/memy/api.env on the VPS. Never commit real values.
+# Copy to /etc/memy/staging/api.env on the VPS. Never commit real values.
 NODE_ENV=production
 API_PORT=3000
 API_GLOBAL_PREFIX=api/v1
-API_PUBLIC_URL=https://api.example.invalid/api/v1
-CORS_ORIGINS=https://www.example.invalid
+API_PUBLIC_URL=https://staging-api.example.com/api/v1
+CORS_ORIGINS=https://staging-www.example.com
 
-DATABASE_URL=postgresql://memy:change-me@postgres:5432/memy?schema=public
+DATABASE_URL=postgresql://memy_staging:change-me@postgres:5432/memy_staging?schema=public
 
 JWT_ACCESS_SECRET=replace-with-32-plus-character-secret
 REFRESH_TOKEN_PEPPER=replace-with-pepper
@@ -16,11 +16,11 @@ APPLE_CLIENT_ID=
 OBJECT_STORAGE_ENDPOINT=http://minio:9000
 OBJECT_STORAGE_ACCESS_KEY=
 OBJECT_STORAGE_SECRET_KEY=
-OBJECT_STORAGE_BUCKET=memy-private
+OBJECT_STORAGE_BUCKET=memy-staging-private
 OBJECT_STORAGE_REGION=us-east-1
 OBJECT_STORAGE_SIGNED_URL_SECONDS=300
 
 LOG_LEVEL=info
 SUPPORT_EMAIL=
 ACCOUNT_DELETION_RETENTION_DAYS=30
-BACKUP_PATH=/var/backups/memy
+BACKUP_PATH=/var/backups/memy-staging

@@ -1,0 +1,3 @@
+# Copy to /etc/memy/staging/minio.env on the VPS. Never commit real values.
+MINIO_ROOT_USER=memy-staging-minio
+MINIO_ROOT_PASSWORD=change-me-min-8-chars

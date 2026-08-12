@@ -25,12 +25,13 @@ The public website is `/apps/www` (landing, privacy, terms, support).
 ## Process
 
 1. Copy the release image or build `apps/api/Dockerfile`.
-2. Place env files. Production API startup fails without JWT and refresh secrets.
-3. `docker compose -f docker-compose.production.yml up -d`
-4. Run Prisma migrations inside the API container:
-   `docker compose -f docker-compose.production.yml exec api npx prisma migrate deploy`
-5. Check `https://<api-host>/api/v1/health`
-6. If the new API image fails health, roll back the **application image only**. Never automatically roll back a destructive database migration.
+2. Place env files (see `deploy/env/README.md` and `deploy/env/compose.production.example`).
+   Production API startup fails without JWT, refresh pepper, HTTPS `API_PUBLIC_URL`,
+   and object-storage settings.
+3. `./scripts/deploy.sh production`
+4. Check `https://<api-host>/api/v1/health`
+5. If the new API image fails health, roll back the **application image only**.
+   Never automatically roll back a destructive database migration.
 
 ## Rollback
 

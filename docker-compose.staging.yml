@@ -1,7 +1,7 @@
-# Production VPS stack. Copy to the server with env files outside Git.
+# Staging VPS stack — isolated volumes and env paths from production.
 # Only the reverse proxy publishes 80/443. PostgreSQL and MinIO stay private.
 
-name: memy-production
+name: memy-staging
 
 services:
   caddy:
@@ -16,8 +16,8 @@ services:
     volumes:
       - ./deploy/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./apps/www:/srv/www:ro
-      - caddy_data:/data
-      - caddy_config:/config
+      - staging_caddy_data:/data
+      - staging_caddy_config:/config
     depends_on:
       api:
         condition: service_healthy
@@ -26,13 +26,13 @@ services:
       - private
 
   api:
-    image: ${MEMY_API_IMAGE:-memy-api:0.0.1}
+    image: ${MEMY_API_IMAGE:-memy-api:staging}
     build:
       context: ./apps/api
       dockerfile: Dockerfile
     restart: unless-stopped
     env_file:
-      - /etc/memy/api.env
+      - /etc/memy/staging/api.env
     environment:
       NODE_ENV: production
     depends_on:
@@ -54,9 +54,9 @@ services:
     image: postgres:16.4-alpine
     restart: unless-stopped
     env_file:
-      - /etc/memy/postgres.env
+      - /etc/memy/staging/postgres.env
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - staging_postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
@@ -70,9 +70,9 @@ services:
     restart: unless-stopped
     command: server /data --console-address ":9001"
     env_file:
-      - /etc/memy/minio.env
+      - /etc/memy/staging/minio.env
     volumes:
-      - minio_data:/data
+      - staging_minio_data:/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:9000/minio/health/live"]
       interval: 15s
@@ -86,7 +86,7 @@ networks:
   private:
 
 volumes:
-  postgres_data:
-  minio_data:
-  caddy_data:
-  caddy_config:
+  staging_postgres_data:
+  staging_minio_data:
+  staging_caddy_data:
+  staging_caddy_config:

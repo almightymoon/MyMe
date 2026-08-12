@@ -7,11 +7,10 @@ import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   createDownloadUrl,
-  createObjectStorageClient,
   createUploadUrl,
   deleteObject,
+  getObjectStorage,
   objectExists,
-  readObjectStorageConfig,
 } from './object-storage';
 
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -47,32 +46,34 @@ export class AssetsService {
     const storage = this.storageOrThrowInProduction();
     const id = randomUUID();
     const objectKey = `wardrobe/${randomUUID()}`;
-    const asset = await this.prisma.asset.create({
-      data: {
-        id,
-        userId,
-        kind: input.kind,
-        objectKey,
-        mimeType: input.mimeType,
-        byteSize: input.byteSize,
-        checksum: input.checksum,
-        width: input.width,
-        height: input.height,
-      },
-    });
-    const uploadUrl = storage
-      ? await createUploadUrl(
-          createObjectStorageClient(storage),
-          storage,
+    const [asset, uploadUrl] = await Promise.all([
+      this.prisma.asset.create({
+        data: {
+          id,
+          userId,
+          kind: input.kind,
           objectKey,
-          input.mimeType,
-        )
-      : '';
+          mimeType: input.mimeType,
+          byteSize: input.byteSize,
+          checksum: input.checksum,
+          width: input.width,
+          height: input.height,
+        },
+      }),
+      storage
+        ? createUploadUrl(
+            storage.client,
+            storage.config,
+            objectKey,
+            input.mimeType,
+          )
+        : Promise.resolve(''),
+    ]);
     return {
       assetId: asset.id,
       uploadUrl,
       uploadMethod: 'PUT',
-      expiresInSeconds: storage?.expiresInSeconds ?? 300,
+      expiresInSeconds: storage?.config.expiresInSeconds ?? 300,
       headers: {
         'Content-Type': input.mimeType,
       },
@@ -86,8 +87,8 @@ export class AssetsService {
     const storage = this.storageOrThrowInProduction();
     if (storage) {
       const head = await objectExists(
-        createObjectStorageClient(storage),
-        storage,
+        storage.client,
+        storage.config,
         asset.objectKey,
       );
       if (!head.exists) {
@@ -119,31 +120,23 @@ export class AssetsService {
     }
     const storage = this.storageOrThrowInProduction();
     const downloadUrl = storage
-      ? await createDownloadUrl(
-          createObjectStorageClient(storage),
-          storage,
-          asset.objectKey,
-        )
+      ? await createDownloadUrl(storage.client, storage.config, asset.objectKey)
       : '';
     return {
       assetId: asset.id,
       mimeType: asset.mimeType,
       byteSize: asset.byteSize,
       downloadUrl,
-      expiresInSeconds: storage?.expiresInSeconds ?? 300,
+      expiresInSeconds: storage?.config.expiresInSeconds ?? 300,
     };
   }
 
   async remove(userId: string, assetId: string) {
     const asset = await this.requireOwned(userId, assetId);
-    const storage = readObjectStorageConfig();
+    const storage = getObjectStorage();
     if (storage) {
       try {
-        await deleteObject(
-          createObjectStorageClient(storage),
-          storage,
-          asset.objectKey,
-        );
+        await deleteObject(storage.client, storage.config, asset.objectKey);
       } catch {
         await this.prisma.asset.update({
           where: { id: asset.id },
@@ -159,7 +152,7 @@ export class AssetsService {
   }
 
   private storageOrThrowInProduction() {
-    const storage = readObjectStorageConfig();
+    const storage = getObjectStorage();
     if (!storage && process.env.NODE_ENV === 'production') {
       throw new ForbiddenException({
         code: 'ASSET_STORAGE_UNAVAILABLE',

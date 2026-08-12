@@ -68,8 +68,8 @@ final wardrobePlansProvider = FutureProvider.autoDispose<List<OutfitPlan>>((
   return ref
       .watch(wardrobeRepositoryProvider)
       .getPlansForDateRange(
-        start: LocalDate(today.year - 1, 1, 1),
-        endInclusive: LocalDate(today.year + 2, 12, 31),
+        start: today.addDays(-14),
+        endInclusive: today.addDays(60),
       );
 });
 

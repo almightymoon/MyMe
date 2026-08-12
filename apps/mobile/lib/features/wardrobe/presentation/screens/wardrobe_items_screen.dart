@@ -33,6 +33,7 @@ class _WardrobeItemsScreenState extends ConsumerState<WardrobeItemsScreen> {
       key: const Key('wardrobe_items'),
       title: 'Items',
       fallbackPath: RoutePaths.wardrobe,
+      fillBody: true,
       trailing: MemyIconPlain(
         icon: Icons.add_rounded,
         onPressed: () => context.push(RoutePaths.addWardrobeItem),
@@ -78,18 +79,23 @@ class _WardrobeItemsScreenState extends ConsumerState<WardrobeItemsScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              if (filtered.isEmpty)
-                const EmptyFeatureCard(
-                  key: Key('wardrobe_items_empty'),
-                  title: 'No items',
-                  message: 'Try another filter or add an item.',
-                )
-              else
-                for (final item in filtered)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: _ItemRow(item: item),
-                  ),
+              Expanded(
+                child: filtered.isEmpty
+                    ? const EmptyFeatureCard(
+                        key: Key('wardrobe_items_empty'),
+                        title: 'No items',
+                        message: 'Try another filter or add an item.',
+                      )
+                    : ListView.builder(
+                        itemCount: filtered.length,
+                        itemBuilder: (context, index) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: _ItemRow(item: filtered[index]),
+                          );
+                        },
+                      ),
+              ),
             ],
           );
         },

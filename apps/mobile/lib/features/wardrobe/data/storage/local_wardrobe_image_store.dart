@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:isolate';
+import 'dart:typed_data';
 
 import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as p;
@@ -66,17 +68,17 @@ class LocalWardrobeImageStore implements WardrobeImageStore {
         code: 'unsupportedImage',
       );
     }
-    final decoded = img.decodeImage(bytes);
-    if (decoded == null) {
+    late final _EncodedWardrobeJpeg processed;
+    try {
+      processed = await Isolate.run(() => _encodeWardrobeImages(bytes));
+    } on StateError {
       throw AppException.validation(
         'That file is not a supported image.',
         code: 'unsupportedImage',
       );
     }
-    final oriented = img.bakeOrientation(decoded);
-    final resized = _fit(oriented, maxEdge);
-    final encoded = img.encodeJpg(resized, quality: 85);
-    final thumb = img.encodeJpg(_fit(resized, thumbEdge), quality: 70);
+    final encoded = processed.original;
+    final thumb = processed.thumb;
     final id = idGenerator();
     final originalName = '$id.jpg';
     final thumbName = '$id.jpg';
@@ -92,8 +94,8 @@ class LocalWardrobeImageStore implements WardrobeImageStore {
         relativeOriginalPath: 'originals/$originalName',
         relativeThumbnailPath: 'thumbnails/$thumbName',
         mimeType: 'image/jpeg',
-        width: resized.width,
-        height: resized.height,
+        width: processed.width,
+        height: processed.height,
         byteSize: encoded.length,
         createdAt: DateTime.now(),
       );
@@ -106,17 +108,6 @@ class LocalWardrobeImageStore implements WardrobeImageStore {
     }
   }
 
-  img.Image _fit(img.Image source, int maxEdge) {
-    final edge = source.width > source.height ? source.width : source.height;
-    if (edge <= maxEdge) return source;
-    final scale = maxEdge / edge;
-    return img.copyResize(
-      source,
-      width: (source.width * scale).round(),
-      height: (source.height * scale).round(),
-    );
-  }
-
   @override
   Future<File?> getOriginalFile(WardrobeImageReference reference) async {
     final file = File(
@@ -127,7 +118,7 @@ class LocalWardrobeImageStore implements WardrobeImageStore {
         reference.relativeOriginalPath,
       ),
     );
-    return file.existsSync() ? file : null;
+    return await file.exists() ? file : null;
   }
 
   @override
@@ -140,7 +131,7 @@ class LocalWardrobeImageStore implements WardrobeImageStore {
         reference.relativeThumbnailPath,
       ),
     );
-    return file.existsSync() ? file : null;
+    return await file.exists() ? file : null;
   }
 
   @override
@@ -218,4 +209,49 @@ class LocalWardrobeImageStore implements WardrobeImageStore {
     }
     return total;
   }
+}
+
+class _EncodedWardrobeJpeg {
+  const _EncodedWardrobeJpeg({
+    required this.original,
+    required this.thumb,
+    required this.width,
+    required this.height,
+  });
+
+  final Uint8List original;
+  final Uint8List thumb;
+  final int width;
+  final int height;
+}
+
+_EncodedWardrobeJpeg _encodeWardrobeImages(Uint8List bytes) {
+  final decoded = img.decodeImage(bytes);
+  if (decoded == null) {
+    throw StateError('unsupportedImage');
+  }
+  final oriented = img.bakeOrientation(decoded);
+  final resized = _fitWardrobeImage(oriented, LocalWardrobeImageStore.maxEdge);
+  return _EncodedWardrobeJpeg(
+    original: Uint8List.fromList(img.encodeJpg(resized, quality: 85)),
+    thumb: Uint8List.fromList(
+      img.encodeJpg(
+        _fitWardrobeImage(resized, LocalWardrobeImageStore.thumbEdge),
+        quality: 70,
+      ),
+    ),
+    width: resized.width,
+    height: resized.height,
+  );
+}
+
+img.Image _fitWardrobeImage(img.Image source, int maxEdge) {
+  final edge = source.width > source.height ? source.width : source.height;
+  if (edge <= maxEdge) return source;
+  final scale = maxEdge / edge;
+  return img.copyResize(
+    source,
+    width: (source.width * scale).round(),
+    height: (source.height * scale).round(),
+  );
 }

@@ -48,6 +48,29 @@ export function createObjectStorageClient(
   });
 }
 
+let cachedStorage: {
+  key: string;
+  client: S3Client;
+  config: ObjectStorageConfig;
+} | null = null;
+
+export function getObjectStorage(): {
+  client: S3Client;
+  config: ObjectStorageConfig;
+} | null {
+  const config = readObjectStorageConfig();
+  if (!config) return null;
+  const key = `${config.endpoint}|${config.region}|${config.bucket}|${config.accessKey}`;
+  if (!cachedStorage || cachedStorage.key !== key) {
+    cachedStorage = {
+      key,
+      client: createObjectStorageClient(config),
+      config,
+    };
+  }
+  return { client: cachedStorage.client, config: cachedStorage.config };
+}
+
 export async function createUploadUrl(
   client: S3Client,
   config: ObjectStorageConfig,

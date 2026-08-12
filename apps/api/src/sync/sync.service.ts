@@ -34,25 +34,35 @@ export class SyncService {
 
   async bootstrap(userId: string, limit = DEFAULT_LIMIT, afterCursor?: string) {
     const after = decodeBootstrapCursor(afterCursor);
-    const records = await this.prisma.syncRecord.findMany({
-      where: {
-        userId,
-        deletedAt: null,
-        ...(after
-          ? {
-              OR: [
-                { entityType: { gt: after.entityType } },
-                {
-                  entityType: after.entityType,
-                  entityId: { gt: after.entityId },
-                },
-              ],
-            }
-          : {}),
-      },
-      orderBy: [{ entityType: 'asc' }, { entityId: 'asc' }],
-      take: limit + 1,
-    });
+    const [records, cursor] = await Promise.all([
+      this.prisma.syncRecord.findMany({
+        where: {
+          userId,
+          deletedAt: null,
+          ...(after
+            ? {
+                OR: [
+                  { entityType: { gt: after.entityType } },
+                  {
+                    entityType: after.entityType,
+                    entityId: { gt: after.entityId },
+                  },
+                ],
+              }
+            : {}),
+        },
+        orderBy: [{ entityType: 'asc' }, { entityId: 'asc' }],
+        take: limit + 1,
+        select: {
+          entityType: true,
+          entityId: true,
+          serverVersion: true,
+          payload: true,
+          updatedAt: true,
+        },
+      }),
+      this.currentCursor(userId),
+    ]);
     const hasMore = records.length > limit;
     const page = hasMore ? records.slice(0, limit) : records;
     const last = page[page.length - 1];
@@ -64,7 +74,7 @@ export class SyncService {
         payload: row.payload,
         updatedAt: row.updatedAt.toISOString(),
       })),
-      cursor: await this.currentCursor(userId),
+      cursor,
       nextCursor:
         hasMore && last
           ? encodeBootstrapCursor(last.entityType, last.entityId)
@@ -248,52 +258,52 @@ export class SyncService {
         (current?.payload as Prisma.InputJsonValue) ??
         {};
 
-      await tx.syncRecord.upsert({
-        where: {
-          userId_entityType_entityId: {
+      await Promise.all([
+        tx.syncRecord.upsert({
+          where: {
+            userId_entityType_entityId: {
+              userId,
+              entityType,
+              entityId: mutation.entityId,
+            },
+          },
+          create: {
             userId,
             entityType,
             entityId: mutation.entityId,
+            serverVersion: nextVersion,
+            payload: storedPayload,
+            deletedAt,
+            lastMutationId: mutation.mutationId,
+            lastDeviceId: deviceId,
           },
-        },
-        create: {
-          userId,
-          entityType,
-          entityId: mutation.entityId,
-          serverVersion: nextVersion,
-          payload: storedPayload,
-          deletedAt,
-          lastMutationId: mutation.mutationId,
-          lastDeviceId: deviceId,
-        },
-        update: {
-          serverVersion: nextVersion,
-          payload: storedPayload,
-          deletedAt,
-          lastMutationId: mutation.mutationId,
-          lastDeviceId: deviceId,
-        },
-      });
-
-      await tx.syncChangeLog.create({
-        data: {
-          userId,
-          entityType,
-          entityId: mutation.entityId,
-          operation,
-          serverVersion: nextVersion,
-          payload: storedPayload,
-        },
-      });
-
-      await tx.syncMutationReceipt.create({
-        data: {
-          userId,
-          mutationId: mutation.mutationId,
-          result: 'accepted',
-          serverVersion: nextVersion,
-        },
-      });
+          update: {
+            serverVersion: nextVersion,
+            payload: storedPayload,
+            deletedAt,
+            lastMutationId: mutation.mutationId,
+            lastDeviceId: deviceId,
+          },
+        }),
+        tx.syncChangeLog.create({
+          data: {
+            userId,
+            entityType,
+            entityId: mutation.entityId,
+            operation,
+            serverVersion: nextVersion,
+            payload: storedPayload,
+          },
+        }),
+        tx.syncMutationReceipt.create({
+          data: {
+            userId,
+            mutationId: mutation.mutationId,
+            result: 'accepted',
+            serverVersion: nextVersion,
+          },
+        }),
+      ]);
 
       return { kind: 'accepted' as const, serverVersion: nextVersion };
     });

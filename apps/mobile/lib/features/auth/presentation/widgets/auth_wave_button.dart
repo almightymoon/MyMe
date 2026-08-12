@@ -138,17 +138,19 @@ class _AuthWaveButtonState extends State<AuthWaveButton>
                 right: -_bleed,
                 bottom: -_bleed,
                 height: _waveHeight + _glowPad + _bleed,
-                child: CustomPaint(
-                  painter: _WavePainter(
-                    color: widget.color,
-                    crestLift: crestLift - pressSettle + rippleAmp * 0.35,
-                    sideBreath: sideBreath + pressBulge,
-                    skew: skew,
-                    ripple: ripple,
-                    rippleAmp: rippleAmp,
-                    glowPad: _glowPad,
-                    bleed: _bleed,
-                    press: press,
+                child: RepaintBoundary(
+                  child: CustomPaint(
+                    painter: _WavePainter(
+                      color: widget.color,
+                      crestLift: crestLift - pressSettle + rippleAmp * 0.35,
+                      sideBreath: sideBreath + pressBulge,
+                      skew: skew,
+                      ripple: ripple,
+                      rippleAmp: rippleAmp,
+                      glowPad: _glowPad,
+                      bleed: _bleed,
+                      press: press,
+                    ),
                   ),
                 ),
               ),
@@ -177,14 +179,14 @@ class _AuthWaveButtonState extends State<AuthWaveButton>
                             if (widget.showChevron)
                               Transform.translate(
                                 offset: Offset(0, chevronY),
-                                child: Opacity(
-                                  opacity:
-                                      0.82 + 0.18 * (0.5 + 0.5 * chevronPhase),
-                                  child: const Icon(
-                                    Icons.keyboard_arrow_up_rounded,
-                                    color: Colors.white,
-                                    size: 22,
+                                child: Icon(
+                                  Icons.keyboard_arrow_up_rounded,
+                                  color: Colors.white.withValues(
+                                    alpha:
+                                        0.82 +
+                                        0.18 * (0.5 + 0.5 * chevronPhase),
                                   ),
+                                  size: 22,
                                 ),
                               ),
                             Text(

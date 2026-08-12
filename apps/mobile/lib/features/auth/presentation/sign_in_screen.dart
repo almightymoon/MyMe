@@ -114,12 +114,8 @@ class _SignInScreenState extends State<SignInScreen> {
                           'assets/images/branding/logo.svg',
                           width: 148,
                           height: 123,
-                          placeholderBuilder: (_) => Image.asset(
-                            'assets/images/branding/logo-mark.png',
-                            width: 148,
-                            height: 123,
-                            fit: BoxFit.contain,
-                          ),
+                          placeholderBuilder: (_) =>
+                              const SizedBox(width: 148, height: 123),
                         ),
                       ),
                       const SizedBox(height: 22),

@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -66,15 +65,10 @@ class MemyBottomNavigation extends StatelessWidget {
             right: 0,
             bottom: 0,
             height: barHeight,
-            child: ClipRect(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: AppColors.surface.withValues(alpha: 0.96),
-                    border: Border(top: BorderSide(color: AppColors.line)),
-                  ),
-                ),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                border: Border(top: BorderSide(color: AppColors.line)),
               ),
             ),
           ),
@@ -266,7 +260,20 @@ class _QuickAddButtonState extends State<_QuickAddButton>
       message: AppStrings.quickAdd,
       child: AnimatedBuilder(
         animation: Listenable.merge([_pulse, _press]),
-        builder: (context, _) {
+        child: const Center(
+          child: SizedBox(
+            width: MemyBottomNavigation.fabSize,
+            height: MemyBottomNavigation.fabSize,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.ember,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.add_rounded, color: Colors.white, size: 26),
+            ),
+          ),
+        ),
+        builder: (context, child) {
           final t = _pulse.value * 2 * math.pi;
           final breath = 1 + math.sin(t) * 0.018;
           final glowPulse = 0.36 + math.sin(t) * 0.06;
@@ -284,22 +291,10 @@ class _QuickAddButtonState extends State<_QuickAddButton>
               child: SizedBox(
                 width: MemyBottomNavigation.fabSize + 20,
                 height: MemyBottomNavigation.fabSize + 20,
-                child: CustomPaint(
-                  painter: _FabGlowPainter(intensity: glowPulse),
-                  child: Center(
-                    child: Container(
-                      width: MemyBottomNavigation.fabSize,
-                      height: MemyBottomNavigation.fabSize,
-                      decoration: const BoxDecoration(
-                        color: AppColors.ember,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.add_rounded,
-                        color: Colors.white,
-                        size: 26,
-                      ),
-                    ),
+                child: RepaintBoundary(
+                  child: CustomPaint(
+                    painter: _FabGlowPainter(intensity: glowPulse),
+                    child: child,
                   ),
                 ),
               ),

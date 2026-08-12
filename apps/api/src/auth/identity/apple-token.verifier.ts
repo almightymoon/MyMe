@@ -7,14 +7,15 @@ import { VerifiedIdentity } from './verified-identity';
 const APPLE_ISS = 'https://appleid.apple.com';
 
 export class AppleTokenVerifier implements IdentityTokenVerifier {
+  private readonly jwks = jose.createRemoteJWKSet(
+    new URL('https://appleid.apple.com/auth/keys'),
+  );
+
   constructor(private readonly audience: string) {}
 
   async verify(idToken: string, nonce?: string): Promise<VerifiedIdentity> {
     try {
-      const jwks = jose.createRemoteJWKSet(
-        new URL('https://appleid.apple.com/auth/keys'),
-      );
-      const { payload } = await jose.jwtVerify(idToken, jwks, {
+      const { payload } = await jose.jwtVerify(idToken, this.jwks, {
         issuer: APPLE_ISS,
         audience: this.audience,
       });

@@ -336,6 +336,10 @@ class _ModuleCard extends StatelessWidget {
                             width: 52,
                             height: 52,
                             fit: BoxFit.contain,
+                            cacheWidth:
+                                (52 * MediaQuery.devicePixelRatioOf(context))
+                                    .round()
+                                    .clamp(64, 256),
                             errorBuilder: (_, _, _) => Icon(
                               Icons.apps_rounded,
                               size: 40,

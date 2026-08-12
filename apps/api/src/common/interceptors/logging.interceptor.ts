@@ -31,6 +31,16 @@ function sanitizeRequestUrl(url: string): string {
   return `${path}?${redacted}`;
 }
 
+function isProbePath(url: string): boolean {
+  const path = url.split('?')[0] ?? url;
+  return (
+    path === '/api/v1/health' ||
+    path === '/api/v1/health/live' ||
+    path === '/health' ||
+    path === '/health/live'
+  );
+}
+
 @Injectable()
 export class RequestLoggingInterceptor implements NestInterceptor {
   private readonly logger = new Logger('HTTP');
@@ -39,7 +49,11 @@ export class RequestLoggingInterceptor implements NestInterceptor {
     const http = context.switchToHttp();
     const request = http.getRequest<Request>();
     const { method } = request;
-    const url = sanitizeRequestUrl(request.url);
+    const rawUrl = request.originalUrl ?? request.url;
+    if (method === 'GET' && isProbePath(rawUrl)) {
+      return next.handle();
+    }
+    const url = sanitizeRequestUrl(rawUrl);
     const started = Date.now();
 
     return next.handle().pipe(

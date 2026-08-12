@@ -355,18 +355,20 @@ export class AuthService {
       },
     });
 
-    const user = await this.prisma.user.findUniqueOrThrow({
-      where: { id: userId },
-    });
     const tokens = this.issueAccess(userId, persistedDevice.id, rawRefresh);
-    const recordCount = await this.prisma.syncRecord.count({
-      where: { userId, deletedAt: null },
-    });
-    const latest = await this.prisma.syncChangeLog.findFirst({
-      where: { userId },
-      orderBy: { sequence: 'desc' },
-      select: { sequence: true },
-    });
+    const [user, recordCount, latest] = await Promise.all([
+      this.prisma.user.findUniqueOrThrow({
+        where: { id: userId },
+      }),
+      this.prisma.syncRecord.count({
+        where: { userId, deletedAt: null },
+      }),
+      this.prisma.syncChangeLog.findFirst({
+        where: { userId },
+        orderBy: { sequence: 'desc' },
+        select: { sequence: true },
+      }),
+    ]);
     return {
       ...tokens,
       user: {

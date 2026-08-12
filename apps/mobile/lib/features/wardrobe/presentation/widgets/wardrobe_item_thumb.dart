@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../application/providers/wardrobe_providers.dart';
 import '../../domain/entities/wardrobe_models.dart';
 
-class WardrobeItemThumb extends ConsumerWidget {
+class WardrobeItemThumb extends ConsumerStatefulWidget {
   const WardrobeItemThumb({
     super.key,
     required this.item,
@@ -19,12 +19,56 @@ class WardrobeItemThumb extends ConsumerWidget {
   final bool full;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final image = item.imageReference;
-    final label = '${item.name} wardrobe image';
+  ConsumerState<WardrobeItemThumb> createState() => _WardrobeItemThumbState();
+}
+
+class _WardrobeItemThumbState extends ConsumerState<WardrobeItemThumb> {
+  Future<File?>? _fileFuture;
+  String? _imageId;
+  bool? _full;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncFuture();
+  }
+
+  @override
+  void didUpdateWidget(covariant WardrobeItemThumb oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.item.imageReference?.id != widget.item.imageReference?.id ||
+        oldWidget.full != widget.full) {
+      _fileFuture = null;
+      _imageId = null;
+    }
+    _syncFuture();
+  }
+
+  void _syncFuture() {
+    final image = widget.item.imageReference;
+    if (image == null) {
+      _fileFuture = null;
+      _imageId = null;
+      return;
+    }
+    if (_fileFuture != null && _imageId == image.id && _full == widget.full) {
+      return;
+    }
+    _imageId = image.id;
+    _full = widget.full;
+    final store = ref.read(wardrobeImageStoreProvider);
+    _fileFuture = widget.full
+        ? store.getOriginalFile(image)
+        : store.getThumbnailFile(image);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final image = widget.item.imageReference;
+    final size = widget.size;
     if (image == null) {
       return Semantics(
-        label: 'No photo for ${item.name}',
+        label: 'No photo for ${widget.item.name}',
         child: SizedBox(
           width: size,
           height: size,
@@ -36,14 +80,12 @@ class WardrobeItemThumb extends ConsumerWidget {
       );
     }
     return FutureBuilder<File?>(
-      future: full
-          ? ref.read(wardrobeImageStoreProvider).getOriginalFile(image)
-          : ref.read(wardrobeImageStoreProvider).getThumbnailFile(image),
+      future: _fileFuture,
       builder: (context, snapshot) {
         final file = snapshot.data;
         if (file == null) {
           return Semantics(
-            label: 'Photo missing for ${item.name}',
+            label: 'Photo missing for ${widget.item.name}',
             child: SizedBox(
               width: size,
               height: size,
@@ -55,14 +97,14 @@ class WardrobeItemThumb extends ConsumerWidget {
           );
         }
         return Semantics(
-          label: label,
+          label: '${widget.item.name} wardrobe image',
           image: true,
           child: Image.file(
             file,
             width: size,
             height: size,
             fit: BoxFit.cover,
-            cacheWidth: full ? 1200 : 256,
+            cacheWidth: widget.full ? 1200 : 256,
             excludeFromSemantics: true,
           ),
         );

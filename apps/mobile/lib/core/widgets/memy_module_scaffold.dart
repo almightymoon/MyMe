@@ -224,11 +224,15 @@ class _HeroAsset extends StatelessWidget {
     if (!ambientMotionEnabled(context)) {
       return SizedBox(width: size, height: size);
     }
+    final cacheWidth = (size * MediaQuery.devicePixelRatioOf(context))
+        .round()
+        .clamp(64, 512);
     return Image.asset(
       asset,
       width: size,
       height: size,
       fit: BoxFit.contain,
+      cacheWidth: cacheWidth,
       errorBuilder: (_, _, _) => const SizedBox.shrink(),
     );
   }

@@ -38,6 +38,14 @@ export class HealthController {
   constructor(private readonly prisma: PrismaService) {}
 
   @Public()
+  @Get('live')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Liveness probe (no database)' })
+  live(): Pick<HealthResponseDto, 'status' | 'service'> {
+    return { status: 'ok', service: 'memy-api' };
+  }
+
+  @Public()
   @Get()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

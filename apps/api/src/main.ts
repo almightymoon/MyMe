@@ -46,54 +46,57 @@ async function bootstrap(): Promise<void> {
 
   app.enableShutdownHooks();
 
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('MeMy API')
-    .setDescription(
-      [
-        'MeMy personal life OS — Goals vertical slice.',
-        '',
-        '## Development authentication',
-        'Outside production, send header `X-Dev-User-Id` equal to `DEV_USER_ID`,',
-        'or `Authorization: Bearer dev <DEV_USER_ID>`.',
-        'Production refuses development authentication.',
-        '',
-        '## Money',
-        'Amounts use integer minor units (e.g. cents / paisa).',
-        '',
-        '## Errors',
-        'Errors follow `{ statusCode, code, message, details, timestamp, path }`.',
-      ].join('\n'),
-    )
-    .setVersion('0.0.1')
-    .addApiKey(
-      {
-        type: 'apiKey',
-        in: 'header',
-        name: 'X-Dev-User-Id',
-        description: 'Development user UUID (must match DEV_USER_ID)',
-      },
-      'dev-user',
-    )
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'dev <uuid>',
-        description: 'Authorization: Bearer dev <DEV_USER_ID>',
-      },
-      'dev-auth',
-    )
-    .build();
-
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('docs', app, document, {
-    useGlobalPrefix: false,
-  });
-
   const port = config.get('apiPort', { infer: true });
+
+  if (nodeEnv !== 'production') {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('MeMy API')
+      .setDescription(
+        [
+          'MeMy personal life OS — Goals vertical slice.',
+          '',
+          '## Development authentication',
+          'Outside production, send header `X-Dev-User-Id` equal to `DEV_USER_ID`,',
+          'or `Authorization: Bearer dev <DEV_USER_ID>`.',
+          'Production refuses development authentication.',
+          '',
+          '## Money',
+          'Amounts use integer minor units (e.g. cents / paisa).',
+          '',
+          '## Errors',
+          'Errors follow `{ statusCode, code, message, details, timestamp, path }`.',
+        ].join('\n'),
+      )
+      .setVersion('0.0.1')
+      .addApiKey(
+        {
+          type: 'apiKey',
+          in: 'header',
+          name: 'X-Dev-User-Id',
+          description: 'Development user UUID (must match DEV_USER_ID)',
+        },
+        'dev-user',
+      )
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'dev <uuid>',
+          description: 'Authorization: Bearer dev <DEV_USER_ID>',
+        },
+        'dev-auth',
+      )
+      .build();
+
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('docs', app, document, {
+      useGlobalPrefix: false,
+    });
+    logger.log(`Swagger UI at http://localhost:${port}/docs`);
+  }
+
   await app.listen(port);
   logger.log(`Listening on http://localhost:${port}/${globalPrefix}`);
-  logger.log(`Swagger UI at http://localhost:${port}/docs`);
 }
 
 bootstrap().catch((error: unknown) => {

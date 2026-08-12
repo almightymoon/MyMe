@@ -42,7 +42,7 @@ class ProfileAvatarView extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.all(ring),
         child: ClipOval(
-          clipBehavior: Clip.antiAliasWithSaveLayer,
+          clipBehavior: Clip.antiAlias,
           child: SizedBox.expand(
             child: Transform.scale(
               // Artwork is a circle on a square canvas; scale past the
@@ -51,7 +51,10 @@ class ProfileAvatarView extends StatelessWidget {
               child: Image.asset(
                 spec.assetPath,
                 fit: BoxFit.cover,
-                filterQuality: FilterQuality.high,
+                filterQuality: FilterQuality.medium,
+                cacheWidth: (size * MediaQuery.devicePixelRatioOf(context))
+                    .round()
+                    .clamp(48, 256),
                 gaplessPlayback: true,
                 errorBuilder: (context, error, stackTrace) {
                   return ColoredBox(

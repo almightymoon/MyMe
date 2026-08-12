@@ -59,9 +59,24 @@ export class JwtAuthGuard extends AuthGuard {
       });
     }
 
-    const user = await this.prisma.user.findUnique({
-      where: { id: claims.sub },
-    });
+    const [user, device] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { id: claims.sub },
+        select: {
+          id: true,
+          email: true,
+          displayName: true,
+          timezone: true,
+          currencyCode: true,
+          status: true,
+          deletedAt: true,
+        },
+      }),
+      this.prisma.device.findUnique({
+        where: { id: claims.deviceId },
+        select: { id: true, userId: true, revokedAt: true },
+      }),
+    ]);
     if (!user || user.deletedAt || user.status !== 'active') {
       throw new UnauthorizedException({
         code: 'ACCOUNT_UNAVAILABLE',
@@ -69,10 +84,7 @@ export class JwtAuthGuard extends AuthGuard {
       });
     }
 
-    const device = await this.prisma.device.findFirst({
-      where: { id: claims.deviceId, userId: user.id, revokedAt: null },
-    });
-    if (!device) {
+    if (!device || device.userId !== user.id || device.revokedAt) {
       throw new UnauthorizedException({
         code: 'DEVICE_REVOKED',
         message: 'Sign in again to sync.',

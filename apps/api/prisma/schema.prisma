@@ -174,6 +174,7 @@ model SyncRecord {
 
   @@unique([userId, entityType, entityId])
   @@index([userId, updatedAt])
+  @@index([userId, deletedAt, entityType, entityId])
 }
 
 model SyncMutationReceipt {

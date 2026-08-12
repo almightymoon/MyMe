@@ -1,21 +1,39 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { createHash } from 'crypto';
-import * as jose from 'jose';
+import type { createRemoteJWKSet } from 'jose';
 import { IdentityTokenVerifier } from './identity-token.verifier';
 import { VerifiedIdentity } from './verified-identity';
 
 const APPLE_ISS = 'https://appleid.apple.com';
+const APPLE_JWKS_URL = new URL('https://appleid.apple.com/auth/keys');
+
+type JoseModule = typeof import('jose');
+type RemoteJWKSet = ReturnType<typeof createRemoteJWKSet>;
 
 export class AppleTokenVerifier implements IdentityTokenVerifier {
-  private readonly jwks = jose.createRemoteJWKSet(
-    new URL('https://appleid.apple.com/auth/keys'),
-  );
+  private jwks?: RemoteJWKSet;
+  private josePromise?: Promise<JoseModule>;
 
   constructor(private readonly audience: string) {}
 
+  /** Dynamic import keeps Jest (CJS) from parsing jose's ESM bundle at load time. */
+  private loadJose(): Promise<JoseModule> {
+    this.josePromise ??= import('jose');
+    return this.josePromise;
+  }
+
+  private async getJwks(): Promise<RemoteJWKSet> {
+    if (!this.jwks) {
+      const jose = await this.loadJose();
+      this.jwks = jose.createRemoteJWKSet(APPLE_JWKS_URL);
+    }
+    return this.jwks;
+  }
+
   async verify(idToken: string, nonce?: string): Promise<VerifiedIdentity> {
     try {
-      const { payload } = await jose.jwtVerify(idToken, this.jwks, {
+      const jose = await this.loadJose();
+      const { payload } = await jose.jwtVerify(idToken, await this.getJwks(), {
         issuer: APPLE_ISS,
         audience: this.audience,
       });

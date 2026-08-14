@@ -1,0 +1,58 @@
+name: Mobile iOS CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/mobile/**'
+      - '.github/workflows/mobile-ios-ci.yml'
+  pull_request:
+    paths:
+      - 'apps/mobile/**'
+      - '.github/workflows/mobile-ios-ci.yml'
+
+defaults:
+  run:
+    working-directory: apps/mobile
+
+jobs:
+  mobile-ios:
+    name: Flutter format, analyze, test, iOS simulator build
+    runs-on: macos-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter / Dart versions
+        run: |
+          flutter --version
+          dart --version
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Format check
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test (fake Calendar/Health gateways)
+        run: flutter test
+        env:
+          # CI never touches real HealthKit / EventKit — default fake sources.
+          # Keep explicit for documentation of the contract.
+          CALENDAR_DATA_SOURCE: fake
+          HEALTH_DATA_SOURCE: fake
+
+      - name: iOS simulator build (no codesign)
+        run: flutter build ios --simulator --no-codesign

@@ -1,0 +1,59 @@
+{
+  "version": "1.0",
+  "assets": [
+    {
+      "id": "strength-lunge-dumbbells",
+      "category": "Strength Training",
+      "png": "png/strength-lunge-dumbbells.png",
+      "webp": "webp/strength-lunge-dumbbells.webp",
+      "aspectRatio": "4:5",
+      "alt": "Athlete performing a kneeling dumbbell lunge.",
+      "usage": "Decorative category/hero artwork; not a substitute for exercise-form instruction."
+    },
+    {
+      "id": "running-cardio",
+      "category": "Running & Cardio",
+      "png": "png/running-cardio.png",
+      "webp": "webp/running-cardio.webp",
+      "aspectRatio": "4:5",
+      "alt": "Athlete jogging in a bright abstract wellness scene.",
+      "usage": "Decorative category/hero artwork; not a substitute for exercise-form instruction."
+    },
+    {
+      "id": "yoga-warrior",
+      "category": "Yoga",
+      "png": "png/yoga-warrior.png",
+      "webp": "webp/yoga-warrior.webp",
+      "aspectRatio": "4:5",
+      "alt": "Athlete holding a balanced warrior yoga pose.",
+      "usage": "Decorative category/hero artwork; not a substitute for exercise-form instruction."
+    },
+    {
+      "id": "cycling-cardio",
+      "category": "Cycling",
+      "png": "png/cycling-cardio.png",
+      "webp": "webp/cycling-cardio.webp",
+      "aspectRatio": "4:5",
+      "alt": "Athlete riding a bicycle in a stylized wellness scene.",
+      "usage": "Decorative category/hero artwork; not a substitute for exercise-form instruction."
+    },
+    {
+      "id": "hiit-bodyweight-squat",
+      "category": "HIIT & Bodyweight",
+      "png": "png/hiit-bodyweight-squat.png",
+      "webp": "webp/hiit-bodyweight-squat.webp",
+      "aspectRatio": "4:5",
+      "alt": "Athlete performing a controlled bodyweight squat.",
+      "usage": "Decorative category/hero artwork; not a substitute for exercise-form instruction."
+    },
+    {
+      "id": "mobility-side-stretch",
+      "category": "Mobility & Recovery",
+      "png": "png/mobility-side-stretch.png",
+      "webp": "webp/mobility-side-stretch.webp",
+      "aspectRatio": "4:5",
+      "alt": "Athlete performing a seated side stretch.",
+      "usage": "Decorative category/hero artwork; not a substitute for exercise-form instruction."
+    }
+  ]
+}

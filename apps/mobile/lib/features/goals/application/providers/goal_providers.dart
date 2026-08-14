@@ -1,0 +1,163 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/application/providers/core_providers.dart';
+import '../../../../core/config/environment_config.dart';
+import '../../../../core/network/network_providers.dart';
+import '../../../auth/application/auth_session_controller.dart';
+import '../../../auth/data/account_local_store.dart';
+import '../../data/repositories/api_goal_repository.dart';
+import '../../data/repositories/fake_goal_repository.dart';
+import '../../data/repositories/journaling_goal_repository.dart';
+import '../../data/repositories/local_goal_repository.dart';
+import '../../../sync/application/sync_providers.dart';
+import '../../domain/entities/goal.dart';
+import '../../domain/entities/goal_enums.dart';
+import '../../domain/entities/goal_forecast.dart';
+import '../../domain/entities/goal_summary.dart';
+import '../../domain/repositories/goal_repository.dart';
+import '../../domain/services/goal_forecast_service.dart';
+
+export '../../../../core/application/providers/core_providers.dart'
+    show sharedPreferencesProvider, uuidProvider, appClockProvider;
+export '../../../../core/network/network_providers.dart' show apiClientProvider;
+
+/// Override in tests to force `fake` / `local` / `api` without dart-defines.
+///
+/// Production always resolves to `local` — no demo data, no cloud account.
+final goalsDataSourceProvider = Provider<GoalsDataSource>((ref) {
+  return EnvironmentConfig.resolveGoalsDataSource();
+});
+
+/// Local persistence used either as primary store (`local`) or API read-cache.
+final localGoalRepositoryProvider = Provider<LocalGoalRepository>((ref) {
+  final prefs = ref.watch(sharedPreferencesProvider);
+  final source = ref.watch(goalsDataSourceProvider);
+  final store = AccountLocalStore(ref.watch(authSessionProvider)?.userId);
+  final repo = LocalGoalRepository(
+    prefs: prefs,
+    documentKey: store.key(LocalGoalRepository.storageKey),
+    initKey: store.key(LocalGoalRepository.initializedKey),
+    // API cache and production: never seed demo Goals as user data.
+    seedBuilder:
+        source == GoalsDataSource.api ||
+            !EnvironmentConfig.shouldSeedDemoContent
+        ? () => const []
+        : null,
+  );
+  ref.onDispose(repo.dispose);
+  return repo;
+});
+
+/// Resolves [GoalRepository] from [goalsDataSourceProvider].
+///
+/// Modes (`--dart-define=GOALS_DATA_SOURCE=`):
+/// - `fake` — in-memory [FakeGoalRepository]
+/// - `local` — [LocalGoalRepository] (default offline/demo)
+/// - `api` — [ApiGoalRepository] with local read-cache
+final goalRepositoryProvider = Provider<GoalRepository>((ref) {
+  final source = ref.watch(goalsDataSourceProvider);
+  switch (source) {
+    case GoalsDataSource.fake:
+      final repo = FakeGoalRepository();
+      ref.onDispose(repo.dispose);
+      return repo;
+    case GoalsDataSource.local:
+      return JournalingGoalRepository(
+        inner: ref.watch(localGoalRepositoryProvider),
+        journal: ref.watch(syncMutationJournalProvider),
+        session: ref.watch(authSessionProvider),
+      );
+    case GoalsDataSource.api:
+      final repo = ApiGoalRepository(
+        client: ref.watch(apiClientProvider),
+        cache: ref.watch(localGoalRepositoryProvider),
+      );
+      ref.onDispose(repo.dispose);
+      return repo;
+  }
+});
+
+final goalForecastServiceProvider = Provider<GoalForecastService>((ref) {
+  return const GoalForecastService();
+});
+
+/// Live list of all goals (reactive).
+final goalsProvider = StreamProvider.autoDispose<List<Goal>>((ref) {
+  return ref.watch(goalRepositoryProvider).watchGoals();
+});
+
+final goalSummariesProvider =
+    Provider.autoDispose<AsyncValue<List<GoalSummary>>>((ref) {
+      return ref
+          .watch(goalsProvider)
+          .whenData(
+            (goals) => goals.map(GoalSummary.fromGoal).toList(growable: false),
+          );
+    });
+
+final activeGoalsProvider = Provider.autoDispose<AsyncValue<List<Goal>>>((ref) {
+  return ref
+      .watch(goalsProvider)
+      .whenData(
+        (goals) => goals
+            .where((g) => g.status == GoalStatus.active)
+            .toList(growable: false),
+      );
+});
+
+final goalByIdProvider = StreamProvider.autoDispose.family<Goal?, String>((
+  ref,
+  id,
+) async* {
+  final repo = ref.watch(goalRepositoryProvider);
+  yield await repo.getGoal(id);
+  await for (final goals in repo.watchGoals()) {
+    Goal? match;
+    for (final goal in goals) {
+      if (goal.id == id) {
+        match = goal;
+        break;
+      }
+    }
+    yield match;
+  }
+});
+
+final goalForecastProvider = Provider.autoDispose.family<GoalForecast?, String>(
+  (ref, id) {
+    final goal = ref.watch(goalByIdProvider(id)).valueOrNull;
+    if (goal == null) return null;
+    return ref.watch(goalForecastServiceProvider).forecast(goal);
+  },
+);
+
+final goalsFilterProvider = StateProvider.autoDispose<GoalsListFilter>((ref) {
+  return GoalsListFilter.all;
+});
+
+enum GoalsListFilter { all, active, completed, archived }
+
+final filteredGoalsProvider = Provider.autoDispose<AsyncValue<List<Goal>>>((
+  ref,
+) {
+  final filter = ref.watch(goalsFilterProvider);
+  return ref.watch(goalsProvider).whenData((goals) {
+    switch (filter) {
+      case GoalsListFilter.all:
+        return goals;
+      case GoalsListFilter.active:
+        return goals.where((g) => g.status == GoalStatus.active).toList();
+      case GoalsListFilter.completed:
+        return goals.where((g) => g.status == GoalStatus.completed).toList();
+      case GoalsListFilter.archived:
+        return goals.where((g) => g.status == GoalStatus.archived).toList();
+    }
+  });
+});
+
+final averageActiveProgressProvider = Provider.autoDispose<double>((ref) {
+  final active = ref.watch(activeGoalsProvider).valueOrNull ?? const [];
+  if (active.isEmpty) return 0;
+  final sum = active.fold<double>(0, (acc, g) => acc + g.progressPercent);
+  return sum / active.length;
+});

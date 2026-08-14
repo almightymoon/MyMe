@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>MeMy</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>memy</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<!-- Health (read-only): required for `health` plugin HealthKit reads —
+	     see lib/core/config/environment_config.dart HealthDataSource docs.
+	     MeMy never writes to HealthKit, so NSHealthUpdateUsageDescription
+	     and the HealthKit "Update" capability are intentionally omitted. -->
+	<key>NSHealthShareUsageDescription</key>
+	<string>MeMy reads the activity, heart-rate, sleep, and workout data you choose so it can display your personal wellness dashboard. MeMy does not write health data.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>MeMy accesses the calendars you select so your schedule can appear in MeMy and MeMy-created events can be added to your chosen calendar.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>MeMy accesses the calendars you select so your schedule can appear in MeMy and MeMy-created events can be added to your chosen calendar.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>MeMy uses your location only to show today’s weather on the home screen. Location is not stored or shared.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>MeMy lets you choose a wardrobe photo. The photo is copied into MeMy’s private storage on this device and can sync to your MeMy account’s private storage after you sign in.</string>
+	<!-- Ordinary HTTPS networking only; no custom encryption. Owner confirms App Store Connect answer. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneClassName</key>
+					<string>UIWindowScene</string>
+					<key>UISceneConfigurationName</key>
+					<string>flutter</string>
+					<key>UISceneDelegateClassName</key>
+					<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+					<key>UISceneStoryboardFile</key>
+					<string>Main</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+</dict>
+</plist>

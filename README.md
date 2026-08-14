@@ -11,8 +11,8 @@ Make changes on main and publish a new snapshot.
 | Field | Value |
 | --- | --- |
 | Source branch | `main` |
-| Source commit | `234b7a58cef8939676604a80438ebec255ac4b85` |
-| Generated (UTC) | 2026-08-14T23:35:22Z |
+| Source commit | `94e1cd405377f48be4ca2efba614a693fae1d9d3` |
+| Generated (UTC) | 2026-08-14T23:47:56Z |
 | Branch | `deploy/website` |
 
 ## Public website

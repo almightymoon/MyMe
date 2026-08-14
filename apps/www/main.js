@@ -1,6 +1,6 @@
 /**
  * MeMy experience — Lusion-inspired motion layer
- * Canvas field + native scroll + GSAP ScrollTrigger + magnetic cursor
+ * Canvas field + native scroll + GSAP ScrollTrigger
  */
 (function () {
   'use strict';
@@ -33,7 +33,6 @@
     dpr: 1,
     particles: [],
     orbs: [],
-    trail: [],
     mouse: { x: 0.5, y: 0.38, tx: 0.5, ty: 0.38 },
     scroll: 0,
     t: 0,
@@ -58,8 +57,6 @@
         function (e) {
           Field.mouse.tx = e.clientX / Field.w;
           Field.mouse.ty = e.clientY / Field.h;
-          Field.trail.push({ x: e.clientX, y: e.clientY, life: 1 });
-          if (Field.trail.length > 18) Field.trail.shift();
         },
         { passive: true }
       );
@@ -144,24 +141,6 @@
       ctx.fillStyle = mg;
       ctx.fillRect(0, 0, w, h);
 
-      if (this.trail.length > 2) {
-        ctx.beginPath();
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.moveTo(this.trail[0].x, this.trail[0].y);
-        for (i = 1; i < this.trail.length; i++) {
-          ctx.lineTo(this.trail[i].x, this.trail[i].y);
-          this.trail[i].life *= 0.96;
-        }
-        ctx.strokeStyle = 'rgba(255,138,76,0.22)';
-        ctx.lineWidth = 18;
-        ctx.stroke();
-        ctx.strokeStyle = 'rgba(255,106,26,0.45)';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-        if (this.trail[0] && this.trail[0].life < 0.08) this.trail.shift();
-      }
-
       var p, a, n, mag, dx, dy, dist, speed;
       speed = 1.05 + scroll * 0.55;
       for (i = 0; i < this.particles.length; i++) {
@@ -216,56 +195,6 @@
         }
         ctx.globalAlpha = 1;
       }
-    },
-  };
-
-  /* —— Custom cursor —— */
-  var Cursor = {
-    el: document.getElementById('cursor'),
-    ring: null,
-    x: 0,
-    y: 0,
-    rx: 0,
-    ry: 0,
-    init: function () {
-      if (!this.el || coarse || reduced) {
-        if (this.el) this.el.style.display = 'none';
-        document.documentElement.classList.remove('has-cursor');
-        return;
-      }
-      document.documentElement.classList.add('has-cursor');
-      this.ring = this.el.querySelector('.cursor__ring');
-      this.x = window.innerWidth / 2;
-      this.y = window.innerHeight / 2;
-      this.rx = this.x;
-      this.ry = this.y;
-      window.addEventListener(
-        'pointermove',
-        function (e) {
-          Cursor.x = e.clientX;
-          Cursor.y = e.clientY;
-        },
-        { passive: true }
-      );
-      $$('a, button, [data-magnetic]').forEach(function (el) {
-        el.addEventListener('pointerenter', function () {
-          Cursor.el.classList.add('is-hover');
-        });
-        el.addEventListener('pointerleave', function () {
-          Cursor.el.classList.remove('is-hover');
-        });
-      });
-      this.tick();
-    },
-    tick: function () {
-      this.rx = lerp(this.rx, this.x, 0.18);
-      this.ry = lerp(this.ry, this.y, 0.18);
-      this.el.style.transform = 'translate3d(' + this.x + 'px,' + this.y + 'px,0)';
-      if (this.ring) {
-        this.ring.style.transform =
-          'translate3d(' + (this.rx - this.x) + 'px,' + (this.ry - this.y) + 'px,0)';
-      }
-      requestAnimationFrame(this.tick.bind(this));
     },
   };
 
@@ -745,7 +674,6 @@
   /* —— Boot —— */
   Nav.init();
   Field.init();
-  Cursor.init();
   Magnetic.init();
 
   function start() {

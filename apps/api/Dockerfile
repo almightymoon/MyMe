@@ -1,5 +1,7 @@
 FROM node:20.18.1-alpine AS build
 WORKDIR /app
+# OpenSSL in build stage so prisma generate picks linux-musl-openssl-3.0.x
+RUN apk add --no-cache openssl libc6-compat
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY prisma ./prisma
@@ -10,7 +12,8 @@ RUN npx prisma generate && npm run build
 FROM node:20.18.1-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
-RUN apk add --no-cache wget
+# Alpine 3.21+ ships OpenSSL 3; Prisma needs matching libs + musl compat.
+RUN apk add --no-cache wget openssl libc6-compat
 RUN addgroup -S memy && adduser -S memy -G memy
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev

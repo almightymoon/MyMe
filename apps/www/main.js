@@ -1,6 +1,6 @@
 /**
  * MeMy experience — Lusion-inspired motion layer
- * Canvas field + Lenis + GSAP ScrollTrigger + magnetic cursor
+ * Canvas field + native scroll + GSAP ScrollTrigger + magnetic cursor
  */
 (function () {
   'use strict';
@@ -447,53 +447,21 @@
 
     var gsapOk = typeof gsap !== 'undefined';
     var stOk = typeof ScrollTrigger !== 'undefined';
-    var LenisCtor = window.Lenis;
 
     if (gsapOk && stOk) gsap.registerPlugin(ScrollTrigger);
 
-    var lenis = null;
-    if (LenisCtor && !reduced) {
-      document.documentElement.classList.add('lenis');
-      lenis = new LenisCtor({
-        duration: 1.2,
-        easing: function (t) {
-          return Math.min(1, 1.001 - Math.pow(2, -10 * t));
-        },
-        smoothWheel: true,
-      });
-      if (gsapOk && stOk) {
-        lenis.on('scroll', ScrollTrigger.update);
-        gsap.ticker.add(function (time) {
-          lenis.raf(time * 1000);
-        });
-        gsap.ticker.lagSmoothing(0);
-      } else {
-        function raf(t) {
-          lenis.raf(t);
-          requestAnimationFrame(raf);
-        }
-        requestAnimationFrame(raf);
-      }
-      lenis.on('scroll', function (e) {
-        Nav.onScroll(e.scroll);
-        Field.scroll = clamp(e.progress, 0, 1);
+    window.addEventListener(
+      'scroll',
+      function () {
+        Nav.onScroll(window.scrollY);
+        var max = document.documentElement.scrollHeight - window.innerHeight;
+        var p = max > 0 ? window.scrollY / max : 0;
+        Field.scroll = p;
         var bar = document.getElementById('scroll-progress');
-        if (bar) bar.style.transform = 'scaleX(' + e.progress + ')';
-      });
-    } else {
-      window.addEventListener(
-        'scroll',
-        function () {
-          Nav.onScroll(window.scrollY);
-          var max = document.documentElement.scrollHeight - window.innerHeight;
-          var p = max > 0 ? window.scrollY / max : 0;
-          Field.scroll = p;
-          var bar = document.getElementById('scroll-progress');
-          if (bar) bar.style.transform = 'scaleX(' + p + ')';
-        },
-        { passive: true }
-      );
-    }
+        if (bar) bar.style.transform = 'scaleX(' + p + ')';
+      },
+      { passive: true }
+    );
 
     $$('a[href^="#"]').forEach(function (a) {
       a.addEventListener('click', function (e) {
@@ -501,8 +469,7 @@
         var target = id && id !== '#' ? document.querySelector(id) : null;
         if (!target) return;
         e.preventDefault();
-        if (lenis) lenis.scrollTo(target, { offset: -56 });
-        else target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
+        target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
       });
     });
 

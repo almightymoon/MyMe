@@ -376,6 +376,6 @@ publish_one_safe() {
 [[ "$DO_WEBSITE" -eq 1 ]] && publish_one_safe website
 
 echo ""
-echo "Done. main remains unchanged."
-git -C "$REPO_ROOT" rev-parse main
-git -C "$REPO_ROOT" status --short
+echo "Done. Source commit remains authoritative; generated branches updated separately."
+git -C "$REPO_ROOT" rev-parse HEAD
+git -C "$REPO_ROOT" status --short || true

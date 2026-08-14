@@ -1,0 +1,9 @@
+# VPS-local override when Apache owns 80/443 (shared host with other sites).
+# Do not publish Caddy on this host — disable it via profile.
+services:
+  caddy:
+    profiles: ["disabled-on-this-host"]
+
+  api:
+    ports:
+      - "127.0.0.1:4020:3000"

@@ -7,6 +7,7 @@ scripts/backup-staging.sh
 scripts/deploy.sh
 scripts/health-check.sh
 scripts/migrate.sh
+scripts/vps-apache-deploy.sh
 docker-compose.yml
 docker-compose.staging.yml
 docker-compose.production.yml
@@ -15,5 +16,5 @@ docs/architecture/production-auth-offline-sync.md
 docs/architecture/account-local-storage-inventory.md
 docs/architecture/wardrobe-image-storage.md
 .github/workflows/api-ci.yml
-.github/workflows/deploy-production.yml
+.github/workflows/deploy-vps.yml
 .gitignore

@@ -11,8 +11,8 @@ Make changes on main and publish a new snapshot.
 | Field | Value |
 | --- | --- |
 | Source branch | `main` |
-| Source commit | `bf484f8f53f14feafe7cafccf80c7cbf3fdc494e` |
-| Generated (UTC) | 2026-08-14T23:27:49Z |
+| Source commit | `463fab55d2cace343cdf589ce95950264ee938e2` |
+| Generated (UTC) | 2026-08-14T23:34:15Z |
 | Branch | `deploy/backend` |
 
 ## VPS requirements

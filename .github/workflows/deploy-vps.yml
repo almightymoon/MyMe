@@ -1,0 +1,108 @@
+name: Deploy to Server
+
+# Same shape as MyShelf / forex: publish product branches, then SSH to VPS.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/www/**'
+      - 'apps/api/**'
+      - 'deploy/**'
+      - 'scripts/vps-apache-deploy.sh'
+      - 'scripts/deploy.sh'
+      - 'scripts/migrate.sh'
+      - 'scripts/health-check.sh'
+      - 'scripts/publish-product-branches.sh'
+      - 'scripts/lib/product-branch-common.sh'
+      - 'docker-compose.production.yml'
+      - 'branch-manifests/**'
+      - '.github/workflows/deploy-vps.yml'
+  workflow_dispatch:
+    inputs:
+      skip_publish:
+        description: Skip publishing deploy/* branches (pull whatever is already on the VPS remotes)
+        type: boolean
+        default: false
+      website_only:
+        description: Pull website only (no API rebuild)
+        type: boolean
+        default: false
+
+concurrency:
+  group: memy-vps-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: Publish deploy branches
+    if: ${{ github.event_name == 'push' || inputs.skip_publish != true }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+
+      - name: Fetch product branches
+        run: git fetch origin --prune
+
+      - name: Publish website + backend
+        run: |
+          chmod +x scripts/publish-product-branches.sh scripts/scan-generated-secrets.sh scripts/validate-website-content.sh
+          # Skip Flutter/API test gates here; api-ci / mobile-ci cover quality.
+          # Emergency path matches prior VPS publishes: secret scan still runs.
+          ./scripts/publish-product-branches.sh \
+            --source "${{ github.sha }}" \
+            --website \
+            --backend \
+            --push \
+            --skip-validate
+
+  deploy:
+    name: Build and deploy
+    needs: [publish]
+    if: ${{ always() && (needs.publish.result == 'success' || needs.publish.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check required secrets
+        run: |
+          if [ -z "${{ secrets.IP }}" ]; then echo "::error::Secret IP is not set"; exit 1; fi
+          if [ -z "${{ secrets.USERNAME }}" ]; then echo "::error::Secret USERNAME is not set"; exit 1; fi
+          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then echo "::error::Secret SSH_PRIVATE_KEY is not set"; exit 1; fi
+          echo "All required secrets are present"
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.IP }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          command_timeout: 25m
+          script: |
+            set -euo pipefail
+            BACKEND=/opt/memy/backend
+            WEBSITE=/opt/memy/website
+
+            if [ ! -d "$BACKEND/.git" ] || [ ! -d "$WEBSITE/.git" ]; then
+              echo "::error::Missing /opt/memy/{backend,website} clones"
+              exit 1
+            fi
+
+            # Ensure deploy script exists even before first successful publish lands it
+            git -C "$BACKEND" fetch origin deploy/backend
+            git -C "$BACKEND" checkout deploy/backend
+            git -C "$BACKEND" reset --hard origin/deploy/backend
+            chmod +x "$BACKEND/scripts/vps-apache-deploy.sh"
+
+            ARGS=""
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.website_only }}" = "true" ]; then
+              ARGS="--website-only"
+            fi
+
+            # shellcheck disable=SC2086
+            "$BACKEND/scripts/vps-apache-deploy.sh" $ARGS

@@ -36,4 +36,4 @@ docker compose -f docker-compose.staging.yml --env-file /etc/memy/staging.env up
 
 Mobile dart-defines: `docs/deployment/mobile-connection.md`.
 
-The GitHub `deploy-production.yml` workflow is `workflow_dispatch` only. Do not claim a live deploy until owner SSH and environment secrets exist and a run succeeds.
+The GitHub `deploy-vps.yml` workflow publishes product branches then SSHs to the VPS (secrets `IP`, `USERNAME`, `SSH_PRIVATE_KEY`, same as MyShelf). Do not claim a live deploy until those secrets exist and a run succeeds.

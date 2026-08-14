@@ -102,3 +102,6 @@ tmp/
 temp/
 .sass-cache/
 *.tsbuildinfo
+
+# Local asset dumps (not part of product trees)
+/avatar images/

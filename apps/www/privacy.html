@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MeMy Privacy Policy (draft)</title>
+    <link rel="icon" href="/assets/logo.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="legal-page">
+    <header class="nav is-scrolled" id="nav">
+      <div class="nav__inner">
+        <a class="nav__brand" href="/">
+          <img src="/assets/logo.svg" alt="" width="26" height="22" />
+          MeMy
+        </a>
+        <nav class="nav__links" aria-label="Primary">
+          <a class="nav__link" href="/">Home</a>
+          <a class="nav__link" href="/terms.html">Terms</a>
+          <a class="nav__link" href="/support.html">Support</a>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <h1>Privacy Policy</h1>
+      <p class="meta">Draft — not legally reviewed.</p>
+      <p>
+        MeMy uses Google Sign-In and Sign in with Apple. The backend stores the
+        provider plus provider subject, optional email, profile, preferences,
+        and synchronized app-owned records in PostgreSQL on the operator's VPS.
+        Wardrobe images use private object storage. Raw HealthKit / Health
+        Connect records and imported device calendar events are not uploaded.
+      </p>
+      <h2>On your device</h2>
+      <ul>
+        <li>Health platform data (steps, sleep, workouts, etc.)</li>
+        <li>Device calendar events you choose to connect</li>
+      </ul>
+      <h2>In the cloud</h2>
+      <ul>
+        <li>Account identity and preferences</li>
+        <li>Synced goals, habits, finance, and wardrobe metadata</li>
+        <li>Private wardrobe images (not public URLs)</li>
+      </ul>
+      <p><a href="/">← Back to home</a></p>
+    </main>
+    <footer class="footer">
+      <div class="container footer__inner">
+        <div class="footer__bottom">
+          <p class="footer__legal">Copyright © <span id="year"></span> MeMy</p>
+        </div>
+      </div>
+    </footer>
+    <script src="/main.js" defer></script>
+  </body>
+</html>

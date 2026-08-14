@@ -1,0 +1,5 @@
+# Allowlist for deploy/website — public production website only.
+# Production site lives at apps/www (not the interactive prototype).
+apps/www/
+docs/public/
+.gitignore

@@ -11,8 +11,8 @@ Make changes on main and publish a new snapshot.
 | Field | Value |
 | --- | --- |
 | Source branch | `main` |
-| Source commit | `fb7bff9afc676abb426b89eeba98ab14cb053ef3` |
-| Generated (UTC) | 2026-08-14T22:45:00Z |
+| Source commit | `601e3827c55f5fd8f7600f1df855d18ab7cd77f4` |
+| Generated (UTC) | 2026-08-14T22:49:27Z |
 | Branch | `release/mobile` |
 
 ## Flutter setup

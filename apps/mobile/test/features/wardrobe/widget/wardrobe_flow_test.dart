@@ -40,10 +40,7 @@ void main() {
     controller.setCategory(WardrobeItemCategory.outerwear);
     controller.setOccasions(const [WardrobeOccasion.business]);
     controller.setDressCodes(const [DressCode.businessFormal]);
-    final first = await Future.wait([
-      controller.submit(),
-      controller.submit(),
-    ]);
+    final first = await Future.wait([controller.submit(), controller.submit()]);
     expect(first.whereType<String>().toSet(), hasLength(1));
 
     final repo = container.read(wardrobeRepositoryProvider);

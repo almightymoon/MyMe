@@ -487,7 +487,9 @@ class EnvironmentConfig {
       throw EnvironmentConfigError('API_BASE_URL must be a valid URL.');
     }
     if (uri.scheme != 'https') {
-      throw EnvironmentConfigError('API_BASE_URL must use HTTPS in production.');
+      throw EnvironmentConfigError(
+        'API_BASE_URL must use HTTPS in production.',
+      );
     }
 
     final host = uri.host.trim().toLowerCase();
@@ -508,8 +510,11 @@ class EnvironmentConfig {
         host.startsWith('172.18.') ||
         host.startsWith('172.19.') ||
         host.startsWith('172.2') || // 172.20–172.29
-        host.startsWith('172.3')) { // 172.30–172.31
-      throw EnvironmentConfigError('API_BASE_URL must not point to private LAN.');
+        host.startsWith('172.3')) {
+      // 172.30–172.31
+      throw EnvironmentConfigError(
+        'API_BASE_URL must not point to private LAN.',
+      );
     }
 
     // Production expects the full prefix including `/api/v1`.

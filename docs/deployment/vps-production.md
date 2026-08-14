@@ -30,8 +30,10 @@ On a dual-clone VPS, serve it from `/opt/memy/website/apps/www` via
 2. Place env files (see `deploy/env/README.md` and `deploy/env/compose.production.example`).
    Production API startup fails without JWT, refresh pepper, HTTPS `API_PUBLIC_URL`,
    and object-storage settings.
-3. `./scripts/deploy.sh production`
-4. Check `https://<api-host>/api/v1/health`
+3. Shared Apache VPS: `/opt/memy/backend/scripts/vps-apache-deploy.sh`
+   (GitHub Actions: `.github/workflows/deploy-vps.yml`).
+   Dedicated Caddy host: `./scripts/deploy.sh production`
+4. Check `https://memy.athariqbal.com` and `https://api.memy.athariqbal.com/api/v1/health`
 5. If the new API image fails health, roll back the **application image only**.
    Never automatically roll back a destructive database migration.
 

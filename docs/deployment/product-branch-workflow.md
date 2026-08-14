@@ -122,26 +122,43 @@ export MEMY_WEBSITE_ROOT=/opt/memy/website/apps/www
 Compose mounts `${MEMY_WEBSITE_ROOT}:/srv/www:ro` into Caddy.
 `scripts/deploy.sh` verifies the website root exists before deploying.
 
-### Update
+### Update (shared Apache VPS)
+
+Preferred path — GitHub Actions (same secrets as MyShelf/forex: `IP`,
+`USERNAME`, `SSH_PRIVATE_KEY`):
+
+1. Push to `main` (paths under `apps/www`, `apps/api`, `deploy/`, …) **or**
+   run **Deploy to Server** via `workflow_dispatch`.
+2. Workflow publishes `deploy/website` + `deploy/backend`, then SSHs and runs
+   `/opt/memy/backend/scripts/vps-apache-deploy.sh`.
+
+That script pulls both clones, rebuilds the API on `127.0.0.1:4020` with the
+Apache compose override (Caddy disabled), applies migrations, and refreshes
+**only** `memy*` Apache vhosts. It does not edit forex/portfolio/lab configs.
+
+Manual:
+
+```bash
+/opt/memy/backend/scripts/vps-apache-deploy.sh
+# or website-only:
+/opt/memy/backend/scripts/vps-apache-deploy.sh --website-only
+```
+
+On a dedicated host that uses Caddy on 80/443 (not this shared VPS):
 
 ```bash
 cd /opt/memy/backend
-git fetch origin deploy/backend
-git checkout deploy/backend
-git pull --ff-only origin deploy/backend
-
+git fetch origin deploy/backend && git reset --hard origin/deploy/backend
 cd /opt/memy/website
-git fetch origin deploy/website
-git checkout deploy/website
-git pull --ff-only origin deploy/website
-
+git fetch origin deploy/website && git reset --hard origin/deploy/website
 cd /opt/memy/backend
 export MEMY_WEBSITE_ROOT=/opt/memy/website/apps/www
-docker compose -f docker-compose.production.yml config
 ./scripts/deploy.sh production
 ```
 
 Do **not** use `git reset --hard origin/main` on the VPS.
+Do **not** run stock `./scripts/deploy.sh production` on the shared Apache host
+(it would try to bind Caddy to 80/443).
 
 ## Rollback
 

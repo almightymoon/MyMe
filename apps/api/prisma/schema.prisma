@@ -1,0 +1,286 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum GoalCategory {
+  financial
+  career
+  education
+  fitness
+  health
+  personalDevelopment
+  business
+  travel
+  custom
+}
+
+enum GoalPriority {
+  low
+  medium
+  high
+  critical
+}
+
+enum GoalStatus {
+  active
+  paused
+  completed
+  archived
+}
+
+enum UserStatus {
+  active
+  disabled
+  deletionPending
+}
+
+enum AuthProvider {
+  google
+  apple
+}
+
+enum AuthAuditResult {
+  success
+  failure
+  cancelled
+}
+
+model User {
+  id             String                @id @default(uuid()) @db.Uuid
+  /// Optional contact email. Not the identity key and not unique across providers.
+  email          String?
+  displayName    String
+  avatarKey      String?
+  status         UserStatus            @default(active)
+  timezone       String                @default("UTC")
+  currencyCode   String                @default("PKR") @db.VarChar(3)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  lastSignedInAt DateTime?
+  deletedAt      DateTime?
+  goals          Goal[]
+  identities     AuthIdentity[]
+  devices        Device[]
+  sessions       RefreshSession[]
+  auditEvents    AuthAuditEvent[]
+  syncRecords    SyncRecord[]
+  syncReceipts   SyncMutationReceipt[]
+  syncChanges    SyncChangeLog[]
+  assets         Asset[]
+
+  @@index([status])
+}
+
+model AuthIdentity {
+  id              String       @id @default(uuid()) @db.Uuid
+  userId          String       @db.Uuid
+  provider        AuthProvider
+  providerSubject String
+  providerEmail   String?
+  emailVerified   Boolean      @default(false)
+  createdAt       DateTime     @default(now())
+  lastUsedAt      DateTime     @default(now())
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerSubject])
+  @@index([userId])
+}
+
+model Device {
+  id                      String           @id @default(uuid()) @db.Uuid
+  userId                  String           @db.Uuid
+  clientGeneratedDeviceId String
+  platform                String
+  appVersion              String
+  deviceLabel             String?
+  lastSeenAt              DateTime         @default(now())
+  createdAt               DateTime         @default(now())
+  revokedAt               DateTime?
+  user                    User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessions                RefreshSession[]
+  auditEvents             AuthAuditEvent[]
+
+  @@unique([userId, clientGeneratedDeviceId])
+  @@index([userId])
+}
+
+model RefreshSession {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @db.Uuid
+  deviceId      String    @db.Uuid
+  tokenHash     String
+  tokenFamilyId String    @db.Uuid
+  expiresAt     DateTime
+  createdAt     DateTime  @default(now())
+  rotatedAt     DateTime?
+  revokedAt     DateTime?
+  lastUsedAt    DateTime  @default(now())
+  lastIpHash    String?
+  userAgentHash String?
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device        Device    @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@unique([tokenHash])
+  @@index([userId])
+  @@index([tokenFamilyId])
+}
+
+model AuthAuditEvent {
+  id                  String          @id @default(uuid()) @db.Uuid
+  userId              String?         @db.Uuid
+  deviceId            String?         @db.Uuid
+  eventType           String
+  provider            AuthProvider?
+  result              AuthAuditResult
+  sanitizedReasonCode String?
+  createdAt           DateTime        @default(now())
+  user                User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  device              Device?         @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+}
+
+enum AssetKind {
+  wardrobeOriginal
+  wardrobeThumbnail
+}
+
+enum AssetUploadStatus {
+  pending
+  uploaded
+  failed
+  deletionPending
+}
+
+model SyncRecord {
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @db.Uuid
+  entityType     String
+  entityId       String
+  serverVersion  Int
+  /// Validated typed payload — never arbitrary client JSON without a validator.
+  payload        Json
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+  lastMutationId String
+  lastDeviceId   String    @db.Uuid
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, entityType, entityId])
+  @@index([userId, updatedAt])
+  @@index([userId, deletedAt, entityType, entityId])
+}
+
+model SyncMutationReceipt {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @db.Uuid
+  mutationId    String
+  acceptedAt    DateTime @default(now())
+  result        String
+  serverVersion Int?
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, mutationId])
+}
+
+model SyncChangeLog {
+  sequence      BigInt   @id @default(autoincrement())
+  userId        String   @db.Uuid
+  entityType    String
+  entityId      String
+  operation     String
+  serverVersion Int
+  changedAt     DateTime @default(now())
+  payload       Json?
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, sequence])
+  @@index([userId, entityType, entityId])
+}
+
+model Asset {
+  id           String            @id @default(uuid()) @db.Uuid
+  userId       String            @db.Uuid
+  kind         AssetKind
+  objectKey    String
+  mimeType     String
+  byteSize     Int
+  checksum     String
+  width        Int?
+  height       Int?
+  version      Int               @default(1)
+  uploadStatus AssetUploadStatus @default(pending)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  deletedAt    DateTime?
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([objectKey])
+  @@index([userId])
+}
+
+model Goal {
+  id                 String              @id @default(uuid()) @db.Uuid
+  userId             String              @db.Uuid
+  name               String
+  description        String              @default("")
+  category           GoalCategory
+  customCategoryName String?
+  priority           GoalPriority        @default(medium)
+  status             GoalStatus          @default(active)
+  /// Whole-number minor units (e.g. paisa). Stored as Decimal(30,0) — never IEEE float.
+  targetAmountMinor  Decimal?            @db.Decimal(30, 0)
+  currentAmountMinor Decimal?            @db.Decimal(30, 0)
+  currencyCode       String?             @db.VarChar(3)
+  deadline           DateTime
+  progressPercent    Float               @default(0)
+  notes              String              @default("")
+  archivedAt         DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  milestones         GoalMilestone[]
+  progressEntries    GoalProgressEntry[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([deadline])
+  @@index([userId, status])
+}
+
+model GoalMilestone {
+  id          String    @id @default(uuid()) @db.Uuid
+  goalId      String    @db.Uuid
+  title       String
+  description String?
+  targetDate  DateTime?
+  isCompleted Boolean   @default(false)
+  completedAt DateTime?
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  goal        Goal      @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([goalId])
+}
+
+model GoalProgressEntry {
+  id                      String   @id @default(uuid()) @db.Uuid
+  goalId                  String   @db.Uuid
+  previousProgressPercent Float
+  newProgressPercent      Float
+  previousAmountMinor     Decimal? @db.Decimal(30, 0)
+  newAmountMinor          Decimal? @db.Decimal(30, 0)
+  note                    String?
+  createdAt               DateTime @default(now())
+  goal                    Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([goalId])
+  @@index([goalId, createdAt])
+}

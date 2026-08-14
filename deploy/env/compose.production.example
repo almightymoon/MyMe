@@ -1,0 +1,14 @@
+# Copy to /etc/memy/production.env on the VPS (never commit real values).
+# Used by docker compose -f docker-compose.production.yml --env-file /etc/memy/production.env
+
+COMPOSE_PROJECT_NAME=memy-production
+
+# Confirmed production hostnames (DNS must point at the VPS before deploy).
+MEMY_WWW_HOST=www.example.com
+MEMY_API_HOST=api.example.com
+
+# Optional: pin the API image tag instead of building on the server.
+# MEMY_API_IMAGE=ghcr.io/your-org/memy-api:production
+
+# Dual-clone VPS: path to the static site from the deploy/website clone.
+MEMY_WEBSITE_ROOT=/opt/memy/website/apps/www

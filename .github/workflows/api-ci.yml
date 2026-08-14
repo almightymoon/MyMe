@@ -1,0 +1,113 @@
+name: API CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/api/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/api-ci.yml'
+  pull_request:
+    paths:
+      - 'apps/api/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/api-ci.yml'
+
+defaults:
+  run:
+    working-directory: apps/api
+
+jobs:
+  api:
+    name: NestJS format, lint, unit, build, e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: memy
+          POSTGRES_PASSWORD: memy_dev_password
+          POSTGRES_DB: memy_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U memy -d memy_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      NODE_ENV: test
+      API_PORT: 3001
+      API_GLOBAL_PREFIX: api/v1
+      CORS_ORIGINS: http://localhost:3000
+      DEV_USER_ID: 00000000-0000-4000-8000-000000000001
+      DEV_USER_EMAIL: emma@example.com
+      DEV_USER_DISPLAY_NAME: Emma Chen
+      DEV_USER_TIMEZONE: Asia/Karachi
+      DEV_USER_CURRENCY: PKR
+      # Nest + Prisma connect via DATABASE_URL only (Compose POSTGRES_* are
+      # service env for the postgres container above, not Nest config).
+      DATABASE_URL: postgresql://memy:memy_dev_password@localhost:5432/memy_test?schema=public
+      DATABASE_URL_TEST: postgresql://memy:memy_dev_password@localhost:5432/memy_test?schema=public
+      DEV_DATABASE_URL: postgresql://memy:memy_dev_password@localhost:5432/memy?schema=public
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: apps/api/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Lint check
+        run: npm run lint:check
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Prisma format check
+        run: |
+          npx prisma format
+          git diff --exit-code -- prisma/schema.prisma
+
+      - name: Prisma validate
+        run: npx prisma validate
+
+      - name: Prisma generate
+        run: npx prisma generate
+
+      - name: Build
+        run: npm run build
+
+      - name: Write .env.test for guarded E2E prepare
+        run: |
+          printf '%s\n' \
+            'NODE_ENV=test' \
+            'API_PORT=3001' \
+            'API_GLOBAL_PREFIX=api/v1' \
+            'CORS_ORIGINS=http://localhost:3000' \
+            'DEV_USER_ID=00000000-0000-4000-8000-000000000001' \
+            'DEV_USER_EMAIL=emma@example.com' \
+            'DEV_USER_DISPLAY_NAME=Emma Chen' \
+            'DEV_USER_TIMEZONE=Asia/Karachi' \
+            'DEV_USER_CURRENCY=PKR' \
+            'DATABASE_URL=postgresql://memy:memy_dev_password@localhost:5432/memy_test?schema=public' \
+            'DATABASE_URL_TEST=postgresql://memy:memy_dev_password@localhost:5432/memy_test?schema=public' \
+            'DEV_DATABASE_URL=postgresql://memy:memy_dev_password@localhost:5432/memy?schema=public' \
+            > .env.test
+
+      - name: E2E tests (prepare + suite against memy_test)
+        run: npm run test:e2e

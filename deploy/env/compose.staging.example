@@ -1,0 +1,14 @@
+# Copy to /etc/memy/staging.env on the VPS (never commit real values).
+# Used by docker compose -f docker-compose.staging.yml --env-file /etc/memy/staging.env
+
+COMPOSE_PROJECT_NAME=memy-staging
+
+# Confirmed staging hostnames (DNS must point at the VPS before deploy).
+MEMY_WWW_HOST=staging-www.example.com
+MEMY_API_HOST=staging-api.example.com
+
+# Optional: pin the API image tag instead of building on the server.
+# MEMY_API_IMAGE=ghcr.io/your-org/memy-api:staging
+
+# Dual-clone VPS: path to the static site from the deploy/website clone.
+MEMY_WEBSITE_ROOT=/opt/memy/website/apps/www

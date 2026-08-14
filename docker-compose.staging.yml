@@ -1,0 +1,94 @@
+# Staging VPS stack — isolated volumes and env paths from production.
+# Only the reverse proxy publishes 80/443. PostgreSQL and MinIO stay private.
+
+name: memy-staging
+
+services:
+  caddy:
+    image: caddy:2.8.4-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      MEMY_WWW_HOST: ${MEMY_WWW_HOST}
+      MEMY_API_HOST: ${MEMY_API_HOST}
+    volumes:
+      - ./deploy/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      # Dual-clone VPS: set MEMY_WEBSITE_ROOT=/opt/memy/website/apps/www
+      # Monorepo default: ./apps/www
+      - ${MEMY_WEBSITE_ROOT:-./apps/www}:/srv/www:ro
+      - staging_caddy_data:/data
+      - staging_caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - public
+      - private
+
+  api:
+    image: ${MEMY_API_IMAGE:-memy-api:staging}
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - /etc/memy/staging/api.env
+    environment:
+      NODE_ENV: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/v1/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+    networks:
+      - private
+
+  postgres:
+    image: postgres:16.4-alpine
+    restart: unless-stopped
+    env_file:
+      - /etc/memy/staging/postgres.env
+    volumes:
+      - staging_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - private
+
+  minio:
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    env_file:
+      - /etc/memy/staging/minio.env
+    volumes:
+      - staging_minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9000/minio/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+    networks:
+      - private
+
+networks:
+  public:
+  private:
+
+volumes:
+  staging_postgres_data:
+  staging_minio_data:
+  staging_caddy_data:
+  staging_caddy_config:

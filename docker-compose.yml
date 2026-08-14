@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: memy-postgres
+    restart: unless-stopped
+    ports:
+      # Host 5433 avoids clashing with other local Postgres containers on 5432
+      - "${POSTGRES_PORT:-5433}:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-memy}
+      POSTGRES_USER: ${POSTGRES_USER:-memy}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-memy_dev_password}
+    volumes:
+      - memy_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-memy} -d ${POSTGRES_DB:-memy}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  memy_postgres_data:

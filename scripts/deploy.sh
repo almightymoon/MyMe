@@ -29,7 +29,20 @@ if [[ -z "${MEMY_WWW_HOST:-}" || -z "${MEMY_API_HOST:-}" ]]; then
   exit 1
 fi
 
+WEBSITE_ROOT="${MEMY_WEBSITE_ROOT:-$ROOT/apps/www}"
+if [[ ! -d "$WEBSITE_ROOT" ]]; then
+  echo "Missing website root: $WEBSITE_ROOT" >&2
+  echo "Clone deploy/website to /opt/memy/website and set MEMY_WEBSITE_ROOT=/opt/memy/website/apps/www" >&2
+  exit 1
+fi
+if [[ ! -f "$WEBSITE_ROOT/index.html" ]]; then
+  echo "Website root missing index.html: $WEBSITE_ROOT" >&2
+  exit 1
+fi
+export MEMY_WEBSITE_ROOT="$WEBSITE_ROOT"
+
 echo "Deploying MeMy ${ENVIRONMENT} (${MEMY_API_HOST})"
+echo "Website root: ${MEMY_WEBSITE_ROOT}"
 
 docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" pull api 2>/dev/null || true
 docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --build

@@ -1,0 +1,27 @@
+# Allowlist for release/mobile — paths relative to repository root.
+# Only committed files matching these prefixes/paths are published.
+apps/mobile/
+docs/product/mobile-route-map.md
+docs/product/v1-scope.md
+docs/privacy/
+docs/release/android-build.md
+docs/release/android-permissions.md
+docs/release/app-identity.md
+docs/release/app-store-submission-checklist.md
+docs/release/apple-age-rating-worksheet.md
+docs/release/apple-app-privacy-worksheet.md
+docs/release/apple-export-compliance.md
+docs/release/branding-assets.md
+docs/release/dependency-audit.md
+docs/release/google-play-content-rating-worksheet.md
+docs/release/google-play-data-safety-worksheet.md
+docs/release/google-play-submission-checklist.md
+docs/release/health-store-declarations.md
+docs/release/ios-build.md
+docs/release/ios-permissions.md
+docs/release/public-policy-hosting.md
+docs/release/store-assets.md
+docs/release/versioning.md
+.github/workflows/mobile-ci.yml
+.github/workflows/mobile-ios-ci.yml
+.gitignore

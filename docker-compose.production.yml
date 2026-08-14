@@ -15,7 +15,9 @@ services:
       MEMY_API_HOST: ${MEMY_API_HOST}
     volumes:
       - ./deploy/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./apps/www:/srv/www:ro
+      # Dual-clone VPS: set MEMY_WEBSITE_ROOT=/opt/memy/website/apps/www
+      # Monorepo default: ./apps/www
+      - ${MEMY_WEBSITE_ROOT:-./apps/www}:/srv/www:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:

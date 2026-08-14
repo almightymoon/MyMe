@@ -3,50 +3,613 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>MeMy</title>
-    <style>
-      :root {
-        color-scheme: light dark;
-        --bg: #111018;
-        --text: #f4efe6;
-        --muted: #c4b8a8;
-        --accent: #e07a3d;
-      }
-      body {
-        margin: 0;
-        font-family: Georgia, "Times New Roman", serif;
-        background: var(--bg);
-        color: var(--text);
-        line-height: 1.5;
-      }
-      main {
-        max-width: 40rem;
-        margin: 0 auto;
-        padding: 4rem 1.5rem;
-      }
-      a {
-        color: var(--accent);
-      }
-      p,
-      li {
-        color: var(--muted);
-      }
-    </style>
+    <title>MeMy — Your life, beautifully organized</title>
+    <meta
+      name="description"
+      content="MeMy is the personal life OS for goals, habits, finance, wardrobe, and your day. Sign in with Google or Apple. Private, offline-first, beautifully simple."
+    />
+    <meta name="theme-color" content="#000000" />
+    <link rel="icon" href="/assets/logo.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
   </head>
-  <body>
-    <main>
-      <h1>MeMy</h1>
-      <p>A personal life OS. Accounts use Google or Sign in with Apple.</p>
-      <p>
-        After you sign in once, MeMy stays usable offline. Health platform data
-        and imported device calendars remain on your device.
-      </p>
-      <ul>
-        <li><a href="/privacy.html">Privacy Policy</a> (draft)</li>
-        <li><a href="/terms.html">Terms</a> (draft)</li>
-        <li><a href="/support.html">Support</a></li>
-      </ul>
-      <p>App Store and Google Play links will appear here when published.</p>
+  <body class="experience is-loading">
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <div class="loader" id="loader" aria-hidden="true">
+      <div class="loader__mark">MeMy</div>
+      <div class="loader__bar"><span id="loader-bar"></span></div>
+      <div class="loader__count" id="loader-count">00</div>
+    </div>
+
+    <canvas class="field" id="field" aria-hidden="true"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="cursor" id="cursor" aria-hidden="true">
+      <span class="cursor__ring"></span>
+      <span class="cursor__dot"></span>
+    </div>
+    <div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
+
+    <header class="nav" id="nav">
+      <div class="nav__inner">
+        <a class="nav__brand" href="/">
+          <img src="/assets/logo.svg" alt="" width="26" height="22" loading="eager" />
+          MeMy
+        </a>
+        <nav class="nav__links" id="nav-links" aria-label="Primary">
+          <a class="nav__link" href="#features">Features</a>
+          <a class="nav__link" href="#modules">Modules</a>
+          <a class="nav__link" href="#privacy">Privacy</a>
+          <a class="nav__link" href="/support.html">Support</a>
+          <a class="nav__link nav__cta" href="#download" data-magnetic>Get the app</a>
+        </nav>
+        <button
+          class="nav__toggle"
+          id="nav-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="nav-menu"
+          aria-label="Open menu"
+        >
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+      <div class="nav__menu" id="nav-menu" aria-hidden="true">
+        <nav class="nav__menu-inner" aria-label="Mobile">
+          <a class="nav__menu-link" href="#features">Features</a>
+          <a class="nav__menu-link" href="#modules">Modules</a>
+          <a class="nav__menu-link" href="#privacy">Privacy</a>
+          <a class="nav__menu-link" href="/support.html">Support</a>
+          <a class="nav__menu-cta btn btn--fill" href="#download">Get the app</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="hero" aria-labelledby="hero-title">
+        <div class="hero__content">
+          <p class="hero__eyebrow hero__seq" data-seq="1">
+            <img src="/assets/logo.svg" alt="" width="18" height="15" loading="eager" />
+            Personal life OS
+          </p>
+          <h1 class="hero__title hero__seq" id="hero-title" data-seq="2" data-split>
+            Your life.<br /><span class="text-gradient">One calm place.</span>
+          </h1>
+          <p class="hero__lead hero__seq" data-seq="3">
+            Goals, habits, money, wardrobe, health, and your entire day — unified
+            in one beautifully crafted app. Sign in once. Work offline. Stay in control.
+          </p>
+          <div class="hero__actions hero__seq" data-seq="4">
+            <a class="btn btn--fill" href="#download" data-magnetic>Coming to App Store</a>
+            <a class="btn btn--ghost" href="#features" data-magnetic>Learn more</a>
+          </div>
+        </div>
+
+        <div class="hero__visual hero__seq" data-seq="6">
+          <div class="hero__visual-glow" aria-hidden="true"></div>
+          <div class="hero-stage">
+            <div class="float-chip float-chip--a">
+              <b>78</b>
+              <span>Life score</span>
+            </div>
+            <div class="float-chip float-chip--b">
+              <i></i>
+              <span>Works offline</span>
+            </div>
+            <div class="float-chip float-chip--c">Health stays on-device</div>
+            <div class="device-stack" id="device-stack" aria-hidden="true">
+            <div class="device device--back">
+              <div class="device__frame">
+                <div class="device__screen device__screen--dim">
+                  <div class="app-bar app-bar--compact">
+                    <div class="app-bar__greeting">Plan · This week</div>
+                    <div class="app-bar__name">Your week</div>
+                  </div>
+                  <div class="app-body">
+                    <div class="app-card app-card--mini">
+                      <div class="app-card__kicker">Goals</div>
+                      <div class="app-card__title">3 active</div>
+                    </div>
+                    <div class="app-card app-card--mini">
+                      <div class="app-card__kicker">Habits</div>
+                      <div class="app-card__title">5 of 7 done</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="device device--front">
+              <div class="device__frame">
+                <div class="device__island"></div>
+                <div class="device__screen">
+                  <div class="app-bar">
+                    <div class="app-bar__greeting">Wednesday · Aug 12</div>
+                    <div class="app-bar__name">Hi, Emma</div>
+                  </div>
+                  <div class="app-body">
+                    <div class="app-card app-card--score">
+                      <div class="score-ring"><span>78</span></div>
+                      <div>
+                        <div class="app-card__kicker">Life score</div>
+                        <div class="app-card__title">Strong week so far</div>
+                      </div>
+                    </div>
+                    <div class="app-row">
+                      <div class="app-mini">
+                        <div class="app-mini__dot" style="background: var(--habits)"></div>
+                        <div class="app-mini__label">Habits</div>
+                        <div class="app-mini__val">3 of 5</div>
+                      </div>
+                      <div class="app-mini">
+                        <div class="app-mini__dot" style="background: var(--finance)"></div>
+                        <div class="app-mini__label">Finance</div>
+                        <div class="app-mini__val">PKR 12.4k</div>
+                      </div>
+                    </div>
+                    <div class="app-card">
+                      <div class="app-card__kicker">Today's outfit</div>
+                      <div class="app-card__title">Business · Navy blazer</div>
+                    </div>
+                  </div>
+                  <div class="app-nav">
+                    <div class="app-nav__item is-active">
+                      <div class="app-nav__icon"></div>
+                      Today
+                    </div>
+                    <div class="app-nav__item">
+                      <div class="app-nav__icon"></div>
+                      Plan
+                    </div>
+                    <div class="app-nav__fab"></div>
+                    <div class="app-nav__item">
+                      <div class="app-nav__icon"></div>
+                      More
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            </div>
+            <div class="hero-stage__floor" aria-hidden="true"></div>
+          </div>
+        </div>
+        <p class="hero__scroll hero__seq" data-seq="5">Scroll to explore</p>
+      </section>
+
+      <section class="statement statement--dark" aria-label="Value proposition">
+        <p class="statement__text" data-split data-scrub>
+          Everything you need.<br />Nothing you don't.
+        </p>
+      </section>
+
+      <div class="ticker" aria-hidden="true">
+        <div class="ticker__inner">
+          <span>Goals</span><i></i><span>Habits</span><i></i><span>Finance</span><i></i><span>Health</span><i></i><span>Calendar</span><i></i><span>Wardrobe</span><i></i><span>Body</span><i></i>
+          <span>Goals</span><i></i><span>Habits</span><i></i><span>Finance</span><i></i><span>Health</span><i></i><span>Calendar</span><i></i><span>Wardrobe</span><i></i><span>Body</span><i></i>
+        </div>
+      </div>
+
+      <!-- Features: immersive sticky storytelling -->
+      <section class="story" id="features" aria-labelledby="features-title">
+        <div class="story__intro reveal">
+          <p class="eyebrow">Designed for calm</p>
+          <h2 class="story__headline" id="features-title" data-split>
+            Everything important.<br />Nothing noisy.
+          </h2>
+        </div>
+
+        <div class="sticky-features__scene" id="sticky-features">
+          <div class="sticky-features__pin">
+            <div class="sticky-progress" aria-hidden="true">
+              <div class="sticky-progress__track">
+                <div class="sticky-progress__fill"></div>
+              </div>
+              <span class="sticky-progress__label">01 / 04</span>
+            </div>
+            <div class="sticky-features__grid">
+              <div class="sticky-features__list" role="tablist" aria-label="Features">
+                <article class="sticky-feature is-active" data-feature="0" role="tab" aria-selected="true">
+                  <span class="sticky-feature__num">01</span>
+                  <h3 class="sticky-feature__title">Sign in once. Feel at home.</h3>
+                  <p class="sticky-feature__text">
+                    Google or Apple. Secure sessions that stay out of your way.
+                  </p>
+                </article>
+                <article class="sticky-feature" data-feature="1" role="tab" aria-selected="false">
+                  <span class="sticky-feature__num">02</span>
+                  <h3 class="sticky-feature__title">Works when the network doesn't.</h3>
+                  <p class="sticky-feature__text">
+                    Capture life offline. Sync quietly when you're back.
+                  </p>
+                </article>
+                <article class="sticky-feature" data-feature="2" role="tab" aria-selected="false">
+                  <span class="sticky-feature__num">03</span>
+                  <h3 class="sticky-feature__title">Private where it matters.</h3>
+                  <p class="sticky-feature__text">
+                    Health and calendar stay on your phone. Always.
+                  </p>
+                </article>
+                <article class="sticky-feature" data-feature="3" role="tab" aria-selected="false">
+                  <span class="sticky-feature__num">04</span>
+                  <h3 class="sticky-feature__title">Today and Plan. One rhythm.</h3>
+                  <p class="sticky-feature__text">
+                    Your day composed — not another noisy dashboard.
+                  </p>
+                </article>
+              </div>
+
+              <div class="sticky-features__visual" aria-live="polite">
+                <div class="sticky-visual is-active" data-visual="0">
+                  <div class="panel panel--auth">
+                    <span class="panel__tag">Sign in</span>
+                    <div class="panel__phone">
+                      <div class="panel__island"></div>
+                      <div class="panel__screen">
+                        <p class="panel__kicker">Welcome back</p>
+                        <p class="panel__big">Continue with</p>
+                        <div class="panel__btn panel__btn--dark">Sign in with Apple</div>
+                        <div class="panel__btn panel__btn--light">Google</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="sticky-visual" data-visual="1">
+                  <div class="panel panel--offline">
+                    <span class="panel__tag">Offline</span>
+                    <div class="panel__phone">
+                      <div class="panel__island"></div>
+                      <div class="panel__screen">
+                        <div class="panel__pill">Offline · queued</div>
+                        <p class="panel__big">3 changes<br />waiting</p>
+                        <div class="panel__queue">
+                          <span>Habit check-in</span>
+                          <span>Expense · lunch</span>
+                          <span>Outfit saved</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="sticky-visual" data-visual="2">
+                  <div class="panel panel--privacy">
+                    <span class="panel__tag">On device</span>
+                    <div class="panel__phone">
+                      <div class="panel__island"></div>
+                      <div class="panel__screen">
+                        <p class="panel__kicker">Never uploaded</p>
+                        <ul class="panel__list">
+                          <li><span>Health</span><em>Local</em></li>
+                          <li><span>Calendar</span><em>Local</em></li>
+                          <li><span>Wardrobe photos</span><em>Private</em></li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="sticky-visual" data-visual="3">
+                  <div class="panel panel--today">
+                    <span class="panel__tag">Today</span>
+                    <div class="panel__phone">
+                      <div class="panel__island"></div>
+                      <div class="panel__screen panel__screen--light">
+                        <p class="panel__greeting">Good afternoon</p>
+                        <div class="panel__score-row">
+                          <div class="score-ring score-ring--sm"><span>78</span></div>
+                          <div>
+                            <p class="panel__kicker panel__kicker--dark">Life score</p>
+                            <p class="panel__line">Strong week</p>
+                          </div>
+                        </div>
+                        <div class="panel__chips">
+                          <span>Habits 3/5</span>
+                          <span>PKR 12.4k</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sticky-features__steps" aria-hidden="true">
+            <div class="sticky-step" data-step="0"></div>
+            <div class="sticky-step" data-step="1"></div>
+            <div class="sticky-step" data-step="2"></div>
+            <div class="sticky-step" data-step="3"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Modules filmstrip -->
+      <section class="filmstrip" id="modules">
+        <div class="filmstrip__head reveal">
+          <p class="eyebrow eyebrow--light">Inside MeMy</p>
+          <h2 class="filmstrip__title" data-split>Seven modules.<br />One quiet system.</h2>
+        </div>
+        <div class="filmstrip__track" tabindex="0" aria-label="Modules">
+          <figure class="filmstrip__item">
+            <div class="filmstrip__card">
+              <span class="filmstrip__idx">01</span>
+              <img src="/assets/modules/mod-goals.png" alt="" loading="lazy" width="320" height="320" />
+              <figcaption>
+                <strong>Goals</strong>
+                <span>Rings, not noise</span>
+              </figcaption>
+            </div>
+          </figure>
+          <figure class="filmstrip__item">
+            <div class="filmstrip__card">
+              <span class="filmstrip__idx">02</span>
+              <img src="/assets/modules/mod-habits.png" alt="" loading="lazy" width="320" height="320" />
+              <figcaption>
+                <strong>Habits</strong>
+                <span>Streaks without guilt</span>
+              </figcaption>
+            </div>
+          </figure>
+          <figure class="filmstrip__item">
+            <div class="filmstrip__card">
+              <span class="filmstrip__idx">03</span>
+              <img src="/assets/modules/mod-finance.png" alt="" loading="lazy" width="320" height="320" />
+              <figcaption>
+                <strong>Finance</strong>
+                <span>Spend, quietly tracked</span>
+              </figcaption>
+            </div>
+          </figure>
+          <figure class="filmstrip__item">
+            <div class="filmstrip__card">
+              <span class="filmstrip__idx">04</span>
+              <img src="/assets/modules/heart.png" alt="" loading="lazy" width="320" height="320" />
+              <figcaption>
+                <strong>Health</strong>
+                <span>Stays on this phone</span>
+              </figcaption>
+            </div>
+          </figure>
+          <figure class="filmstrip__item">
+            <div class="filmstrip__card">
+              <span class="filmstrip__idx">05</span>
+              <img src="/assets/modules/mod-calendar.png" alt="" loading="lazy" width="320" height="320" />
+              <figcaption>
+                <strong>Calendar</strong>
+                <span>Your day, composed</span>
+              </figcaption>
+            </div>
+          </figure>
+          <figure class="filmstrip__item">
+            <div class="filmstrip__card">
+              <span class="filmstrip__idx">06</span>
+              <img src="/assets/modules/mod-wardrobe.png" alt="" loading="lazy" width="320" height="320" />
+              <figcaption>
+                <strong>Wardrobe</strong>
+                <span>What to wear tomorrow</span>
+              </figcaption>
+            </div>
+          </figure>
+          <figure class="filmstrip__item">
+            <div class="filmstrip__card">
+              <span class="filmstrip__idx">07</span>
+              <img src="/assets/modules/body.png" alt="" loading="lazy" width="320" height="320" />
+              <figcaption>
+                <strong>Body</strong>
+                <span>Shape, not a spreadsheet</span>
+              </figcaption>
+            </div>
+          </figure>
+        </div>
+      </section>
+
+      <!-- Full-bleed product chapters -->
+      <section class="chapter chapter--goals">
+        <div class="chapter__copy reveal">
+          <p class="eyebrow eyebrow--light">Goals</p>
+          <h2 class="chapter__title" data-split>Dream big.<br />Track small.</h2>
+          <p class="chapter__desc">
+            Progress rings and deadlines that feel achievable — not overwhelming.
+          </p>
+        </div>
+        <div class="chapter__stage">
+          <div class="chapter-phone" data-tilt>
+            <div class="chapter-phone__frame">
+              <div class="chapter-phone__island"></div>
+              <div class="chapter-phone__ui">
+                <p class="chapter-phone__label">Active goals</p>
+                <div class="chapter-goal">
+                  <div class="chapter-goal__top">
+                    <span>Half marathon</span>
+                    <strong>68%</strong>
+                  </div>
+                  <div class="chapter-goal__bar"><i style="width:68%"></i></div>
+                </div>
+                <div class="chapter-goal">
+                  <div class="chapter-goal__top">
+                    <span>Save PKR 200k</span>
+                    <strong>41%</strong>
+                  </div>
+                  <div class="chapter-goal__bar"><i style="width:41%"></i></div>
+                </div>
+                <div class="chapter-goal chapter-goal--muted">
+                  <div class="chapter-goal__top">
+                    <span>Read 24 books</span>
+                    <strong>12%</strong>
+                  </div>
+                  <div class="chapter-goal__bar"><i style="width:12%"></i></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="chapter chapter--habits chapter--flip">
+        <div class="chapter__copy reveal">
+          <p class="eyebrow eyebrow--light">Habits</p>
+          <h2 class="chapter__title" data-split>Small wins.<br />Every day.</h2>
+          <p class="chapter__desc">
+            Streaks without guilt. See what's done — and what's still open.
+          </p>
+        </div>
+        <div class="chapter__stage">
+          <div class="chapter-board" data-tilt>
+            <div class="chapter-board__row is-done"><span>Morning stretch</span><em>✓</em></div>
+            <div class="chapter-board__row is-done"><span>Water · 2L</span><em>✓</em></div>
+            <div class="chapter-board__row is-done"><span>No late coffee</span><em>✓</em></div>
+            <div class="chapter-board__row"><span>Evening journal</span><em>○</em></div>
+            <div class="chapter-board__row"><span>Walk 8k steps</span><em>○</em></div>
+            <p class="chapter-board__streak">12-day streak</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="chapter chapter--life">
+        <div class="chapter__copy chapter__copy--center reveal">
+          <p class="eyebrow eyebrow--light">Finance &amp; wardrobe</p>
+          <h2 class="chapter__title" data-split>The details that<br />shape your day.</h2>
+        </div>
+        <div class="chapter__duo">
+          <article class="duo-card duo-card--finance" data-tilt>
+            <p class="duo-card__label">This month</p>
+            <p class="duo-card__value">PKR 48,200</p>
+            <p class="duo-card__meta">Top · Food &amp; dining</p>
+            <div class="duo-card__bars" aria-hidden="true">
+              <span style="height:40%"></span>
+              <span style="height:70%"></span>
+              <span style="height:55%"></span>
+              <span style="height:90%"></span>
+              <span style="height:35%"></span>
+              <span style="height:60%"></span>
+            </div>
+          </article>
+          <article class="duo-card duo-card--wardrobe" data-tilt>
+            <p class="duo-card__label">Tomorrow</p>
+            <p class="duo-card__value">Business formal</p>
+            <p class="duo-card__meta">Navy blazer · 4 pieces</p>
+            <div class="duo-card__swatches" aria-hidden="true">
+              <span style="background:#1a2744"></span>
+              <span style="background:#c4c8d0"></span>
+              <span style="background:#2b2b2b"></span>
+              <span style="background:#8b7355"></span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Privacy: editorial, not cards -->
+      <section class="privacy-editorial" id="privacy">
+        <div class="privacy-editorial__inner">
+          <h2 class="privacy-editorial__title reveal" data-split>
+            Your data.<br />Your rules.
+          </h2>
+          <div class="privacy-editorial__rows">
+            <div class="privacy-row">
+              <strong>Health stays local</strong>
+              <p>HealthKit and Health Connect never leave your device.</p>
+            </div>
+            <div class="privacy-row">
+              <strong>Calendar stays local</strong>
+              <p>Events are read on your phone — never uploaded.</p>
+            </div>
+            <div class="privacy-row">
+              <strong>Export or delete</strong>
+              <p>Your account, on your terms, from inside the app.</p>
+            </div>
+          </div>
+          <p class="privacy-editorial__link reveal">
+            <a href="/privacy.html">Read the privacy policy →</a>
+          </p>
+        </div>
+      </section>
+
+      <!-- CTA: quiet climax -->
+      <section class="cta-quiet reveal" id="download">
+        <h2 class="cta-quiet__title" data-split>Ready when you are.</h2>
+        <p class="cta-quiet__desc">Coming to iOS and Android.</p>
+        <div class="cta-quiet__stores">
+          <div class="store-badge" aria-disabled="true" data-magnetic>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+            </svg>
+            <span>
+              <span class="store-badge__small">Download on the</span>
+              <span class="store-badge__large">App Store</span>
+            </span>
+            <span class="store-badge__tag">Soon</span>
+          </div>
+          <div class="store-badge" aria-disabled="true" data-magnetic>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M3.609 1.814L13.792 12 3.61 22.186a1.004 1.004 0 0 1-.61-.92V2.734a1 1 0 0 1 .609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.198l2.807 1.626a1 1 0 0 1 0 1.73l-2.808 1.626L15.206 12l2.492-2.491zM5.864 2.658L16.802 8.99l-2.303 2.303-8.635-8.635z"/>
+            </svg>
+            <span>
+              <span class="store-badge__small">Get it on</span>
+              <span class="store-badge__large">Google Play</span>
+            </span>
+            <span class="store-badge__tag">Soon</span>
+          </div>
+        </div>
+      </section>
     </main>
+
+    <footer class="footer">
+      <div class="container footer__inner">
+        <div class="footer__top">
+          <div class="footer__brand-block">
+            <a class="footer__brand" href="/">
+              <img src="/assets/logo.svg" alt="" width="22" height="18" loading="lazy" />
+              MeMy
+            </a>
+            <p class="footer__tagline">
+              A personal life OS for goals, habits, finance, wardrobe, and your day.
+            </p>
+          </div>
+          <div class="footer__cols">
+            <div class="footer__col">
+              <h4>Product</h4>
+              <ul>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#modules">Modules</a></li>
+                <li><a href="#download">Download</a></li>
+              </ul>
+            </div>
+            <div class="footer__col">
+              <h4>Legal</h4>
+              <ul>
+                <li><a href="/privacy.html">Privacy</a></li>
+                <li><a href="/terms.html">Terms</a></li>
+              </ul>
+            </div>
+            <div class="footer__col">
+              <h4>Support</h4>
+              <ul>
+                <li><a href="/support.html">Help center</a></li>
+              </ul>
+            </div>
+            <div class="footer__col">
+              <h4>Contact</h4>
+              <ul>
+                <li><a href="/support.html">Get help</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="footer__bottom">
+          <p class="footer__legal">
+            Copyright © <span id="year"></span> MeMy. Draft legal pages — counsel review pending.
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js" defer></script>
+    <script src="/main.js" defer></script>
   </body>
 </html>

@@ -1,0 +1,19 @@
+# Allowlist for deploy/backend — paths relative to repository root.
+# Only committed files matching these prefixes/paths are published.
+apps/api/
+deploy/
+scripts/backup.sh
+scripts/backup-staging.sh
+scripts/deploy.sh
+scripts/health-check.sh
+scripts/migrate.sh
+docker-compose.yml
+docker-compose.staging.yml
+docker-compose.production.yml
+docs/deployment/
+docs/architecture/production-auth-offline-sync.md
+docs/architecture/account-local-storage-inventory.md
+docs/architecture/wardrobe-image-storage.md
+.github/workflows/api-ci.yml
+.github/workflows/deploy-production.yml
+.gitignore

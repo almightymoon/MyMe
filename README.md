@@ -37,21 +37,32 @@ See:
 
 ```
 /
-├── index.html
-├── app/                       # Interactive web prototype (do not remove)
 ├── apps/
 │   ├── mobile/                # Flutter client (Android + iOS)
-│   └── api/                   # NestJS API (Goals vertical slice; optional)
-├── docker-compose.yml         # Local PostgreSQL
+│   ├── api/                   # NestJS API
+│   └── www/                   # Public production website
+├── prototype/web/             # Interactive design prototype (not production)
+├── deploy/                    # Caddy + VPS env examples
+├── branch-manifests/          # Allowlists for generated product branches
+├── docker-compose*.yml
 ├── docs/
-└── reference images/
+└── scripts/                   # Deploy + product-branch publication
 ```
+
+Generated snapshot branches (never develop here):
+
+- `release/mobile` — Flutter-only share/build snapshot
+- `deploy/backend` — API + VPS stack for `/opt/memy/backend`
+- `deploy/website` — public site for `/opt/memy/website`
+
+See `docs/deployment/product-branch-workflow.md`.
 
 ## Development status
 
 | Area | Status |
 |------|--------|
-| Web prototype (`/app`) | Approved visual reference — keep intact |
+| Web prototype (`/prototype/web`) | Approved visual reference — keep intact; not public |
+| Public website (`/apps/www`) | Landing, legal, support |
 | Flutter mobile (`/apps/mobile`) | **v1 feature freeze** — local-first Goals · Finance · Habits · Device Calendar · Health · Exercise · Today/Plan · Privacy/Support/Legal |
 | NestJS API (`/apps/api`) | Optional Goals API for development; production mobile does not require it |
 | Cloud calendar OAuth / vendor wearables / live AI | Deferred — see `docs/product/v1-scope.md` |

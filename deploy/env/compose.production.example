@@ -9,3 +9,6 @@ MEMY_API_HOST=api.example.com
 
 # Optional: pin the API image tag instead of building on the server.
 # MEMY_API_IMAGE=ghcr.io/your-org/memy-api:production
+
+# Dual-clone VPS: path to the static site from the deploy/website clone.
+MEMY_WEBSITE_ROOT=/opt/memy/website/apps/www

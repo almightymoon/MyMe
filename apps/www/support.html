@@ -4,15 +4,50 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>MeMy Support</title>
+    <link rel="icon" href="/assets/logo.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles.css" />
   </head>
-  <body>
+  <body class="legal-page">
+    <header class="nav is-scrolled" id="nav">
+      <div class="nav__inner">
+        <a class="nav__brand" href="/">
+          <img src="/assets/logo.svg" alt="" width="26" height="22" />
+          MeMy
+        </a>
+        <nav class="nav__links" aria-label="Primary">
+          <a class="nav__link" href="/">Home</a>
+          <a class="nav__link" href="/privacy.html">Privacy</a>
+          <a class="nav__link" href="/terms.html">Terms</a>
+        </nav>
+      </div>
+    </header>
     <main>
       <h1>Support</h1>
+      <p class="meta">We're here to help.</p>
       <p>
-        Use Help inside the MeMy app. A public support email will be listed here
-        after the owner confirms it.
+        For the fastest answer, open <strong>Help &amp; Support</strong> inside
+        the MeMy app from Settings or the sidebar.
       </p>
-      <p><a href="/">Home</a></p>
+      <h2>Common topics</h2>
+      <ul>
+        <li>Signing in with Google or Apple</li>
+        <li>Syncing after going offline</li>
+        <li>Connecting Health or Calendar on your device</li>
+        <li>Exporting or deleting your account</li>
+      </ul>
+      <p>
+        A public support email will be listed here after launch. Until then, use
+        in-app Help.
+      </p>
+      <p><a href="/">← Back to home</a></p>
     </main>
+    <footer class="footer">
+      <div class="container footer__inner">
+        <div class="footer__bottom">
+          <p class="footer__legal">Copyright © <span id="year"></span> MeMy</p>
+        </div>
+      </div>
+    </footer>
+    <script src="/main.js" defer></script>
   </body>
 </html>

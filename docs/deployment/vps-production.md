@@ -4,13 +4,15 @@ Do not put SSH keys, database passwords, or OAuth secrets in this file.
 
 ## What must not be deployed publicly
 
-- `/app` HTML prototype
+- `/prototype/web` HTML prototype
 - `/reference images`
 - Internal screenshot mode
 - Debug API docs in production if the owner disables them
 - PostgreSQL and MinIO ports
 
 The public website is `/apps/www` (landing, privacy, terms, support).
+On a dual-clone VPS, serve it from `/opt/memy/website/apps/www` via
+`MEMY_WEBSITE_ROOT` (see `docs/deployment/product-branch-workflow.md`).
 
 ## Prerequisites
 

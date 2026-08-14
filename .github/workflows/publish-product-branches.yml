@@ -1,0 +1,99 @@
+name: Publish product branches
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: Source git ref (commit SHA or branch). Default main.
+        required: true
+        default: main
+      publish_mobile:
+        description: Publish release/mobile
+        type: boolean
+        default: true
+      publish_backend:
+        description: Publish deploy/backend
+        type: boolean
+        default: true
+      publish_website:
+        description: Publish deploy/website
+        type: boolean
+        default: true
+      push:
+        description: Fast-forward push generated branches (never force)
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-product-branches
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Validate and publish generated branches
+    runs-on: ubuntu-latest
+    # Manual only — do not run from untrusted pull requests.
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.source_ref }}
+
+      - name: Fetch all remote branches
+        run: git fetch origin --prune
+
+      - name: Resolve source SHA
+        id: source
+        run: |
+          SHA="$(git rev-parse --verify HEAD)"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "Source commit: $SHA"
+
+      - name: Setup Flutter
+        if: ${{ inputs.publish_mobile }}
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Setup Node
+        if: ${{ inputs.publish_backend }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: apps/api/package-lock.json
+
+      - name: Build publish args
+        id: args
+        run: |
+          ARGS="--source ${{ steps.source.outputs.sha }} --commit"
+          if [ "${{ inputs.publish_mobile }}" = "true" ]; then ARGS="$ARGS --mobile"; fi
+          if [ "${{ inputs.publish_backend }}" = "true" ]; then ARGS="$ARGS --backend"; fi
+          if [ "${{ inputs.publish_website }}" = "true" ]; then ARGS="$ARGS --website"; fi
+          if [ "${{ inputs.push }}" = "true" ]; then ARGS="$ARGS --push"; fi
+          echo "args=$ARGS" >> "$GITHUB_OUTPUT"
+          echo "Publish args: $ARGS"
+
+      - name: Publish product branches
+        run: |
+          chmod +x scripts/publish-product-branches.sh scripts/scan-generated-secrets.sh scripts/validate-website-content.sh
+          ./scripts/publish-product-branches.sh ${{ steps.args.outputs.args }}
+
+      - name: Report SHAs
+        if: always()
+        run: |
+          echo "Source main/ref SHA: ${{ steps.source.outputs.sha }}"
+          for b in release/mobile deploy/backend deploy/website; do
+            if git show-ref --verify --quiet "refs/heads/$b"; then
+              echo "Local $b: $(git rev-parse "$b")"
+            fi
+            REMOTE="$(git ls-remote --heads origin "$b" | awk '{print $1}')"
+            if [ -n "$REMOTE" ]; then
+              echo "Remote $b: $REMOTE"
+            fi
+          done

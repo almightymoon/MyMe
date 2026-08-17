@@ -33,7 +33,6 @@
     dpr: 1,
     particles: [],
     orbs: [],
-    mouse: { x: 0.5, y: 0.38, tx: 0.5, ty: 0.38 },
     scroll: 0,
     t: 0,
     running: false,
@@ -52,14 +51,6 @@
       this.resize();
       this.spawn();
       window.addEventListener('resize', this.resize.bind(this), { passive: true });
-      window.addEventListener(
-        'pointermove',
-        function (e) {
-          Field.mouse.tx = e.clientX / Field.w;
-          Field.mouse.ty = e.clientY / Field.h;
-        },
-        { passive: true }
-      );
       this.running = true;
       this.loop();
     },
@@ -100,8 +91,6 @@
     loop: function () {
       if (!this.running) return;
       this.t += 0.016;
-      this.mouse.x = lerp(this.mouse.x, this.mouse.tx, 0.055);
-      this.mouse.y = lerp(this.mouse.y, this.mouse.ty, 0.055);
       this.draw();
       requestAnimationFrame(this.loop.bind(this));
     },
@@ -115,8 +104,6 @@
       ctx.fillStyle = 'rgba(0,0,0,0.22)';
       ctx.fillRect(0, 0, w, h);
 
-      var mx = this.mouse.x * w;
-      var my = this.mouse.y * h;
       var pulse = 0.62 + Math.sin(this.t * 0.65) * 0.14 + scroll * 0.22;
       var i;
 
@@ -134,14 +121,7 @@
         ctx.fillRect(ox - o.r, oy - o.r, o.r * 2, o.r * 2);
       }
 
-      var mg = ctx.createRadialGradient(mx, my, 0, mx, my, Math.max(w, h) * 0.42);
-      mg.addColorStop(0, 'rgba(255,106,26,' + (0.22 * pulse).toFixed(3) + ')');
-      mg.addColorStop(0.4, 'rgba(255,80,20,0.06)');
-      mg.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = mg;
-      ctx.fillRect(0, 0, w, h);
-
-      var p, a, n, mag, dx, dy, dist, speed;
+      var p, a, n, speed;
       speed = 1.05 + scroll * 0.55;
       for (i = 0; i < this.particles.length; i++) {
         p = this.particles[i];
@@ -149,13 +129,6 @@
         a = n * Math.PI;
         p.vx = lerp(p.vx, Math.cos(a) * speed, 0.045);
         p.vy = lerp(p.vy, Math.sin(a) * speed, 0.045);
-
-        dx = mx - p.x;
-        dy = my - p.y;
-        dist = Math.sqrt(dx * dx + dy * dy) + 36;
-        mag = 48 / dist;
-        p.vx += dx * mag * 0.014;
-        p.vy += dy * mag * 0.014;
 
         p.x += p.vx;
         p.y += p.vy;
@@ -173,27 +146,6 @@
             : 'rgba(255,106,26,' + alpha.toFixed(3) + ')';
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fill();
-      }
-
-      if (!coarse) {
-        ctx.strokeStyle = 'rgba(255,106,26,0.09)';
-        ctx.lineWidth = 1;
-        var j, q, d2;
-        for (i = 0; i < this.particles.length; i += 3) {
-          p = this.particles[i];
-          for (j = i + 7; j < this.particles.length; j += 13) {
-            q = this.particles[j];
-            d2 = (p.x - q.x) * (p.x - q.x) + (p.y - q.y) * (p.y - q.y);
-            if (d2 < 16000) {
-              ctx.globalAlpha = 1 - d2 / 16000;
-              ctx.beginPath();
-              ctx.moveTo(p.x, p.y);
-              ctx.lineTo(q.x, q.y);
-              ctx.stroke();
-            }
-          }
-        }
-        ctx.globalAlpha = 1;
       }
     },
   };

@@ -45,6 +45,8 @@ for dirpath, _, files in os.walk(www):
             ref = m.group(1)
             if ref.startswith(("http://", "https://", "mailto:", "tel:", "data:", "#")):
                 continue
+            if ref.endswith(".apk"):
+                continue
             if ref.startswith("/"):
                 target = os.path.normpath(www + ref)
             else:

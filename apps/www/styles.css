@@ -2272,10 +2272,21 @@ body.is-loading {
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #fff;
   text-align: left;
+  text-decoration: none;
   transition:
     transform 0.35s var(--ease-out),
     background 0.25s,
     border-color 0.25s;
+}
+
+.store-badge--live {
+  background: rgba(255, 106, 26, 0.14);
+  border-color: rgba(255, 106, 26, 0.45);
+}
+
+.store-badge--live:hover {
+  background: rgba(255, 106, 26, 0.22);
+  border-color: var(--ember);
 }
 
 .store-badge:hover {

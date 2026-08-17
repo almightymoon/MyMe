@@ -153,7 +153,7 @@ docker compose \
   --env-file "$ENV_FILE" \
   -f "$BACKEND_ROOT/docker-compose.production.yml" \
   -f "$APACHE_OVERRIDE" \
-  exec -T api npx prisma migrate deploy
+  run --rm --no-deps --entrypoint npx api prisma migrate deploy
 
 wait_api_health
 sync_apache_vhosts

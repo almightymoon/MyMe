@@ -36,20 +36,34 @@ export class AdminAuthService implements OnModuleInit {
     if (!bootstrap.bootstrapEmail || !bootstrap.bootstrapPassword) {
       return;
     }
-    const existing = await this.prisma.adminUser.count();
-    if (existing > 0) {
-      return;
+    try {
+      const existing = await this.prisma.adminUser.count();
+      if (existing > 0) {
+        return;
+      }
+      const email = bootstrap.bootstrapEmail.toLowerCase();
+      await this.prisma.adminUser.create({
+        data: {
+          email,
+          displayName: 'Owner',
+          passwordHash: hashPassword(bootstrap.bootstrapPassword),
+          status: 'active',
+        },
+      });
+      this.logger.warn(`Bootstrapped first admin account for ${email}`);
+    } catch (error) {
+      const code =
+        typeof error === 'object' && error && 'code' in error
+          ? String((error as { code?: string }).code)
+          : '';
+      if (code === 'P2021') {
+        this.logger.warn(
+          'Admin bootstrap skipped until prisma migrations are applied.',
+        );
+        return;
+      }
+      throw error;
     }
-    const email = bootstrap.bootstrapEmail.toLowerCase();
-    await this.prisma.adminUser.create({
-      data: {
-        email,
-        displayName: 'Owner',
-        passwordHash: hashPassword(bootstrap.bootstrapPassword),
-        status: 'active',
-      },
-    });
-    this.logger.warn(`Bootstrapped first admin account for ${email}`);
   }
 
   async login(email: string, password: string) {

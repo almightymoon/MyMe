@@ -29,10 +29,16 @@ Use the production API hostname and **separate** OAuth clients from staging:
 flutter build appbundle \
   --dart-define=APP_ENV=production \
   --dart-define=AUTH_MODE=account \
-  --dart-define=API_BASE_URL=https://api.<your-domain>/api/v1 \
+  --dart-define=API_BASE_URL=https://api.memy.athariqbal.com/api/v1 \
   --dart-define=GOOGLE_SERVER_CLIENT_ID=<production-web-client-id> \
   --dart-define=GOOGLE_IOS_CLIENT_ID=<production-ios-client-id> \
-  --dart-define=SUPPORT_EMAIL=support@<your-domain>
+  --dart-define=SUPPORT_EMAIL=support@athariqbal.com
+```
+
+Run against the live VPS from a device/simulator:
+
+```bash
+./apps/mobile/tool/run_vps.sh
 ```
 
 `EnvironmentConfig.validate()` rejects production builds that still point at
@@ -41,7 +47,8 @@ flutter build appbundle \
 ## What the app does at runtime
 
 1. User signs in with Google or Apple (native SDK).
-2. Mobile sends the provider ID token to `POST /api/v1/auth/exchange`.
+2. Mobile sends the provider ID token to `POST /api/v1/auth/google` or
+   `POST /api/v1/auth/apple`.
 3. API returns a short-lived access token + rotating refresh token.
 4. Refresh token is stored in `flutter_secure_storage` (Keychain / EncryptedSharedPreferences).
 5. Module sync pushes local mutations through the durable outbox and pulls with string cursors.
@@ -52,7 +59,7 @@ flutter build appbundle \
 After deploy, confirm:
 
 ```bash
-curl -fsS https://staging-api.<your-domain>/api/v1/health
+curl -fsS https://api.memy.athariqbal.com/api/v1/health
 ```
 
 Expected JSON includes `"status":"ok"` and `"database":"up"`.

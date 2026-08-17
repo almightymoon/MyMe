@@ -73,6 +73,7 @@ model User {
   syncReceipts   SyncMutationReceipt[]
   syncChanges    SyncChangeLog[]
   assets         Asset[]
+  subscriptions  Subscription[]
 
   @@index([status])
 }
@@ -269,6 +270,87 @@ model GoalMilestone {
   goal        Goal      @relation(fields: [goalId], references: [id], onDelete: Cascade)
 
   @@index([goalId])
+}
+
+enum AdminUserStatus {
+  active
+  disabled
+}
+
+enum PlanInterval {
+  none
+  month
+  year
+}
+
+enum SubscriptionStatus {
+  trialing
+  active
+  pastDue
+  canceled
+  expired
+}
+
+model AdminUser {
+  id           String          @id @default(uuid()) @db.Uuid
+  email        String          @unique
+  displayName  String
+  passwordHash String
+  status       AdminUserStatus @default(active)
+  lastLoginAt  DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  auditEvents  AdminAuditEvent[]
+
+  @@index([status])
+}
+
+model Plan {
+  id            String         @id @default(uuid()) @db.Uuid
+  code          String         @unique
+  name          String
+  interval      PlanInterval
+  amountMinor   Decimal        @db.Decimal(30, 0)
+  currencyCode  String         @db.VarChar(3)
+  active        Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id               String             @id @default(uuid()) @db.Uuid
+  userId           String             @db.Uuid
+  planId           String             @db.Uuid
+  status           SubscriptionStatus @default(active)
+  amountMinor      Decimal            @db.Decimal(30, 0)
+  currencyCode     String             @db.VarChar(3)
+  startedAt        DateTime           @default(now())
+  currentPeriodEnd DateTime?
+  canceledAt       DateTime?
+  notes            String             @default("")
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan             Plan               @relation(fields: [planId], references: [id], onDelete: Restrict)
+
+  @@index([userId, status])
+  @@index([planId])
+  @@index([status])
+}
+
+model AdminAuditEvent {
+  id          String     @id @default(uuid()) @db.Uuid
+  adminUserId String?    @db.Uuid
+  action      String
+  targetType  String
+  targetId    String?
+  metadata    Json?
+  createdAt   DateTime   @default(now())
+  adminUser   AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([adminUserId, createdAt])
 }
 
 model GoalProgressEntry {

@@ -8,6 +8,7 @@ import { GoalsModule } from './goals/goals.module';
 import { TodayModule } from './today/today.module';
 import { SyncModule } from './sync/sync.module';
 import { AssetsModule } from './assets/assets.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { AssetsModule } from './assets/assets.module';
     TodayModule,
     SyncModule,
     AssetsModule,
+    AdminModule,
   ],
 })
 export class AppModule {}

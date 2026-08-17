@@ -34,6 +34,7 @@ On a dual-clone VPS, serve it from `/opt/memy/website/apps/www` via
    (GitHub Actions: `.github/workflows/deploy-vps.yml`).
    Dedicated Caddy host: `./scripts/deploy.sh production`
 4. Check `https://memy.athariqbal.com` and `https://api.memy.athariqbal.com/api/v1/health`
+   Admin: `https://memy.athariqbal.com/admin/` (operator login, not Google).
 5. If the new API image fails health, roll back the **application image only**.
    Never automatically roll back a destructive database migration.
 

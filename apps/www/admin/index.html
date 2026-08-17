@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>MeMy Admin</title>
+    <link rel="icon" href="/assets/logo.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/admin/admin.css" />
+  </head>
+  <body>
+    <div id="login" class="login">
+      <form id="login-form" class="login__card" autocomplete="on">
+        <img src="/assets/logo.svg" alt="" width="28" height="24" />
+        <h1>MeMy Admin</h1>
+        <p>Sign in to manage users, plans, and revenue.</p>
+        <label>
+          Email
+          <input id="login-email" type="email" required autocomplete="username" />
+        </label>
+        <label>
+          Password
+          <input
+            id="login-password"
+            type="password"
+            required
+            minlength="12"
+            autocomplete="current-password"
+          />
+        </label>
+        <button type="submit">Sign in</button>
+        <p id="login-error" class="error" hidden></p>
+      </form>
+    </div>
+
+    <div id="app" class="shell" hidden>
+      <aside class="side">
+        <div class="side__brand">
+          <img src="/assets/logo.svg" alt="" width="22" height="18" />
+          MeMy
+        </div>
+        <nav>
+          <button data-view="overview" class="is-active">Overview</button>
+          <button data-view="users">Users</button>
+          <button data-view="subscriptions">Subscriptions</button>
+          <button data-view="plans">Plans</button>
+          <button data-view="revenue">Revenue</button>
+          <button data-view="audit">Audit</button>
+          <button data-view="operators">Operators</button>
+        </nav>
+        <div class="side__foot">
+          <span id="who"></span>
+          <button id="logout" type="button">Sign out</button>
+        </div>
+      </aside>
+      <main id="main" class="main"></main>
+    </div>
+    <script src="/admin/admin.js"></script>
+  </body>
+</html>

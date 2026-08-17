@@ -114,6 +114,8 @@ export const envValidationSchema = Joi.object({
     }),
   GOOGLE_CLIENT_ID: Joi.string().allow('').optional(),
   APPLE_CLIENT_ID: Joi.string().allow('').optional(),
+  ADMIN_BOOTSTRAP_EMAIL: Joi.string().email().optional(),
+  ADMIN_BOOTSTRAP_PASSWORD: Joi.string().min(12).max(128).optional(),
 });
 
 export type AppConfig = {
@@ -134,6 +136,10 @@ export type AppConfig = {
     refreshPepper: string;
     googleClientId?: string;
     appleClientId?: string;
+  };
+  admin: {
+    bootstrapEmail?: string;
+    bootstrapPassword?: string;
   };
 };
 
@@ -165,6 +171,10 @@ export default (): AppConfig => {
         process.env.REFRESH_TOKEN_PEPPER ?? 'memy-dev-refresh-pepper',
       googleClientId: process.env.GOOGLE_CLIENT_ID || undefined,
       appleClientId: process.env.APPLE_CLIENT_ID || undefined,
+    },
+    admin: {
+      bootstrapEmail: process.env.ADMIN_BOOTSTRAP_EMAIL || undefined,
+      bootstrapPassword: process.env.ADMIN_BOOTSTRAP_PASSWORD || undefined,
     },
   };
 };

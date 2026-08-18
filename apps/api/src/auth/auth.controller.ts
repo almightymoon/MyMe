@@ -15,6 +15,8 @@ import { AuthService } from './auth.service';
 import {
   AppleSignInDto,
   DeviceInfoDto,
+  EmailRegisterDto,
+  EmailSignInDto,
   GoogleSignInDto,
   LogoutDto,
   RefreshDto,
@@ -59,6 +61,33 @@ export class AuthController {
       this.device(body.device),
       body.nonce,
       displayName || undefined,
+    );
+  }
+
+  @Public()
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Create an email and password account' })
+  @UsePipes(bodyValidation)
+  async register(@Body() body: EmailRegisterDto) {
+    return this.auth.registerWithEmail(
+      body.email,
+      body.password,
+      this.device(body.device),
+      body.displayName,
+    );
+  }
+
+  @Public()
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Sign in with email and password' })
+  @UsePipes(bodyValidation)
+  async login(@Body() body: EmailSignInDto) {
+    return this.auth.signInWithEmail(
+      body.email,
+      body.password,
+      this.device(body.device),
     );
   }
 

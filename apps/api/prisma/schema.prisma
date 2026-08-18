@@ -43,6 +43,7 @@ enum UserStatus {
 enum AuthProvider {
   google
   apple
+  email
 }
 
 enum AuthAuditResult {
@@ -85,6 +86,8 @@ model AuthIdentity {
   providerSubject String
   providerEmail   String?
   emailVerified   Boolean      @default(false)
+  /// Set only for [AuthProvider.email]. Google/Apple identities leave this null.
+  passwordHash    String?
   createdAt       DateTime     @default(now())
   lastUsedAt      DateTime     @default(now())
   user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)

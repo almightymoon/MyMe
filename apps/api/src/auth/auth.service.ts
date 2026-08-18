@@ -1,9 +1,16 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuthProvider } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { AppConfig } from '../config/configuration';
+import { ErrorCodes } from '../common/errors/error-codes';
+import { hashPassword, verifyPassword } from '../crypto/password';
 import {
   generateOpaqueRefreshToken,
   hashRefreshToken,
@@ -53,6 +60,89 @@ export class AuthService {
       identity.displayName = firstAuthorizationName.trim();
     }
     return this.completeSignIn(identity, device);
+  }
+
+  async registerWithEmail(
+    email: string,
+    password: string,
+    device: DeviceInfo,
+    displayName?: string,
+  ) {
+    const normalized = this.normalizeEmail(email);
+    const existing = await this.prisma.authIdentity.findUnique({
+      where: {
+        provider_providerSubject: {
+          provider: AuthProvider.email,
+          providerSubject: normalized,
+        },
+      },
+    });
+    if (existing) {
+      throw new ConflictException({
+        code: ErrorCodes.AUTH_EMAIL_IN_USE,
+        message: 'An account with this email already exists. Sign in instead.',
+      });
+    }
+
+    try {
+      const created = await this.prisma.user.create({
+        data: {
+          displayName: displayName?.trim() || 'MeMy member',
+          email: normalized,
+          lastSignedInAt: new Date(),
+          identities: {
+            create: {
+              provider: AuthProvider.email,
+              providerSubject: normalized,
+              providerEmail: normalized,
+              emailVerified: false,
+              passwordHash: hashPassword(password),
+            },
+          },
+        },
+      });
+      return this.finalizeSession(created.id, device);
+    } catch (error) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        (error as { code?: string }).code === 'P2002'
+      ) {
+        throw new ConflictException({
+          code: ErrorCodes.AUTH_EMAIL_IN_USE,
+          message:
+            'An account with this email already exists. Sign in instead.',
+        });
+      }
+      throw error;
+    }
+  }
+
+  async signInWithEmail(email: string, password: string, device: DeviceInfo) {
+    const normalized = this.normalizeEmail(email);
+    const identity = await this.prisma.authIdentity.findUnique({
+      where: {
+        provider_providerSubject: {
+          provider: AuthProvider.email,
+          providerSubject: normalized,
+        },
+      },
+    });
+    if (
+      !identity?.passwordHash ||
+      !verifyPassword(password, identity.passwordHash)
+    ) {
+      throw new UnauthorizedException({
+        code: ErrorCodes.AUTH_INVALID_CREDENTIALS,
+        message: 'Email or password is incorrect.',
+      });
+    }
+    await this.prisma.authIdentity.update({
+      where: { id: identity.id },
+      data: { lastUsedAt: new Date() },
+    });
+    return this.finalizeSession(identity.userId, device);
   }
 
   async refresh(refreshToken: string, device: DeviceInfo) {
@@ -316,6 +406,23 @@ export class AuthService {
       userId = created.id;
     }
 
+    return this.finalizeSession(userId, device);
+  }
+
+  async revokeFamilyIfReuse(presentedHash: string) {
+    const session = await this.prisma.refreshSession.findFirst({
+      where: { tokenHash: presentedHash },
+    });
+    if (!session) return;
+    if (session.revokedAt) {
+      await this.prisma.refreshSession.updateMany({
+        where: { tokenFamilyId: session.tokenFamilyId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+    }
+  }
+
+  private async finalizeSession(userId: string, device: DeviceInfo) {
     await this.prisma.user.update({
       where: { id: userId },
       data: { lastSignedInAt: new Date(), deletedAt: null, status: 'active' },
@@ -385,17 +492,8 @@ export class AuthService {
     };
   }
 
-  async revokeFamilyIfReuse(presentedHash: string) {
-    const session = await this.prisma.refreshSession.findFirst({
-      where: { tokenHash: presentedHash },
-    });
-    if (!session) return;
-    if (session.revokedAt) {
-      await this.prisma.refreshSession.updateMany({
-        where: { tokenFamilyId: session.tokenFamilyId, revokedAt: null },
-        data: { revokedAt: new Date() },
-      });
-    }
+  private normalizeEmail(email: string) {
+    return email.trim().toLowerCase();
   }
 
   private issueAccess(userId: string, deviceId: string, refreshToken: string) {

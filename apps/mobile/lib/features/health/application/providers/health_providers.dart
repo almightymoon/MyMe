@@ -6,6 +6,7 @@ import '../../../../core/domain/value_objects/local_date.dart';
 import '../../../../core/integrations/domain/integration_availability.dart';
 import '../../data/gateways/fake_platform_health_gateway.dart';
 import '../../data/gateways/system_platform_health_gateway.dart';
+import '../../data/repositories/disabled_health_repository.dart';
 import '../../data/repositories/fake_health_repository.dart';
 import '../../data/repositories/system_health_repository.dart';
 import '../../domain/entities/daily_health_summary.dart';
@@ -31,6 +32,8 @@ final platformHealthGatewayProvider = Provider<PlatformHealthGateway>((ref) {
       return ref.watch(fakePlatformHealthGatewayProvider);
     case HealthDataSource.system:
       return SystemPlatformHealthGateway();
+    case HealthDataSource.disabled:
+      return const DisabledPlatformHealthGateway();
   }
 });
 
@@ -52,6 +55,8 @@ final healthRepositoryProvider = Provider<HealthRepository>((ref) {
       );
       ref.onDispose(repo.dispose);
       return repo;
+    case HealthDataSource.disabled:
+      return const DisabledHealthRepository();
   }
 });
 

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:memy/core/config/environment_config.dart';
 import 'package:memy/core/config/release_capabilities.dart';
@@ -73,7 +74,7 @@ void main() {
       }
     });
 
-    test('calendar and health resolve to the real platform sources', () {
+    test('calendar resolves to the real platform source', () {
       for (final raw in ['fake', 'system', '']) {
         expect(
           EnvironmentConfig.resolveCalendarDataSource(
@@ -82,14 +83,31 @@ void main() {
           ),
           CalendarDataSource.system,
         );
+      }
+    });
+
+    test('Android never uses Health Connect', () {
+      for (final raw in ['fake', 'system', 'disabled', '']) {
         expect(
           EnvironmentConfig.resolveHealthDataSource(
             environment: production,
             raw: raw,
+            platform: TargetPlatform.android,
           ),
-          HealthDataSource.system,
+          HealthDataSource.disabled,
         );
       }
+    });
+
+    test('iOS production still uses Apple HealthKit', () {
+      expect(
+        EnvironmentConfig.resolveHealthDataSource(
+          environment: production,
+          raw: 'fake',
+          platform: TargetPlatform.iOS,
+        ),
+        HealthDataSource.system,
+      );
     });
 
     test('auth mode is forced to account even when demo is requested', () {

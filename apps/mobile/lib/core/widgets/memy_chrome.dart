@@ -63,11 +63,12 @@ class MemyAvatarButton extends ConsumerWidget {
 
 /// Right-side chrome: optional leading actions, optional avatar, then menu.
 ///
-/// Menu is always the rightmost control.
+/// When [showMenu] is true, the menu control is always the rightmost item.
 class MemyHeaderActions extends StatelessWidget {
   const MemyHeaderActions({
     super.key,
     this.showAvatar = true,
+    this.showMenu = true,
     this.avatarSize = 44,
     this.leading = const [],
     this.menuKey,
@@ -75,6 +76,7 @@ class MemyHeaderActions extends StatelessWidget {
   });
 
   final bool showAvatar;
+  final bool showMenu;
   final double avatarSize;
   final List<Widget> leading;
   final Key? menuKey;
@@ -95,12 +97,13 @@ class MemyHeaderActions extends StatelessWidget {
             key: avatarKey ?? const Key('memy_avatar_button'),
             child: MemyAvatarButton(size: avatarSize),
           ),
-          const SizedBox(width: 8),
+          if (showMenu) const SizedBox(width: 8),
         ],
-        KeyedSubtree(
-          key: menuKey ?? const Key('memy_menu_button'),
-          child: const MemyMenuButton(),
-        ),
+        if (showMenu)
+          KeyedSubtree(
+            key: menuKey ?? const Key('memy_menu_button'),
+            child: const MemyMenuButton(),
+          ),
       ],
     );
   }

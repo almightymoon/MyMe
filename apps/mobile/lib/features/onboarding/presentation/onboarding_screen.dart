@@ -8,6 +8,7 @@ import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/application/providers/core_providers.dart';
+import '../../../core/config/release_capabilities.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/l10n/app_language.dart';
 import '../../../core/widgets/memy_card.dart';
@@ -151,14 +152,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       subtitle: 'Local-first by default',
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          _Bullet('Everything you enter is stored on this device only.'),
-          _Bullet('No MeMy account, no cloud sync, no advertising.'),
+        children: [
+          const _Bullet('Everything you enter is stored on this device only.'),
+          const _Bullet('No MeMy account, no cloud sync, no advertising.'),
           _Bullet(
-            'Calendar and Health are read with your permission and are '
-            'never uploaded.',
+            ref.watch(releaseCapabilitiesProvider).usesAppleHealth
+                ? 'Calendar and Apple Health are read with your permission and are never uploaded.'
+                : 'Calendar can be connected with your permission. Health is tracked in MeMy — not through Health Connect.',
           ),
-          _Bullet(
+          const _Bullet(
             'You can export a copy or delete everything from '
             'Privacy & Data at any time.',
           ),
@@ -345,13 +347,32 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Widget _buildHealth() {
+    final usesAppleHealth = ref
+        .watch(releaseCapabilitiesProvider)
+        .usesAppleHealth;
+    if (!usesAppleHealth) {
+      return _StepBody(
+        title: 'Health',
+        subtitle: 'In MeMy',
+        body: Text(
+          'Track wellness with Habits and Exercise. MeMy does not use '
+          'Health Connect.',
+          style: AppTextStyles.bodyMedium(color: AppColors.secondaryText),
+        ),
+        primaryLabel: 'Continue',
+        primaryKey: const Key('onboarding_health_skip'),
+        onPrimary: _next,
+        onBack: _back,
+      );
+    }
+
     return _StepBody(
-      title: 'Connect Health',
+      title: 'Connect Apple Health',
       subtitle: 'Optional',
       body: Text(
-        'MeMy can read steps, activity and sleep from Apple Health or Health '
-        'Connect. Read-only — MeMy never writes to platform Health, and '
-        'nothing is read until you grant permission.',
+        'MeMy can read steps, activity and sleep from Apple Health. '
+        'Read-only — MeMy never writes to Apple Health, and nothing is '
+        'read until you grant permission.',
         style: AppTextStyles.bodyMedium(color: AppColors.secondaryText),
       ),
       primaryLabel: 'Connect Health',

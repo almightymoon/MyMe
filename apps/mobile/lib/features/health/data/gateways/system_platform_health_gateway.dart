@@ -84,10 +84,7 @@ class SystemPlatformHealthGateway implements PlatformHealthGateway {
     try {
       await _ensureConfigured();
       if (Platform.isAndroid) {
-        final available = await _health.isHealthConnectAvailable();
-        return available
-            ? IntegrationAvailability.available
-            : IntegrationAvailability.notSupported;
+        return IntegrationAvailability.notSupported;
       }
       return IntegrationAvailability.available;
     } catch (_) {

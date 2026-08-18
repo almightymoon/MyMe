@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/router/app_navigation.dart';
 import '../../../app/router/route_names.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_radii.dart';
@@ -13,7 +14,6 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/domain/services/money_format.dart';
 import '../../../core/errors/app_exception.dart';
 import '../../../core/integrations/domain/integration_connection_status.dart';
-import '../../../core/widgets/empty_feature_card.dart';
 import '../../../core/widgets/inline_error_card.dart';
 import '../../../core/widgets/life_score_ring.dart';
 import '../../../core/widgets/loading_card_skeleton.dart';
@@ -76,22 +76,12 @@ class TodayScreen extends ConsumerWidget {
           ),
         ),
         data: (summary) {
-          if (!summary.hasDailyInformation) {
-            return _TodayScaffold(
-              greetingName: summary.greetingName,
-              child: EmptyFeatureCard(
-                key: const Key('today_empty'),
-                title: AppStrings.dayAtAGlance,
-                message: AppStrings.todayEmptyMessage,
-                icon: Icons.wb_sunny_outlined,
-              ),
-            );
-          }
-
           return _TodayScaffold(
             greetingName: summary.greetingName,
             child: _TodayPopulatedBody(
-              key: const Key('today_populated'),
+              key: summary.hasDailyInformation
+                  ? const Key('today_populated')
+                  : const Key('today_empty'),
               summary: summary,
             ),
           );
@@ -140,47 +130,52 @@ class _TodayScaffold extends StatelessWidget {
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.only(right: 12, bottom: 4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Hi, $greetingName!',
-                          style: AppTextStyles.bodyMedium().copyWith(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.faintText,
+                    child: GestureDetector(
+                      key: const Key('home_open_drawer'),
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => openMemyDrawer(context),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Hi, $greetingName!',
+                            style: AppTextStyles.bodyMedium().copyWith(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.faintText,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text.rich(
-                          TextSpan(
-                            children: [
-                              TextSpan(
-                                text: _dayPart,
-                                style: AppTextStyles.displayMedium().copyWith(
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: -0.9,
-                                  height: 1.15,
+                          const SizedBox(height: 2),
+                          Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: _dayPart,
+                                  style: AppTextStyles.displayMedium().copyWith(
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: -0.9,
+                                    height: 1.15,
+                                  ),
                                 ),
-                              ),
-                              TextSpan(
-                                text: ' $_dayEmoji',
-                                style: AppTextStyles.displayMedium().copyWith(
-                                  fontSize: 22,
+                                TextSpan(
+                                  text: ' $_dayEmoji',
+                                  style: AppTextStyles.displayMedium().copyWith(
+                                    fontSize: 22,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
                 const MemyHeaderActions(
                   avatarSize: 44,
                   avatarKey: Key('home_avatar'),
-                  menuKey: Key('home_open_drawer'),
+                  showMenu: false,
                 ),
               ],
             ),
@@ -232,17 +227,19 @@ class _TodayPopulatedBody extends ConsumerWidget {
     final capabilities = ref.watch(releaseCapabilitiesProvider);
     final showDemoFigures = !capabilities.isProduction;
 
+    final lifeScore = showDemoFigures && summary.hasDailyInformation
+        ? demoLifeScore
+        : summary.computedLifeScore;
+    final focus =
+        summary.effectiveFocus ??
+        DailyFocus(title: AppStrings.focusEmptyTitle, progressPercent: 0);
+
     return Column(
       children: [
-        if (showDemoFigures)
-          const _LifeScoreCard(score: demoLifeScore)
-        else
-          const _TodayBuildDayCard(),
+        _LifeScoreCard(score: lifeScore),
         const SizedBox(height: 12),
-        if (showDemoFigures && summary.focus != null) ...[
-          _FocusSection(focus: summary.focus!),
-          const SizedBox(height: 12),
-        ],
+        _FocusSection(focus: focus),
+        const SizedBox(height: 12),
         const _ShortcutRow(),
         const SizedBox(height: 12),
         _GlanceSection(
@@ -274,46 +271,16 @@ class _TodayPopulatedBody extends ConsumerWidget {
   }
 }
 
-/// Honest production stand-in — no fabricated Life Score.
-class _TodayBuildDayCard extends StatelessWidget {
-  const _TodayBuildDayCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return MemyCard(
-      key: const Key('today_build_day'),
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            AppStrings.buildYourDayTitle,
-            style: AppTextStyles.bodyMedium().copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: AppColors.faintText,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            AppStrings.buildYourDayMessage,
-            style: AppTextStyles.titleMedium().copyWith(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              letterSpacing: -0.3,
-              height: 1.35,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _LifeScoreCard extends StatelessWidget {
   const _LifeScoreCard({required this.score});
 
   final int score;
+
+  String get _encouragement {
+    if (score >= 70) return "You're doing great!";
+    if (score > 0) return 'Keep a steady pace today.';
+    return AppStrings.buildYourDayMessage;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -333,11 +300,6 @@ class _LifeScoreCard extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                     color: AppColors.faintText,
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  AppStrings.samplePreviewCaption,
-                  style: AppTextStyles.kicker(),
                 ),
                 const SizedBox(height: 4),
                 Text.rich(
@@ -362,9 +324,7 @@ class _LifeScoreCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  score >= 70
-                      ? "You're doing great!"
-                      : 'Keep a steady pace today.',
+                  _encouragement,
                   style: AppTextStyles.bodySmall().copyWith(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
@@ -840,16 +800,25 @@ class _TodayHealthCard extends ConsumerWidget {
     HealthConnectionConfig connection,
   ) {
     if (connection.status != IntegrationConnectionStatus.connected) {
+      final usesAppleHealth = ref
+          .watch(releaseCapabilitiesProvider)
+          .usesAppleHealth;
       return _TodayHealthCardShell(
-        key: const Key('today_health_connect_cta'),
-        onTap: () => context.push(RoutePaths.healthConnect),
+        key: usesAppleHealth
+            ? const Key('today_health_connect_cta')
+            : const Key('today_health_in_app'),
+        onTap: () => context.push(
+          usesAppleHealth ? RoutePaths.healthConnect : RoutePaths.health,
+        ),
         child: Row(
           children: [
             Icon(Icons.favorite_rounded, color: AppColors.ember, size: 20),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Connect Health to see steps, heart rate & sleep here',
+                usesAppleHealth
+                    ? 'Connect Apple Health to see steps, heart rate & sleep here'
+                    : 'Open Health for habits, exercise, and wellness in MeMy',
                 style: AppTextStyles.bodySmall(color: AppColors.secondaryText),
               ),
             ),
@@ -1077,6 +1046,7 @@ class _FocusSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MemyCard(
+      key: const Key('today_focus'),
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1171,7 +1141,7 @@ class _GlanceSection extends ConsumerWidget {
                 fit: showWeather ? FlexFit.loose : FlexFit.tight,
                 child: events.isEmpty
                     ? Text(
-                        AppStrings.sectionEmptyMessage,
+                        AppStrings.glanceEmptyMessage,
                         style: AppTextStyles.bodySmall(),
                         textAlign: showWeather
                             ? TextAlign.end

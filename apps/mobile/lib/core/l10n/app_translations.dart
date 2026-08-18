@@ -76,9 +76,10 @@ const Map<String, Map<String, String>> appTranslations = {
         'ڈیمو ڈیٹا لوڈ نہیں ہوا۔ یہ ٹیسٹ کی غلطی ہے۔',
     'Check again or retry.': 'دوبارہ دیکھیں یا کوشش کریں۔',
     'Nothing here yet': 'ابھی کچھ نہیں',
-    'No daily focus, agenda, or summaries yet. Demo empty state.':
+    'No daily focus, agenda, or summaries yet.':
         'ابھی توجہ، شیڈول یا خلاصہ نہیں۔',
-    'No items in this demo section.': 'اس حصے میں کچھ نہیں۔',
+    'No events today.': 'آج کوئی ایونٹ نہیں۔',
+    'Choose a goal to focus on today.': 'آج توجہ کے لیے ایک ہدف چنیں۔',
     'Placeholder': 'جگہ دار',
     'Settings': 'ترتیبات',
     'Account': 'اکاؤنٹ',
@@ -193,9 +194,10 @@ const Map<String, Map<String, String>> appTranslations = {
         'فشل تحميل البيانات التجريبية.',
     'Check again or retry.': 'تحقق مجددًا أو أعد المحاولة.',
     'Nothing here yet': 'لا شيء هنا بعد',
-    'No daily focus, agenda, or summaries yet. Demo empty state.':
+    'No daily focus, agenda, or summaries yet.':
         'لا تركيز أو جدول أو ملخص بعد.',
-    'No items in this demo section.': 'لا عناصر في هذا القسم.',
+    'No events today.': 'لا أحداث اليوم.',
+    'Choose a goal to focus on today.': 'اختر هدفاً للتركيز عليه اليوم.',
     'Placeholder': 'عنصر نائب',
     'Settings': 'الإعدادات',
     'Account': 'الحساب',
@@ -311,9 +313,10 @@ const Map<String, Map<String, String>> appTranslations = {
         'डेमो डेटा लोड नहीं हुआ।',
     'Check again or retry.': 'फिर देखें या कोशिश करें।',
     'Nothing here yet': 'अभी कुछ नहीं',
-    'No daily focus, agenda, or summaries yet. Demo empty state.':
+    'No daily focus, agenda, or summaries yet.':
         'अभी फोकस, शेड्यूल या सारांश नहीं।',
-    'No items in this demo section.': 'इस भाग में कुछ नहीं।',
+    'No events today.': 'आज कोई कार्यक्रम नहीं।',
+    'Choose a goal to focus on today.': 'आज ध्यान देने के लिए एक लक्ष्य चुनें।',
     'Placeholder': 'प्लेसहोल्डर',
     'Settings': 'सेटिंग्स',
     'Account': 'खाता',
@@ -429,9 +432,10 @@ const Map<String, Map<String, String>> appTranslations = {
         'No se cargaron los datos demo.',
     'Check again or retry.': 'Revisa o reintenta.',
     'Nothing here yet': 'Aún no hay nada',
-    'No daily focus, agenda, or summaries yet. Demo empty state.':
+    'No daily focus, agenda, or summaries yet.':
         'Aún no hay enfoque, agenda ni resúmenes.',
-    'No items in this demo section.': 'No hay elementos en esta sección.',
+    'No events today.': 'No hay eventos hoy.',
+    'Choose a goal to focus on today.': 'Elige un objetivo para hoy.',
     'Placeholder': 'Marcador',
     'Settings': 'Ajustes',
     'Account': 'Cuenta',
@@ -547,9 +551,11 @@ const Map<String, Map<String, String>> appTranslations = {
         'Échec du chargement des données démo.',
     'Check again or retry.': 'Vérifiez ou réessayez.',
     'Nothing here yet': 'Rien pour l’instant',
-    'No daily focus, agenda, or summaries yet. Demo empty state.':
+    'No daily focus, agenda, or summaries yet.':
         'Pas encore de focus, d’agenda ni de résumé.',
-    'No items in this demo section.': 'Aucun élément dans cette section.',
+    'No events today.': 'Aucun événement aujourd’hui.',
+    'Choose a goal to focus on today.':
+        'Choisissez un objectif pour aujourd’hui.',
     'Placeholder': 'Espace réservé',
     'Settings': 'Réglages',
     'Account': 'Compte',
@@ -665,9 +671,10 @@ const Map<String, Map<String, String>> appTranslations = {
         'Demo-Daten konnten nicht geladen werden.',
     'Check again or retry.': 'Prüfen oder erneut versuchen.',
     'Nothing here yet': 'Noch nichts hier',
-    'No daily focus, agenda, or summaries yet. Demo empty state.':
+    'No daily focus, agenda, or summaries yet.':
         'Noch kein Fokus, keine Agenda, keine Übersicht.',
-    'No items in this demo section.': 'Keine Einträge in diesem Bereich.',
+    'No events today.': 'Keine Termine heute.',
+    'Choose a goal to focus on today.': 'Wähle heute ein Ziel als Fokus.',
     'Placeholder': 'Platzhalter',
     'Settings': 'Einstellungen',
     'Account': 'Konto',

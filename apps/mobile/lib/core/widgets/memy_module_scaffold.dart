@@ -152,13 +152,40 @@ class MemyModuleScaffold extends StatelessWidget {
       endDrawer: showBottomNav ? MemyDrawer(activeShellIndex: navIndex) : null,
       body: DecoratedBox(
         decoration: decoration ?? BoxDecoration(color: AppColors.canvas),
-        child: SafeArea(
-          bottom: !showBottomNav,
-          child: fillBody
-              ? Padding(
-                  padding: contentPadding,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Material(
+          type: MaterialType.transparency,
+          child: SafeArea(
+            bottom: !showBottomNav,
+            child: fillBody
+                ? Padding(
+                    padding: contentPadding,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _topRow(context),
+                        if (heroAsset != null) ...[
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: _HeroAsset(
+                              asset: heroAsset!,
+                              size: heroSize,
+                            ),
+                          ),
+                        ],
+                        Expanded(child: child),
+                        if (showDemoLabel) ...[
+                          const SizedBox(height: AppSpacing.lg),
+                          Text(
+                            'Demo content',
+                            textAlign: TextAlign.center,
+                            style: AppTextStyles.kicker(),
+                          ),
+                        ],
+                      ],
+                    ),
+                  )
+                : ListView(
+                    padding: contentPadding,
                     children: [
                       _topRow(context),
                       if (heroAsset != null) ...[
@@ -167,7 +194,7 @@ class MemyModuleScaffold extends StatelessWidget {
                           child: _HeroAsset(asset: heroAsset!, size: heroSize),
                         ),
                       ],
-                      Expanded(child: child),
+                      child,
                       if (showDemoLabel) ...[
                         const SizedBox(height: AppSpacing.lg),
                         Text(
@@ -178,28 +205,7 @@ class MemyModuleScaffold extends StatelessWidget {
                       ],
                     ],
                   ),
-                )
-              : ListView(
-                  padding: contentPadding,
-                  children: [
-                    _topRow(context),
-                    if (heroAsset != null) ...[
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: _HeroAsset(asset: heroAsset!, size: heroSize),
-                      ),
-                    ],
-                    child,
-                    if (showDemoLabel) ...[
-                      const SizedBox(height: AppSpacing.lg),
-                      Text(
-                        'Demo content',
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.kicker(),
-                      ),
-                    ],
-                  ],
-                ),
+          ),
         ),
       ),
       bottomNavigationBar: showBottomNav

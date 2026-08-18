@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:memy/app/router/route_names.dart';
 import 'package:memy/core/config/release_capabilities.dart';
 import 'package:memy/core/widgets/coming_soon_view.dart';
+import 'package:memy/features/auth/application/auth_session_controller.dart';
+import 'package:memy/features/auth/domain/secure_session_store.dart';
 import 'package:memy/features/onboarding/data/onboarding_preferences.dart';
 
 import '../../helpers/test_app.dart';
@@ -110,6 +112,19 @@ void main() {
         releaseCapabilitiesProvider.overrideWithValue(
           ReleaseCapabilities.production(),
         ),
+        authSessionProvider.overrideWith(
+          (ref) => AuthSessionController(
+            InMemorySecureSessionStore(),
+            initial: StoredAuthSession(
+              userId: '11111111-1111-4111-8111-111111111111',
+              deviceId: '22222222-2222-4222-8222-222222222222',
+              clientGeneratedDeviceId: 'test-device-aaaaaaaa',
+              provider: 'google',
+              refreshToken: 'test-refresh',
+              authenticatedAt: DateTime.utc(2026, 8, 11),
+            ),
+          ),
+        ),
       ],
     );
     await tester.pumpAndSettle();
@@ -148,6 +163,19 @@ void main() {
       overrides: [
         releaseCapabilitiesProvider.overrideWithValue(
           ReleaseCapabilities.production(),
+        ),
+        authSessionProvider.overrideWith(
+          (ref) => AuthSessionController(
+            InMemorySecureSessionStore(),
+            initial: StoredAuthSession(
+              userId: '11111111-1111-4111-8111-111111111111',
+              deviceId: '22222222-2222-4222-8222-222222222222',
+              clientGeneratedDeviceId: 'test-device-aaaaaaaa',
+              provider: 'google',
+              refreshToken: 'test-refresh',
+              authenticatedAt: DateTime.utc(2026, 8, 11),
+            ),
+          ),
         ),
       ],
     );

@@ -26,13 +26,16 @@ class ConnectedAppsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final calendarConnection = ref.watch(calendarConnectionProvider);
-    final healthAsync = ref.watch(health_providers.healthConnectionProvider);
-    final healthStatus =
-        healthAsync.valueOrNull?.status ??
-        IntegrationConnectionStatus.notConnected;
+    final capabilities = ref.watch(releaseCapabilitiesProvider);
+    final healthStatus = capabilities.usesAppleHealth
+        ? (ref
+                  .watch(health_providers.healthConnectionProvider)
+                  .valueOrNull
+                  ?.status ??
+              IntegrationConnectionStatus.notConnected)
+        : IntegrationConnectionStatus.notConnected;
     final recoveryCount =
         ref.watch(calendarRecoveryCasesProvider).valueOrNull?.length ?? 0;
-    final capabilities = ref.watch(releaseCapabilitiesProvider);
 
     return Scaffold(
       key: const Key('connected_apps'),
@@ -74,13 +77,14 @@ class ConnectedAppsScreen extends ConsumerWidget {
                     },
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  _ConnectionRow(
-                    key: const Key('connected_apps_health'),
-                    icon: Icons.favorite_rounded,
-                    title: 'Health',
-                    status: healthStatus,
-                    onTap: () => context.push(RoutePaths.health),
-                  ),
+                  if (capabilities.usesAppleHealth)
+                    _ConnectionRow(
+                      key: const Key('connected_apps_health'),
+                      icon: Icons.favorite_rounded,
+                      title: 'Apple Health',
+                      status: healthStatus,
+                      onTap: () => context.push(RoutePaths.health),
+                    ),
                   if (recoveryCount > 0) ...[
                     const SizedBox(height: AppSpacing.sm),
                     ListTile(

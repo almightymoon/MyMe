@@ -36,13 +36,18 @@ void main() {
         appClockProvider.overrideWithValue(clock),
         healthRepositoryProvider.overrideWith((ref) => repository),
         platformHealthGatewayProvider.overrideWith((ref) => gateway),
+        healthConnectionProvider.overrideWith(
+          (ref) => repository.watchConnection(),
+        ),
       ],
     );
     await signInToToday(tester);
     await openHealth(tester);
 
     expect(find.byKey(const Key('health_overview')), findsOneWidget);
-    expect(find.byKey(const Key('health_connect_cta')), findsOneWidget);
+    expect(find.byKey(const Key('health_in_app_cta')), findsOneWidget);
+    expect(find.byKey(const Key('health_connect_cta')), findsNothing);
+    expect(find.textContaining('Health Connect'), findsWidgets);
     expect(find.byKey(const Key('health_disclaimer')), findsOneWidget);
     expect(find.textContaining('not a diagnosis'), findsWidgets);
     expect(find.text('ECG'), findsNothing);
@@ -87,6 +92,9 @@ void main() {
         appClockProvider.overrideWithValue(clock),
         healthRepositoryProvider.overrideWith((ref) => repository),
         platformHealthGatewayProvider.overrideWith((ref) => gateway),
+        healthConnectionProvider.overrideWith(
+          (ref) => repository.watchConnection(),
+        ),
       ],
     );
     await signInToToday(tester);

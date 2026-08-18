@@ -20,6 +20,13 @@ class HabitTodayItem {
   final int targetValue;
   final bool isCompleted;
   final int currentStreak;
+
+  /// 0–100 completion for Today cards (binary or count toward target).
+  double get completionPercent {
+    if (isCompleted) return 100;
+    if (targetValue <= 0) return 0;
+    return (100.0 * value / targetValue).clamp(0, 100);
+  }
 }
 
 class HabitStreakSummary {

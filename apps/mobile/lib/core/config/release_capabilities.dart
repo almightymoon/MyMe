@@ -144,6 +144,10 @@ class ReleaseCapabilities {
 
   /// Sign out is available for demo auth and real accounts.
   bool get showSignOut => demoAuth || accountAuth;
+
+  /// Optional Apple HealthKit import. Android never uses Health Connect.
+  bool get usesAppleHealth =>
+      platformHealth && !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 }
 
 /// Override in tests to exercise the production IA.

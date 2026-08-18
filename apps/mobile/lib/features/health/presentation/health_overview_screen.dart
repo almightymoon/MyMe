@@ -8,6 +8,7 @@ import '../../../app/theme/app_radii.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../../../core/application/providers/core_providers.dart';
+import '../../../core/config/release_capabilities.dart';
 import '../../../core/integrations/domain/integration_connection_status.dart';
 import '../../../core/widgets/memy_busy_indicator.dart';
 import '../../../core/widgets/memy_module_scaffold.dart';
@@ -87,6 +88,9 @@ class _Body extends ConsumerWidget {
     final now = ref.watch(appClockProvider).now();
     final isConnected =
         connection.status == IntegrationConnectionStatus.connected;
+    final usesAppleHealth = ref
+        .watch(releaseCapabilitiesProvider)
+        .usesAppleHealth;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,7 +100,6 @@ class _Body extends ConsumerWidget {
           style: AppTextStyles.displayMedium().copyWith(fontSize: 24),
         ),
         const SizedBox(height: AppSpacing.lg),
-        if (!isConnected) _ConnectCallout(key: const Key('health_connect_cta')),
         if (isConnected) ...[
           summaryAsync.when(
             data: (summary) => _ConnectedContent(
@@ -122,7 +125,10 @@ class _Body extends ConsumerWidget {
               ),
             ),
           ),
-        ],
+        ] else if (usesAppleHealth)
+          const _ConnectCallout(key: Key('health_connect_cta'))
+        else
+          const _InAppHealthCallout(key: Key('health_in_app_cta')),
         const SizedBox(height: AppSpacing.xl),
         const HealthDisclaimerBanner(),
         const SizedBox(height: AppSpacing.xxl),
@@ -148,10 +154,7 @@ class _ConnectCallout extends StatelessWidget {
         children: [
           Icon(Icons.favorite_rounded, color: AppColors.ember, size: 28),
           const SizedBox(height: AppSpacing.md),
-          Text(
-            'Connect Apple Health or Health Connect',
-            style: AppTextStyles.titleMedium(),
-          ),
+          Text('Connect Apple Health', style: AppTextStyles.titleMedium()),
           const SizedBox(height: AppSpacing.xs),
           Text(
             'See your steps, heart rate, sleep and more here — read-only, '
@@ -172,6 +175,61 @@ class _ConnectCallout extends StatelessWidget {
               ),
               onPressed: () => context.push(RoutePaths.healthConnect),
               child: const Text('Connect Health'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InAppHealthCallout extends StatelessWidget {
+  const _InAppHealthCallout({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadii.panelRadius,
+        boxShadow: AppColors.softShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.favorite_rounded, color: AppColors.ember, size: 28),
+          const SizedBox(height: AppSpacing.md),
+          Text('Health stays in MeMy', style: AppTextStyles.titleMedium()),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Track wellness with Habits and Exercise. MeMy does not use '
+            'Health Connect.',
+            style: AppTextStyles.bodyMedium(),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              key: const Key('health_open_habits'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.ember,
+                shape: RoundedRectangleBorder(
+                  borderRadius: AppRadii.controlRadius,
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              onPressed: () => context.push(RoutePaths.habits),
+              child: const Text('Open Habits'),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              key: const Key('health_open_exercise'),
+              onPressed: () => context.push(RoutePaths.exercise),
+              child: const Text('Open Exercise'),
             ),
           ),
         ],

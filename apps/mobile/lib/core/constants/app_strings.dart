@@ -108,7 +108,9 @@ abstract final class AppStrings {
   static String get tryAgainHint => t('Check again or retry.');
   static String get nothingHereYet => t('Nothing here yet');
   static String get todayEmptyMessage =>
-      t('No daily focus, agenda, or summaries yet. Demo empty state.');
-  static String get sectionEmptyMessage => t('No items in this demo section.');
+      t('No daily focus, agenda, or summaries yet.');
+  static String get sectionEmptyMessage => t('Nothing here yet');
+  static String get glanceEmptyMessage => t('No events today.');
+  static String get focusEmptyTitle => t('Choose a goal to focus on today.');
   static String get placeholderFeature => t('Placeholder');
 }

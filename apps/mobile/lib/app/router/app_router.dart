@@ -175,6 +175,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (!capabilities.exerciseSessions && path == RoutePaths.workoutSession) {
         return RoutePaths.exercise;
       }
+      if (!capabilities.usesAppleHealth &&
+          (path == RoutePaths.healthConnect ||
+              path == RoutePaths.healthPermissions)) {
+        return RoutePaths.health;
+      }
       if (demoAuth || onboardingComplete()) return null;
       if (path == RoutePaths.onboarding) return null;
       if (_onboardingEscapes.any(

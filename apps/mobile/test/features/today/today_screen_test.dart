@@ -127,6 +127,10 @@ void main() {
     await signInToToday(tester);
 
     expect(find.byKey(const Key('today_empty')), findsOneWidget);
-    expect(find.text(AppStrings.todayEmptyMessage), findsOneWidget);
+    expect(find.byKey(const Key('today_life_score')), findsOneWidget);
+    expect(find.byKey(const Key('today_focus')), findsOneWidget);
+    expect(find.text(AppStrings.focusEmptyTitle), findsOneWidget);
+    expect(find.text(AppStrings.glanceEmptyMessage), findsOneWidget);
+    expect(find.text('84%'), findsNothing);
   });
 }

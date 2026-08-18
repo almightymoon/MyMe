@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:memy/core/constants/app_strings.dart';
 import 'package:memy/features/auth/application/identity_auth_providers.dart';
 import 'package:memy/features/auth/domain/identity_auth_gateway.dart';
 import 'package:memy/features/auth/presentation/account_sign_in_screen.dart';
 
 void main() {
-  testWidgets('production welcome has Google and no demo credentials', (
+  testWidgets('production welcome matches designed sign-in layout', (
     tester,
   ) async {
     GoogleFonts.config.allowRuntimeFetching = false;
@@ -23,16 +24,20 @@ void main() {
     );
     await tester.pump();
 
+    expect(find.text(AppStrings.appName), findsOneWidget);
+    expect(find.text(AppStrings.tagline), findsOneWidget);
+    expect(find.byKey(const Key('email_auth_submit')), findsOneWidget);
+    expect(find.text(AppStrings.signIn), findsOneWidget);
+    expect(find.byKey(const Key('email_auth_toggle')), findsOneWidget);
+    expect(find.text(AppStrings.signUp), findsOneWidget);
     expect(find.byKey(const Key('continue_with_google')), findsOneWidget);
     expect(find.text('Continue with Google'), findsOneWidget);
-    expect(find.byKey(const Key('email_auth_submit')), findsOneWidget);
-    expect(find.text('Sign In'), findsOneWidget);
-    expect(find.text('Need an account? Sign up'), findsOneWidget);
     expect(find.textContaining('Demo'), findsNothing);
     expect(find.text('Forgot Password'), findsNothing);
+    expect(find.text('Need an account? Sign up'), findsNothing);
   });
 
-  testWidgets('production welcome can switch to sign up', (tester) async {
+  testWidgets('production welcome wave opens designed sign up', (tester) async {
     GoogleFonts.config.allowRuntimeFetching = false;
     await tester.pumpWidget(
       ProviderScope(
@@ -49,10 +54,12 @@ void main() {
     await tester.tap(find.byKey(const Key('email_auth_toggle')));
     await tester.pump();
 
-    expect(find.text('Sign Up'), findsOneWidget);
+    expect(find.text(AppStrings.createAccountTitle), findsOneWidget);
     expect(find.byKey(const Key('email_auth_name')), findsOneWidget);
     expect(find.byKey(const Key('email_auth_confirm')), findsOneWidget);
-    expect(find.text('Already have an account? Sign in'), findsOneWidget);
+    expect(find.text(AppStrings.acceptTerms), findsOneWidget);
+    expect(find.text(AppStrings.signUp), findsOneWidget);
+    expect(find.text(AppStrings.signIn), findsOneWidget);
     expect(find.text('Continue with Google'), findsOneWidget);
   });
 }

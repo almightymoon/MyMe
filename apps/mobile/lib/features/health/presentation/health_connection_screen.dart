@@ -41,9 +41,9 @@ class HealthConnectionScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             'MeMy can read steps, distance, heart rate, sleep, exercise '
-            'minutes, and weight from Apple Health or Health Connect. This '
-            'is read-only — MeMy never writes to or edits your Health data, '
-            'and nothing is uploaded anywhere.',
+            'minutes, and weight from Apple Health. This is read-only — '
+            'MeMy never writes to or edits your Health data, and nothing '
+            'is uploaded anywhere.',
             style: AppTextStyles.bodyMedium(),
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -118,8 +118,7 @@ class _ContinueButton extends StatelessWidget {
               ),
               child: Text(
                 availability == IntegrationAvailability.notSupported
-                    ? "Health isn't available on this device. On Android, "
-                          'install Health Connect from the Play Store first.'
+                    ? "Apple Health isn't available on this device."
                     : "Couldn't check Health availability. Try again in a "
                           'moment.',
                 style: AppTextStyles.bodySmall(color: AppColors.emberDark),

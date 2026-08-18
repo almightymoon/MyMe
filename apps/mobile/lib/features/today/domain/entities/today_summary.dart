@@ -34,6 +34,36 @@ class TodaySummary {
       finance != null ||
       coachRecommendation != null;
 
+  /// Average of live goal and habit progress. Never a scripted demo figure.
+  int get computedLifeScore {
+    final percents = <double>[
+      for (final goal in goals) goal.progressPercent.clamp(0, 100),
+      for (final habit in habits) habit.completionPercent,
+    ];
+    if (percents.isEmpty) return 0;
+    return (percents.reduce((a, b) => a + b) / percents.length).round();
+  }
+
+  /// Seeded demo focus when present; otherwise the first live goal or habit.
+  DailyFocus? get effectiveFocus {
+    if (focus != null) return focus;
+    if (goals.isNotEmpty) {
+      final goal = goals.first;
+      return DailyFocus(
+        title: goal.title,
+        progressPercent: goal.progressPercent,
+      );
+    }
+    if (habits.isNotEmpty) {
+      final habit = habits.first;
+      return DailyFocus(
+        title: habit.habit.name,
+        progressPercent: habit.completionPercent,
+      );
+    }
+    return null;
+  }
+
   factory TodaySummary.empty({required String greetingName}) {
     return TodaySummary(greetingName: greetingName);
   }

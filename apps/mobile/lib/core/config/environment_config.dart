@@ -20,42 +20,17 @@
 /// calendar permission, so it is never the CI default.
 /// --dart-define=CALENDAR_DATA_SOURCE=system
 ///
-/// # Health data source: fake | system  (default: fake)
-/// `fake` uses FakePlatformHealthGateway — no HealthKit/Health Connect, no
-/// device permissions, safe for CI/simulators. `system` wraps the `health`
-/// plugin and requires a real device (or an iOS simulator with the Health
-/// app / an Android emulator with Health Connect installed) — never the CI
-/// default. Read-only in both modes; MeMy never writes to platform Health.
+/// # Health data source: fake | system | disabled  (default: fake)
+/// `fake` uses FakePlatformHealthGateway — no HealthKit, no device
+/// permissions, safe for CI/simulators. `system` wraps the `health`
+/// plugin for Apple HealthKit on iOS only. Android always resolves to
+/// `disabled` — MeMy does not use Google Health Connect.
 ///
-/// iOS also requires (already applied in this repo):
+/// iOS HealthKit (optional, already applied in this repo):
 ///   - `ios/Runner/Info.plist`: `NSHealthShareUsageDescription`. No
 ///     `NSHealthUpdateUsageDescription` — MeMy never writes to HealthKit.
-///   - `ios/Runner/Runner.entitlements`: `com.apple.developer.healthkit`,
-///     wired via `CODE_SIGN_ENTITLEMENTS` in `Runner.xcodeproj`. Xcode's
-///     Signing & Capabilities tab should also show "HealthKit" enabled for
-///     the Runner target (add the capability there if it doesn't yet, e.g.
-///     after regenerating the project) — capabilities are partly tracked in
-///     the provisioning profile/Apple Developer portal, not only the file.
+///   - `ios/Runner/Runner.entitlements`: `com.apple.developer.healthkit`.
 ///
-/// Android also requires (already applied in this repo, see
-/// `android/app/src/main/AndroidManifest.xml`):
-///   - `android.permission.health.READ_STEPS`
-///   - `android.permission.health.READ_DISTANCE`
-///   - `android.permission.health.READ_ACTIVE_CALORIES_BURNED`
-///   - `android.permission.health.READ_HEART_RATE`
-///   - `android.permission.health.READ_RESTING_HEART_RATE`
-///   - `android.permission.health.READ_EXERCISE`
-///   - `android.permission.health.READ_SLEEP`
-///   - `android.permission.health.READ_WEIGHT`
-///   - `android.permission.ACTIVITY_RECOGNITION` (required for Steps)
-///   - a `<queries>` entry for `com.google.android.apps.healthdata` (so
-///     `checkAvailability()` can detect whether Health Connect is
-///     installed) plus the `androidx.health.ACTION_SHOW_PERMISSIONS_
-///     RATIONALE` intent-filter/query and `ViewPermissionUsageActivity`
-///     alias Health Connect's permissions UI needs
-///   - `MainActivity` extends `FlutterFragmentActivity` (Android 14+
-///     permission requests need `registerForActivityResult`)
-/// No `WRITE_*` health permission is ever declared — read-only end to end.
 /// --dart-define=HEALTH_DATA_SOURCE=system
 ///
 /// # API base including version prefix
@@ -101,7 +76,7 @@ enum HabitsDataSource { fake, local }
 
 enum CalendarDataSource { fake, system }
 
-enum HealthDataSource { fake, system }
+enum HealthDataSource { fake, system, disabled }
 
 /// Build channel. `production` is the locked-down v1 shipping configuration.
 enum AppEnvironment { development, internal, production }
@@ -156,9 +131,8 @@ class EnvironmentConfig {
     defaultValue: 'fake',
   );
 
-  /// `fake` | `system` — defaults to `fake` for CI/simulator safety. `system`
-  /// requires a real device with HealthKit/Health Connect and read
-  /// permission granted by the user; MeMy never writes to platform Health.
+  /// `fake` | `system` | `disabled` — defaults to `fake` for CI. Android
+  /// always resolves to [HealthDataSource.disabled] (no Health Connect).
   static const String healthDataSourceRaw = String.fromEnvironment(
     'HEALTH_DATA_SOURCE',
     defaultValue: 'fake',
@@ -362,11 +336,17 @@ class EnvironmentConfig {
     }
   }
 
-  /// Production always talks to HealthKit / Health Connect (read-only).
+  /// Android never uses Google Health Connect. iOS production may still
+  /// read Apple HealthKit (read-only).
   static HealthDataSource resolveHealthDataSource({
     AppEnvironment? environment,
     String? raw,
+    TargetPlatform? platform,
   }) {
+    final target = platform ?? defaultTargetPlatform;
+    if (target == TargetPlatform.android) {
+      return HealthDataSource.disabled;
+    }
     final env = environment ?? appEnvironment;
     if (env == AppEnvironment.production) {
       return HealthDataSource.system;
@@ -377,6 +357,8 @@ class EnvironmentConfig {
     switch ((raw ?? healthDataSourceRaw).trim().toLowerCase()) {
       case 'system':
         return HealthDataSource.system;
+      case 'disabled':
+        return HealthDataSource.disabled;
       case 'fake':
       default:
         return HealthDataSource.fake;

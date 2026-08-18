@@ -1,4 +1,4 @@
-import { UnauthorizedException } from '@nestjs/common';
+import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { AuthService, DeviceInfo } from './auth.service';
 import { IdentityTokenVerifier } from './identity/identity-token.verifier';
 import { VerifiedIdentity } from './identity/verified-identity';
@@ -274,5 +274,56 @@ describe('AuthService', () => {
       service.refresh(first.refreshToken, device),
     ).rejects.toBeInstanceOf(UnauthorizedException);
     expect(sessions.every((row) => row.revokedAt != null)).toBe(true);
+  });
+
+  it('registers and signs in with email without Google or Apple', async () => {
+    const service = new AuthService(
+      prisma as never,
+      config as never,
+      verifier(identity('google', 'unused')),
+      verifier(identity('apple', 'unused')),
+    );
+    const created = await service.registerWithEmail(
+      'Ada@Example.com',
+      'memy-pass',
+      device,
+      'Ada',
+    );
+    expect(created.user.email).toBe('ada@example.com');
+    expect(created.user.displayName).toBe('Ada');
+    expect(created.refreshToken).toBeTruthy();
+    expect(identities[0].provider).toBe('email');
+    expect(identities[0].passwordHash).toBeTruthy();
+
+    const signedIn = await service.signInWithEmail(
+      'ada@example.com',
+      'memy-pass',
+      device,
+    );
+    expect(signedIn.user.id).toEqual(created.user.id);
+
+    await expect(
+      service.signInWithEmail('ada@example.com', 'wrong-pass', device),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+    await expect(
+      service.registerWithEmail('ada@example.com', 'memy-pass', device),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('does not auto-link email signup to a Google user with the same email', async () => {
+    const service = new AuthService(
+      prisma as never,
+      config as never,
+      verifier(identity('google', 'sub-google', 'shared@example.com')),
+      verifier(identity('apple', 'unused')),
+    );
+    const google = await service.signInWithGoogle('token', device);
+    const email = await service.registerWithEmail(
+      'shared@example.com',
+      'memy-pass',
+      device,
+    );
+    expect(email.user.id).not.toEqual(google.user.id);
+    expect(identities).toHaveLength(2);
   });
 });

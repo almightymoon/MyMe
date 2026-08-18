@@ -24,6 +24,8 @@ hit() {
 [[ -f "${WWW}/privacy.html" ]] || hit "missing privacy.html"
 [[ -f "${WWW}/terms.html" ]] || hit "missing terms.html"
 [[ -f "${WWW}/support.html" ]] || hit "missing support.html"
+[[ -f "${WWW}/404.html" ]] || hit "missing 404.html"
+[[ -f "${WWW}/error.html" ]] || hit "missing error.html"
 
 if ! python3 - "$WWW" <<'PY'
 import os, re, sys
@@ -46,6 +48,9 @@ for dirpath, _, files in os.walk(www):
             if ref.startswith(("http://", "https://", "mailto:", "tel:", "data:", "#")):
                 continue
             if ref.endswith(".apk"):
+                continue
+            ref = ref.split("#", 1)[0].split("?", 1)[0]
+            if not ref:
                 continue
             if ref.startswith("/"):
                 target = os.path.normpath(www + ref)

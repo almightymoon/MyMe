@@ -46,7 +46,10 @@
     var opts = options || {};
     var headers = Object.assign({ 'Content-Type': 'application/json' }, opts.headers || {});
     if (state.token) headers.Authorization = 'Bearer ' + state.token;
-    var res = await fetch(API + path, Object.assign({}, opts, { headers: headers }));
+    var res = await fetch(
+      API + path,
+      Object.assign({ cache: 'no-store' }, opts, { headers: headers }),
+    );
     if (res.status === 204) return null;
     var body = await res.json().catch(function () {
       return {};
@@ -75,9 +78,11 @@
       showApp(true);
       render();
     } catch {
-      state.token = '';
-      localStorage.removeItem(TOKEN_KEY);
-      showApp(false);
+      if ($('app').hidden) {
+        state.token = '';
+        localStorage.removeItem(TOKEN_KEY);
+        showApp(false);
+      }
     }
   }
 
@@ -92,8 +97,15 @@
           password: $('login-password').value,
         }),
       });
+      if (!out || !out.accessToken) {
+        throw new Error('Sign in did not return a session.');
+      }
       state.token = out.accessToken;
       localStorage.setItem(TOKEN_KEY, out.accessToken);
+      if (out.admin && out.admin.email) {
+        $('who').textContent = out.admin.email;
+      }
+      showApp(true);
       await boot();
     } catch (err) {
       $('login-error').hidden = false;

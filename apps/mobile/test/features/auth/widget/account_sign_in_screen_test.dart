@@ -25,9 +25,34 @@ void main() {
 
     expect(find.byKey(const Key('continue_with_google')), findsOneWidget);
     expect(find.text('Continue with Google'), findsOneWidget);
+    expect(find.byKey(const Key('email_auth_submit')), findsOneWidget);
+    expect(find.text('Sign In'), findsOneWidget);
+    expect(find.text('Need an account? Sign up'), findsOneWidget);
     expect(find.textContaining('Demo'), findsNothing);
-    expect(find.text('Sign In'), findsNothing);
-    expect(find.text('Sign Up'), findsNothing);
     expect(find.text('Forgot Password'), findsNothing);
+  });
+
+  testWidgets('production welcome can switch to sign up', (tester) async {
+    GoogleFonts.config.allowRuntimeFetching = false;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          identityAuthGatewayProvider.overrideWithValue(
+            FakeIdentityAuthGateway(),
+          ),
+        ],
+        child: const MaterialApp(home: AccountSignInScreen()),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.byKey(const Key('email_auth_toggle')));
+    await tester.pump();
+
+    expect(find.text('Sign Up'), findsOneWidget);
+    expect(find.byKey(const Key('email_auth_name')), findsOneWidget);
+    expect(find.byKey(const Key('email_auth_confirm')), findsOneWidget);
+    expect(find.text('Already have an account? Sign in'), findsOneWidget);
+    expect(find.text('Continue with Google'), findsOneWidget);
   });
 }

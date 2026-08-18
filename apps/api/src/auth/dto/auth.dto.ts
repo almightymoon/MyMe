@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
+  IsEmail,
   IsOptional,
   IsString,
   IsUUID,
@@ -108,6 +109,36 @@ export class DeleteAccountDto {
   @ApiProperty({ example: 'DELETE MY ACCOUNT' })
   @IsString()
   confirmation!: string;
+}
+
+export class EmailSignInDto {
+  @ApiProperty({ example: 'ada@example.com' })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
+  @IsEmail()
+  @MaxLength(254)
+  email!: string;
+
+  @ApiProperty()
+  @IsString()
+  @MinLength(8)
+  @MaxLength(128)
+  password!: string;
+
+  @ApiProperty({ type: DeviceInfoDto })
+  @ValidateNested()
+  @Type(() => DeviceInfoDto)
+  device!: DeviceInfoDto;
+}
+
+export class EmailRegisterDto extends EmailSignInDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @IsString()
+  @MaxLength(80)
+  displayName?: string;
 }
 
 export class DeviceIdParamDto {

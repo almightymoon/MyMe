@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Page not found — MeMy</title>
+    <meta
+      name="description"
+      content="That page is not on MeMy. Head home or get help from Support."
+    />
+    <meta name="theme-color" content="#000000" />
+    <link rel="icon" href="/assets/logo.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="experience error-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <canvas class="field" id="field" aria-hidden="true"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+
+    <header class="nav is-scrolled" id="nav">
+      <div class="nav__inner">
+        <a class="nav__brand" href="/">
+          <img src="/assets/logo.svg" alt="" width="26" height="22" />
+          MeMy
+        </a>
+        <nav class="nav__links" aria-label="Primary">
+          <a class="nav__link" href="/">Home</a>
+          <a class="nav__link" href="/support.html">Support</a>
+          <a class="nav__link" href="/privacy.html">Privacy</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <p class="error-page__code text-gradient" aria-hidden="true">404</p>
+      <h1>Page not found</h1>
+      <p class="error-page__lead">
+        That link does not exist on MeMy. It may have moved, or it was never
+        here. You can go home or open Support.
+      </p>
+      <div class="error-page__actions">
+        <a class="btn btn--fill" href="/">Back to home</a>
+        <a class="btn btn--ghost" href="/support.html">Support</a>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container footer__inner">
+        <div class="footer__bottom">
+          <p class="footer__legal">Copyright © <span id="year"></span> MeMy</p>
+        </div>
+      </div>
+    </footer>
+    <script src="/main.js" defer></script>
+  </body>
+</html>

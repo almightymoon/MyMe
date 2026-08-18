@@ -52,6 +52,19 @@ abstract interface class AuthApi {
     String? familyName,
   });
 
+  Future<AuthSessionTokens> registerWithEmail({
+    required String email,
+    required String password,
+    required AuthDeviceInfo device,
+    String? displayName,
+  });
+
+  Future<AuthSessionTokens> signInWithEmail({
+    required String email,
+    required String password,
+    required AuthDeviceInfo device,
+  });
+
   Future<AuthSessionTokens> refreshSession({
     required String refreshToken,
     required AuthDeviceInfo device,

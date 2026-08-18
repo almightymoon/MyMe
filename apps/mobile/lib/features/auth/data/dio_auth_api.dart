@@ -38,6 +38,34 @@ class DioAuthApi implements AuthApi {
   }
 
   @override
+  Future<AuthSessionTokens> registerWithEmail({
+    required String email,
+    required String password,
+    required AuthDeviceInfo device,
+    String? displayName,
+  }) {
+    return _exchange('/auth/register', {
+      'email': email,
+      'password': password,
+      'device': device.toJson(),
+      'displayName': ?displayName,
+    }, provider: 'email');
+  }
+
+  @override
+  Future<AuthSessionTokens> signInWithEmail({
+    required String email,
+    required String password,
+    required AuthDeviceInfo device,
+  }) {
+    return _exchange('/auth/login', {
+      'email': email,
+      'password': password,
+      'device': device.toJson(),
+    }, provider: 'email');
+  }
+
+  @override
   Future<AuthSessionTokens> refreshSession({
     required String refreshToken,
     required AuthDeviceInfo device,

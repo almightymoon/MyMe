@@ -81,6 +81,7 @@ import '../../features/wardrobe/presentation/screens/wardrobe_overview_screen.da
 import '../../features/wardrobe/presentation/screens/wardrobe_settings_screen.dart';
 import '../../core/config/release_capabilities.dart';
 import '../../core/widgets/coming_soon_view.dart';
+import '../../core/widgets/not_found_screen.dart';
 import 'route_names.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
@@ -126,6 +127,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
+    errorBuilder: (context, state) => NotFoundScreen(uri: state.uri),
     initialLocation: demoAuth
         ? RoutePaths.signIn
         : (accountAuth && !signedIn
